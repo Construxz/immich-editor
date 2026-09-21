@@ -1,5 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Gerätefotos (photo_manager); ab Android 14 auch nur ausgewählte -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"/>
+    <!-- Ohne sie schwärzt Android den Ort im EXIF: andere Bytes, andere Prüfsumme, Kopie ohne Ort -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION"/>
     <application
         android:label="Editor for Immich"
         android:name="${applicationName}"

@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import '../export/export.dart';
 import '../export/jpeg.dart' show rezeptAus;
 import '../foto.dart';
+import '../gallery/geraet.dart';
 import '../main.dart' show speicher;
 import '../server/immich.dart';
+import '../stapeln/stapeln.dart';
 import 'lineal.dart';
 import 'rezept.dart';
 import 'vorschau.dart';
@@ -16,10 +18,18 @@ enum _Bereich { zuschneiden, anpassen }
 /// Der Editor im Aufbau von Google Fotos (Spec, *Bedienung*): oben Schließen, Rückgängig,
 /// Speichern; in der Mitte das Bild; unten Werkzeuge und Bereiche.
 class EditorSeite extends StatefulWidget {
-  const EditorSeite({super.key, required this.immich, required this.id});
+  const EditorSeite({
+    super.key,
+    required this.immich,
+    required this.id,
+    this.geraet = false,
+  });
 
   final Immich immich;
   final String id;
+
+  /// [id] ist ein Gerätefoto: bearbeiten ohne Server, Kopie in die Gerätegalerie (D-24).
+  final bool geraet;
 
   @override
   State<EditorSeite> createState() => _EditorSeiteState();
@@ -58,20 +68,23 @@ class _EditorSeiteState extends State<EditorSeite> {
       try {
         final hdr = await speicher.read(key: 'hdr') != 'aus';
         final immich = widget.immich;
-        var foto = await immich.foto(widget.id);
-        var original = await immich.original(widget.id);
+        Future<(Foto, Uint8List)> laden(String id) async => widget.geraet
+            ? await geraetOriginal(id)
+            : (await immich.foto(id), await immich.original(id));
+        var (foto, original) = await laden(widget.id);
         // Eine Kopie dieser App? Dann das Original mit ihrem Rezept öffnen.
         Foto? alteKopie;
         var start = const Rezept();
         final aus = rezeptAus(original);
         final originalId = aus == null
             ? null
+            : widget.geraet
+            ? await geraetPerPruefsumme(aus.originalSha1, foto.aufgenommen)
             : await immich.perPruefsumme(aus.originalSha1);
         if (aus != null && originalId != null) {
           alteKopie = foto;
           start = Rezept.fromJson(aus.rezept);
-          foto = await immich.foto(originalId);
-          original = await immich.original(originalId);
+          (foto, original) = await laden(originalId);
         }
         final geladen = await ladeOriginal(original, hdr: hdr);
         zeigeRezept(start);
@@ -172,7 +185,8 @@ class _EditorSeiteState extends State<EditorSeite> {
     if (verwerfen == true && mounted) Navigator.of(context).pop();
   }
 
-  /// Kopie rendern, hochladen, vor das Original stapeln, in dessen Alben legen.
+  /// Kopie rendern, hochladen, vor das Original stapeln, in dessen Alben legen — oder, bei einem
+  /// Gerätefoto, in die Gerätegalerie legen und zum Stapeln vormerken (D-24).
   /// Aufnahmezeit und Ort reisen im übernommenen EXIF mit.
   Future<void> _speichern() async {
     setState(() {
@@ -190,6 +204,25 @@ class _EditorSeiteState extends State<EditorSeite> {
         foto.pruefsumme,
         hdr: _hdr,
       );
+      if (widget.geraet) {
+        await geraetSpeichern(kopie, foto);
+        await vormerken((
+          kopie: await sha1(kopie),
+          original: foto.pruefsumme,
+          alt: _alteKopie?.pruefsumme,
+        ));
+        final alt = _alteKopie;
+        if (alt != null) await geraetPapierkorb(alt.id);
+        meldung.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Auf dem Gerät gespeichert — gestapelt wird nach dem Backup',
+            ),
+          ),
+        );
+        navigator.pop();
+        return;
+      }
       setState(() => _schritt = 'Wird hochgeladen …');
       final id = await immich.hochladen(
         kopie,
@@ -204,21 +237,7 @@ class _EditorSeiteState extends State<EditorSeite> {
         throw Exception('Kopie auf dem Server weicht ab ($id)');
       }
       setState(() => _schritt = 'Wird gestapelt …');
-      await immich.stapeln([id, foto.id]);
-      for (final album in await immich.albenVon(foto.id)) {
-        await immich.insAlbum(album, [id]);
-      }
-      // Frühere Kopien stünden jetzt allein (Immich löst den alten Stapel auf): die geöffnete
-      // und die, die bisher vorn lag — diese nur, wenn sie eine Kopie dieser App ist.
-      final weg = {?_alteKopie?.id};
-      final vorn = foto.stapelVorn;
-      if (vorn != null &&
-          vorn != foto.id &&
-          !weg.contains(vorn) &&
-          rezeptAus(await immich.anfang(vorn)) != null) {
-        weg.add(vorn);
-      }
-      if (weg.isNotEmpty) await immich.papierkorb(weg.toList());
+      await vorOriginal(immich, id, foto, alteKopie: _alteKopie?.id);
 
       meldung.showSnackBar(
         const SnackBar(content: Text('Gespeichert und geprüft')),

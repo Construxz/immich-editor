@@ -8,13 +8,15 @@ Lizenzen nachgesehen am 21.09.2026 über die GitHub-API bzw. die README des Proj
 
 ## Abhängigkeiten
 
-Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storage` (mit `tink-android`; über `path_provider_android` kommen `jni`, `jni_flutter`, `jni_util` vom Dart-Team, BSD-3-Clause); der Rest ist geplant.
+Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storage` (mit `tink-android`; über `path_provider_android` kommen `jni`, `jni_flutter`, `jni_util` vom Dart-Team, BSD-3-Clause), `photo_manager` (mit Glide und `androidx.exifinterface`; Dart-seitig nur `path`, BSD-3-Clause); der Rest ist geplant.
 
 | Paket | Zweck | Lizenz | passt |
 |---|---|---|---|
 | [Flutter](https://github.com/flutter/flutter) | Framework | BSD-3-Clause | ja |
 | [flutter_lints](https://github.com/flutter/packages/tree/main/packages/flutter_lints) | Lint-Regeln, nur Entwicklung | BSD-3-Clause | ja |
 | [photo_manager](https://github.com/fluttercandies/flutter_photo_manager) | Gerätegalerie; auch in Immichs App | Apache-2.0 | ja |
+| [Glide](https://github.com/bumptech/glide) | Miniaturen in `photo_manager` | BSD, Teile MIT und Apache-2.0 | ja |
+| [AndroidX ExifInterface](https://developer.android.com/jetpack/androidx/releases/exifinterface) | EXIF in `photo_manager` | Apache-2.0 | ja |
 | [http](https://github.com/dart-lang/http) | Immich-API | BSD-3-Clause | ja |
 | [flutter_secure_storage](https://github.com/juliansteenbakker/flutter_secure_storage) | Anmeldedaten | BSD-3-Clause | ja |
 | [Tink](https://github.com/tink-crypto/tink-java) (`tink-android`) | Verschlüsselung in `flutter_secure_storage`; Google-Bibliothek, lokal, ohne Play-Dienste | Apache-2.0 | ja |

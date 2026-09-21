@@ -3,7 +3,7 @@
 **Diese Datei wird überschrieben, nicht fortgeschrieben.** Warum etwas so ist, steht in
 [DECISIONS.md](DECISIONS.md), was noch fehlt, in [ROADMAP.md](ROADMAP.md).
 
-Stand: 21.09.2026 abends, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
+Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
 
 ## Was es gibt
 
@@ -11,9 +11,10 @@ Stand: 21.09.2026 abends, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   Dart-Paket `immich_editor`, D-10), `minSdk 34` (D-18):
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
     Immich-Hauptversion nicht 3 ist.
-  - Galerie (⋮: Einstellung „HDR", Abmelden): Server-Fotos nach Monaten über Immichs Timeline,
+  - Galerie (⋮: Einstellung „HDR", Abmelden) mit zwei Reitern: „Gerät" (Fotos auf dem Gerät,
+    neueste zuerst, D-26) und „Immich": Server-Fotos nach Monaten über Immichs Timeline,
     Monate laden beim Hinscrollen, ein Stapel zählt einmal (vorn die Bearbeitung), Mehrfachauswahl
-    per langem Druck. Noch ohne Gerätefotos.
+    per langem Druck.
   - Editor im Aufbau von Google Fotos (D-22): schwarz; oben Schließen, Rückgängig/Wiederholen,
     HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Zuschneiden" (Rahmen mit Anfassern,
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal) und „Anpassen" (12 Regler als runde Knöpfe,
@@ -23,20 +24,23 @@ Stand: 21.09.2026 abends, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
     des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,
     gegenprüfen (SHA-1 des Servers = eigene), vor das Original stapeln, in dessen Alben legen;
-    etwa 4 s im Emulator (D-23).
+    etwa 4 s im Emulator (D-23). **Gerätefotos** speichert die App ohne Server: Kopie in
+    denselben Ordner der Gerätegalerie, vorgemerkt; sobald die Immich-App Original und Kopie
+    gesichert hat, stapelt die Galerie beim Öffnen oder Aktualisieren (D-26).
   - Netzwerk: Zeitgrenzen (30 s, Originale und Upload 3 min) und verständliche Fehler.
   - Ultra HDR: Die Kopie behält die Gain-Map des Originals (D-16), Standardformat (D-19); die
     Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).
   - Erneut bearbeiten: Öffnet man eine Kopie, öffnet der Editor das Original mit deren Rezept;
     beim Speichern gehen frühere Kopien in den Papierkorb (D-23).
-  - **Noch nicht:** Gerätefotos, Online-Fotos zuerst aus der Vorschau, Presets, Filter,
+  - **Noch nicht:** eine Zeitleiste über Gerät und Server, Online-Fotos zuerst aus der Vorschau, Presets, Filter,
     Perspektive — siehe ROADMAP.
 - Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung),
-  `lib/gallery/`, `lib/editor/` (Seite, Rezept, Lineal, Zuschnittrahmen, Vorschau-Kanal),
+  `lib/gallery/` (mit `geraet.dart` über `photo_manager`), `lib/stapeln/` (Stapeln, auch
+  vorgemerkt nach dem Backup), `lib/editor/` (Seite, Rezept, Lineal, Zuschnittrahmen, Vorschau-Kanal),
   `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/foto.dart`; nativ in
   `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometrie.kt`, `Vorschau.kt` (Sitzung, Ansicht),
   `MainActivity.kt` (Kanal `immich_editor/renderer`). Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (14 — JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Lineal, Start),
+- Tests: `test/` (15 — JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Lineal, Warteschlange, Start),
   `android/app/src/test/` (9 — Geometrie, JVM, auch in der CI) und `android/app/src/androidTest/`
   (11 — Renderer auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,

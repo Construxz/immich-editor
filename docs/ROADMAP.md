@@ -13,9 +13,11 @@ Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speich
 (D-17 bis D-23). Offen, in dieser Reihenfolge:
 - ⬜ **Speichern auf dem Pixel nachprüfen:** Der Besitzer bekam mit einem älteren Stand „App
   reagiert nicht" (D-23). Der Emulator zeigt es nicht; auf dem Pixel läuft seit 21.09. abends `4448976`.
-- ⬜ **Gerätefotos** in der Galerie (`photo_manager`), mit dem Server über die Prüfsumme
-  zusammengeführt (`POST /assets/bulk-upload-check`), Prüfsummen zwischengespeichert; bearbeiten
-  ohne Server, Kopie in die Gerätegalerie, später auf dem Server stapeln (D-24).
+- 🔶 **Gerätefotos:** bearbeiten, Kopie in die Gerätegalerie, nach dem Backup stapeln — gebaut
+  (D-26). Offen: eine Zeitleiste über Gerät und Server, über die Prüfsumme zusammengeführt
+  (`POST /assets/bulk-upload-check`, Prüfsummen zwischengespeichert), mit Kennzeichen „gesichert";
+  ein Serverfoto, das auch auf dem Gerät liegt, lokal bearbeiten (D-24); Vorgemerktes, das nie
+  auf dem Server ankommt (Foto gelöscht, Backup aus), irgendwann verwerfen oder anzeigen.
 - ⬜ **Online-Fotos:** Editor startet mit Immichs Vorschaubild, Original erst zum Speichern oder im
   Hintergrund; Einstellungen „Mobile Daten" und „Bearbeitungen von Online-Fotos: Gerät (Vorgabe) /
   Server" (D-24, D-25).

@@ -6,6 +6,7 @@ class Foto {
     required this.aufgenommen,
     required this.pruefsumme,
     this.stapelVorn,
+    this.ordner,
   });
 
   final String id;
@@ -19,6 +20,9 @@ class Foto {
 
   /// Was vorn im Stapel liegt, wenn das Foto gestapelt ist.
   final String? stapelVorn;
+
+  /// Ordner in der Gerätegalerie, wenn das Foto auf dem Gerät liegt; sonst null (Server).
+  final String? ordner;
 }
 
 /// Ein Eintrag der Galerie, so knapp, wie die Timeline ihn liefert.

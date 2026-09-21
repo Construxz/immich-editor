@@ -7,6 +7,40 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-26: Gerätefotos — bearbeiten ohne Server, stapeln nach dem Backup
+
+Gebaut nach D-24:
+
+- **Galerie** mit zwei Reitern unten, „Gerät" (`photo_manager`, neueste Aufnahme zuerst,
+  Seiten zu 120) und „Immich" (wie bisher). Noch getrennt; eine Zeitleiste über beide steht in
+  der ROADMAP.
+- **Editor für Gerätefotos:** lädt die Datei vom Gerät, rechnet ihre SHA-1 selbst; speichert die
+  Kopie (`<name>.edit.jpg`) in **denselben Ordner** mit **derselben Aufnahmezeit**
+  (`DATE_TAKEN`) — so sichert die Immich-App sie mit, und sie steht neben dem Original.
+- **Erneut bearbeiten** auf dem Gerät: Das Original einer Kopie findet sich über die
+  Aufnahmezeit (gleiche Sekunde) und die SHA-1 aus dem Rezept-XMP. Die alte Kopie geht in den
+  Papierkorb des Geräts; Android fragt dafür nach.
+- **Stapeln später:** Jede lokale Kopie wird vorgemerkt (SHA-1 von Kopie, Original, ersetzter
+  Kopie; in `flutter_secure_storage`). Beim Öffnen und Aktualisieren der Galerie sucht die App
+  beide per Prüfsumme auf dem Server und stapelt wie beim direkten Speichern (`lib/stapeln/`).
+- **`ACCESS_MEDIA_LOCATION` ist Pflicht.** Ohne sie liefert Android die Datei mit geschwärztem
+  Ort: andere Bytes, eine SHA-1, die kein Backup trägt — und eine Kopie ohne GPS. Android erteilt
+  sie ohne eigene Abfrage zusammen mit dem Fotozugriff.
+- **Build:** `kotlin.incremental=false` in `android/gradle.properties` — Plugins liegen im
+  Pub-Cache auf `C:`, der Build auf `M:`; Kotlins inkrementeller Cache scheitert daran
+  („Could not close incremental caches").
+
+**Gemessen** 21.09.2026 im Emulator (Testbenutzer): Testfoto B und Testfoto A mit angehängten
+Nullbytes nach `DCIM/Camera` gelegt (nicht auf dem Server). Testfoto B bearbeitet → Kopie im
+selben Ordner, gleiche `datetaken`; erneut geöffnet → Original mit Rezept; nochmals gespeichert →
+alte Kopie im Papierkorb. Backup simuliert (beide Dateien unverändert per `POST /assets`
+hochgeladen) → nach Ziehen zum Aktualisieren ein Stapel, Kopie vorn, Breitengrad in beiden.
+Testfoto A (Ultra HDR) → Kopie mit `hdrgm`-XMP, MPF und Rezept.
+
+**Anwenden:** Online-Fotos (D-25, Vorgabe „Gerät") nutzen denselben Weg.
+
+---
+
 ## 2026-09-21 · D-25: Bearbeitung eines nur online liegenden Fotos — Einstellung, Vorgabe Gerät
 
 Entscheidung des Besitzers zu E6: Der Nutzer wählt in den Einstellungen, der Besitzer selbst
