@@ -22,7 +22,8 @@ Teile, in dieser Reihenfolge:
 *Abnahme:* 20 Bilder wählen, ein eigenes Preset anwenden, 20 Stapel entstehen — auch für ein
 Foto, das nur auf dem Gerät lag, sobald die Immich-App es gesichert hat. Auf dem Pixel zeigt die
 Vorschau eines Ultra-HDR-Fotos HDR, auch nach Zuschneiden und Drehen, und die Kopie ist Ultra
-HDR mit passender Gain-Map; mit „HDR" aus entstehen SDR-Kopien.
+HDR mit passender Gain-Map — libvips (`uhdrload`) erkennt sie (D-19); mit „HDR" aus entstehen
+SDR-Kopien.
 → erstes Release; Repo wird öffentlich (D-4), vorher Mail an Immich (D-5) und die Doku ins
 Englische übersetzt (D-15).
 

@@ -7,6 +7,28 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-19: Kopien sind Standard-Ultra-HDR — Immich zeigt sie, sobald es HDR kann
+
+Anforderung des Besitzers: So, wie die App HDR-Kopien in Immich ablegt, sollen sie ohne
+Nacharbeit in HDR erscheinen, sobald Immich upstream Ultra HDR darstellt
+([immich#7262](https://github.com/immich-app/immich/discussions/7262): Web teilweise, Server über
+libvips 8.18, Mobil über native Ansichten geplant).
+
+Befund, wie geprüft: die Kopie aus D-16 mit **libvips 8.18.6** (`pyvips-binary`), dessen
+Ultra-HDR-Lader auf Googles libultrahdr aufbaut — dem Weg, den Immichs Server nimmt.
+
+| | Lader | Gain-Map | max. Content-Boost | HDR-Kapazität |
+|---|---|---|---|---|
+| Original | `uhdrload` | 697×926 | 4,652 | 4,652 |
+| Kopie (D-16) | `uhdrload` | 697×926 | 4,653 | 4,653 |
+| Kopie aus M1 (Gegenprobe) | `jpegload` | — | — | — |
+
+Dazu D-16: Androids Dekoder liest dieselben Werte; Immich speichert die Datei Byte für Byte (D-12).
+
+**Anwenden:** Kein eigenes HDR-Format; die Kopie bleibt Standard-Ultra-HDR (`hdrgm`-XMP,
+ISO 21496-1, MPF) und liegt vorn im Stapel. Jede Änderung am Export wird mit `uhdrload`
+gegengeprüft (M2-Abnahme).
+
 ## 2026-09-21 · D-18: Mindestens Android 14 (API 34)
 
 AGSL-Shader (D-17) gibt es ab Android 13, die Gain-Map-API und HDR-Fenster ab Android 14. Mit

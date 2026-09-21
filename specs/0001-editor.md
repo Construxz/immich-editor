@@ -45,7 +45,8 @@ nebeneinander.
 **HDR:** Die Kopie behält die Gain-Map des Originals (Ultra HDR, D-16); Tonwert-Änderungen wirken
 auf SDR- und HDR-Darstellung gleich, Geometrie (Zuschneiden, Drehen, Perspektive) wirkt mit
 derselben Rechnung auf Bild und Gain-Map. Die Vorschau zeigt HDR, wie Google Fotos (D-17).
-**Abschaltbar** in den Einstellungen („HDR"): dann SDR-Vorschau und Kopien ohne Gain-Map.
+Die Kopie ist **Standard-Ultra-HDR** (`hdrgm`-XMP, ISO 21496-1, MPF), kein eigenes Format —
+Immich zeigt sie in HDR, sobald es Ultra HDR darstellt (D-19). **Abschaltbar** in den Einstellungen („HDR"): dann SDR-Vorschau und Kopien ohne Gain-Map.
 
 **Zu prüfen:** ob Immich Gesichter und Suchtreffer gestapelter, nicht vorne liegender Assets
 ausblendet oder doppelt zählt.
