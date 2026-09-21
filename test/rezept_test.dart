@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:immich_editor/editor/rezept.dart';
 
@@ -32,5 +34,20 @@ void main() {
     expect(z[2], 1);
     expect(z[3] * 3000, closeTo(4000 * 9 / 16, 1e-9));
     expect(zuschnittFuer(null, 1, 1), [0, 0, 1, 1]);
+  });
+
+  test('fromJson liest, was toJson schreibt', () {
+    final r = const Rezept()
+        .mitWert('contrast', 0.3)
+        .mitWert('vignette', -0.5)
+        .kopie(
+          viertel: 3,
+          spiegeln: true,
+          winkel: 7.8,
+          zuschnitt: [0.1, 0.2, 0.5, 0.6],
+        );
+    final zurueck = Rezept.fromJson(jsonDecode(jsonEncode(r.toJson())));
+    expect(zurueck.gleich(r), isTrue);
+    expect(Rezept.fromJson({'v': 1}).istNeutral, isTrue);
   });
 }

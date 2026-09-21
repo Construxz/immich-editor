@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../export/export.dart';
+import '../export/jpeg.dart' show rezeptAus;
 import '../foto.dart';
 import '../main.dart' show speicher;
 import '../server/immich.dart';
@@ -15,16 +16,21 @@ enum _Bereich { zuschneiden, anpassen }
 /// Der Editor im Aufbau von Google Fotos (Spec, *Bedienung*): oben Schließen, Rückgängig,
 /// Speichern; in der Mitte das Bild; unten Werkzeuge und Bereiche.
 class EditorSeite extends StatefulWidget {
-  const EditorSeite({super.key, required this.immich, required this.foto});
+  const EditorSeite({super.key, required this.immich, required this.id});
 
   final Immich immich;
-  final Foto foto;
+  final String id;
 
   @override
   State<EditorSeite> createState() => _EditorSeiteState();
 }
 
 class _EditorSeiteState extends State<EditorSeite> {
+  Foto? _foto;
+
+  /// Beim erneuten Bearbeiten: die bisherige Kopie; sie geht nach dem Speichern in den
+  /// Papierkorb (Spec, *Speicherweg* 5).
+  Foto? _alteKopie;
   Uint8List? _original;
   var _hdr = true;
   var _hatGainmap = false;
@@ -32,13 +38,18 @@ class _EditorSeiteState extends State<EditorSeite> {
   double? _verhaeltnis; // gewähltes Seitenverhältnis, null = frei
   Object? _fehler;
   var _speichert = false;
+  var _schritt = ''; // was beim Speichern gerade passiert
   var _bereich = _Bereich.anpassen;
   String? _werkzeug; // gewählter Regler im Bereich Anpassen
 
   // Rückgängig/Wiederholen: der Verlauf und die Stelle darin
-  final _verlauf = <Rezept>[const Rezept()];
+  var _verlauf = <Rezept>[const Rezept()];
   var _stelle = 0;
   var _rezept = const Rezept();
+
+  /// Womit der Editor anfing — beim erneuten Bearbeiten das Rezept der Kopie.
+  Rezept get _start => _verlauf.first;
+  bool get _geaendert => !_rezept.gleich(_start);
 
   @override
   void initState() {
@@ -46,10 +57,30 @@ class _EditorSeiteState extends State<EditorSeite> {
     () async {
       try {
         final hdr = await speicher.read(key: 'hdr') != 'aus';
-        final original = await widget.immich.original(widget.foto.id);
+        final immich = widget.immich;
+        var foto = await immich.foto(widget.id);
+        var original = await immich.original(widget.id);
+        // Eine Kopie dieser App? Dann das Original mit ihrem Rezept öffnen.
+        Foto? alteKopie;
+        var start = const Rezept();
+        final aus = rezeptAus(original);
+        final originalId = aus == null
+            ? null
+            : await immich.perPruefsumme(aus.originalSha1);
+        if (aus != null && originalId != null) {
+          alteKopie = foto;
+          start = Rezept.fromJson(aus.rezept);
+          foto = await immich.foto(originalId);
+          original = await immich.original(originalId);
+        }
         final geladen = await ladeOriginal(original, hdr: hdr);
+        zeigeRezept(start);
         if (!mounted) return;
         setState(() {
+          _foto = foto;
+          _alteKopie = alteKopie;
+          _verlauf = [start];
+          _rezept = start;
           _original = original;
           _hdr = hdr;
           _hatGainmap = geladen.hatGainmap;
@@ -121,7 +152,7 @@ class _EditorSeiteState extends State<EditorSeite> {
       : zuschnittFuer(verhaeltnis, _masse.width, _masse.height);
 
   Future<void> _schliessen() async {
-    if (_rezept.istNeutral || _speichert) return Navigator.of(context).pop();
+    if (!_geaendert || _speichert) return Navigator.of(context).pop();
     final verwerfen = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -144,11 +175,14 @@ class _EditorSeiteState extends State<EditorSeite> {
   /// Kopie rendern, hochladen, vor das Original stapeln, in dessen Alben legen.
   /// Aufnahmezeit und Ort reisen im übernommenen EXIF mit.
   Future<void> _speichern() async {
-    setState(() => _speichert = true);
+    setState(() {
+      _speichert = true;
+      _schritt = 'Wird gerendert …';
+    });
     final navigator = Navigator.of(context);
     final meldung = ScaffoldMessenger.of(context);
     final immich = widget.immich;
-    final foto = widget.foto;
+    final foto = _foto!;
     try {
       final kopie = await exportieren(
         _rezept,
@@ -156,19 +190,28 @@ class _EditorSeiteState extends State<EditorSeite> {
         foto.pruefsumme,
         hdr: _hdr,
       );
+      setState(() => _schritt = 'Wird hochgeladen …');
       final id = await immich.hochladen(
         kopie,
         foto.dateiname.replaceFirst(RegExp(r'(\.[^.]*)?$'), '.edit.jpg'),
         foto.aufgenommen,
       );
-      // Erst stapeln, wenn der Server genau die Bytes hat, die wir geschickt haben.
-      if (!listEquals(await immich.original(id), kopie)) {
+      // Erst stapeln, wenn der Server genau die Bytes hat, die wir geschickt haben:
+      // Immich berechnet die SHA-1 beim Empfang — sie muss unserer gleichen.
+      setState(() => _schritt = 'Wird geprüft …');
+      final serverSha1 = (await immich.foto(id)).pruefsumme;
+      if (serverSha1 != await sha1(kopie)) {
         throw Exception('Kopie auf dem Server weicht ab ($id)');
       }
+      setState(() => _schritt = 'Wird gestapelt …');
       await immich.stapeln([id, foto.id]);
       for (final album in await immich.albenVon(foto.id)) {
         await immich.insAlbum(album, [id]);
       }
+      // Die bisherige Kopie steht jetzt allein (Immich löst ihren Stapel auf).
+      final alt = _alteKopie;
+      if (alt != null) await immich.papierkorb([alt.id]);
+
       meldung.showSnackBar(
         const SnackBar(content: Text('Gespeichert und geprüft')),
       );
@@ -192,7 +235,7 @@ class _EditorSeiteState extends State<EditorSeite> {
     return Theme(
       data: dunkel,
       child: PopScope(
-        canPop: _rezept.istNeutral || _speichert,
+        canPop: !_geaendert || _speichert,
         onPopInvokedWithResult: (hatGepoppt, _) {
           if (!hatGepoppt) _schliessen();
         },
@@ -248,7 +291,9 @@ class _EditorSeiteState extends State<EditorSeite> {
             onPressed: _speichert ? null : _hdrUmschalten,
           ),
         FilledButton(
-          onPressed: _speichert || _rezept.istNeutral ? null : _speichern,
+          onPressed: _speichert || !_geaendert || _rezept.istNeutral
+              ? null
+              : _speichern,
           child: const Text('Speichern'),
         ),
         PopupMenuButton<String>(
@@ -260,6 +305,7 @@ class _EditorSeiteState extends State<EditorSeite> {
               _verhaeltnis = null;
               _aendern(const Rezept());
             }
+            if (w == 'bearbeitung') _aendern(_start);
           },
           itemBuilder: (_) => [
             if (_hatGainmap)
@@ -272,6 +318,11 @@ class _EditorSeiteState extends State<EditorSeite> {
               value: 'zurueck',
               child: Text('Alles zurücksetzen'),
             ),
+            if (_alteKopie != null)
+              const PopupMenuItem(
+                value: 'bearbeitung',
+                child: Text('Zur gespeicherten Bearbeitung'),
+              ),
           ],
         ),
       ],
@@ -281,7 +332,7 @@ class _EditorSeiteState extends State<EditorSeite> {
   Widget _bildflaeche() => Stack(
     fit: StackFit.expand,
     children: [
-      Semantics(label: widget.foto.dateiname, child: const Vorschau()),
+      Semantics(label: _foto?.dateiname, child: const Vorschau()),
       if (_bereich == _Bereich.zuschneiden)
         ZuschnittRahmen(
           seitenverhaeltnis: _rahmen,
@@ -298,7 +349,22 @@ class _EditorSeiteState extends State<EditorSeite> {
           onLongPressStart: (_) => zeigeRezept(const Rezept()),
           onLongPressEnd: (_) => _zeigen(),
         ),
-      if (_speichert) const Center(child: CircularProgressIndicator()),
+      if (_speichert)
+        Center(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 12),
+                  Text(_schritt),
+                ],
+              ),
+            ),
+          ),
+        ),
     ],
   );
 

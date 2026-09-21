@@ -39,6 +39,35 @@ Uint8List? exifAus(Uint8List jpeg) {
   return null;
 }
 
+/// Rezept (JSON) und Prüfsumme des Originals aus dem XMP einer Kopie, die diese App
+/// geschrieben hat — oder null, wenn [jpeg] keine solche Kopie ist.
+({Map<String, dynamic> rezept, String originalSha1})? rezeptAus(
+  Uint8List jpeg,
+) {
+  for (final s in zerlegen(jpeg).$1) {
+    if (!_ist(s, 0xE1, _xmpKennung)) continue;
+    final xml = utf8.decode(
+      s.daten.sublist(_xmpKennung.length),
+      allowMalformed: true,
+    );
+    if (!xml.contains(rezeptNamensraum)) return null;
+    String? wert(String name) =>
+        RegExp('ife:$name="([^"]*)"')
+            .firstMatch(xml)
+            ?.group(1)
+            ?.replaceAll('&quot;', '"')
+            .replaceAll('&lt;', '<')
+            .replaceAll('&amp;', '&');
+    final rezept = wert('recipe'), sha1 = wert('originalSha1');
+    if (rezept == null || sha1 == null) return null;
+    return (
+      rezept: jsonDecode(rezept) as Map<String, dynamic>,
+      originalSha1: sha1,
+    );
+  }
+  return null;
+}
+
 /// Setzt die Orientierung in der EXIF-Nutzlast [exif] auf 1 („normal"): Der
 /// Renderer hat das Bild bereits aufgerichtet (`Geometrie.nachExif`).
 void orientierungNormal(Uint8List exif) {

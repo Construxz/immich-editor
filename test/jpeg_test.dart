@@ -112,4 +112,24 @@ void main() {
     final bild = (await t.runAsync(() => dekodieren(neu)))!;
     expect([bild.width, bild.height], [8, 4]);
   });
+
+  test('rezeptAus liest Rezept und Prüfsumme zurück', () {
+    final kopie = zusammensetzen(
+      ultraHdr,
+      rezept: {
+        'v': 1,
+        'contrast': 0.25,
+        'geometry': {'angle': -2.5},
+      },
+      originalSha1: 'ab+/c=',
+    );
+    final r = rezeptAus(kopie)!;
+    expect(r.originalSha1, 'ab+/c=');
+    expect(r.rezept, {
+      'v': 1,
+      'contrast': 0.25,
+      'geometry': {'angle': -2.5},
+    });
+    expect(rezeptAus(gedreht), isNull); // kein Rezept
+  });
 }

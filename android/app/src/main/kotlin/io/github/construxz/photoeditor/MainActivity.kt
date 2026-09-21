@@ -6,7 +6,9 @@ import android.graphics.BitmapFactory
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.util.Base64
 import org.json.JSONObject
+import java.security.MessageDigest
 import java.io.ByteArrayOutputStream
 
 class MainActivity : FlutterActivity() {
@@ -20,9 +22,24 @@ class MainActivity : FlutterActivity() {
                 when (call.method) {
                     "laden" -> {
                         val hdr = call.argument<Boolean>("hdr")!!
-                        val antwort = Sitzung.laden(call.argument<ByteArray>("original")!!, hdr)
-                        hdrFenster(hdr)
-                        result.success(antwort)
+                        val original = call.argument<ByteArray>("original")!!
+                        // Dekodieren nicht auf dem Haupt-Thread — sonst droht „App reagiert nicht".
+                        Sitzung.hintergrund.post {
+                            val antwort = Sitzung.laden(original, hdr)
+                            runOnUiThread {
+                                hdrFenster(hdr)
+                                result.success(antwort)
+                            }
+                        }
+                    }
+                    "sha1" -> {
+                        val bytes = call.argument<ByteArray>("bytes")!!
+                        Sitzung.hintergrund.post {
+                            val summe = Base64.encodeToString(
+                                MessageDigest.getInstance("SHA-1").digest(bytes), Base64.NO_WRAP,
+                            )
+                            runOnUiThread { result.success(summe) }
+                        }
                     }
                     "hdr" -> {
                         val an = call.argument<Boolean>("an")!!

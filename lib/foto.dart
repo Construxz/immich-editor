@@ -16,3 +16,9 @@ class Foto {
   /// SHA-1 des Originals, Base64.
   final String pruefsumme;
 }
+
+/// Ein Eintrag der Galerie, so knapp, wie die Timeline ihn liefert.
+typedef Kachel = ({String id, double seitenverhaeltnis, int stapel});
+
+/// Ein Monat der Galerie: Beginn (ISO-Datum) und Anzahl der Einträge.
+typedef Monat = ({String beginn, int anzahl});

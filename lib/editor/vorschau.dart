@@ -35,6 +35,10 @@ Future<void> zeigeRezept(Rezept rezept) => rendererKanal.invokeMethod(
 
 Future<void> zeigeHdr(bool an) => rendererKanal.invokeMethod('hdr', {'an': an});
 
+/// SHA-1 (Base64) — wie Immich seine `checksum` berechnet; gerechnet von Android.
+Future<String> sha1(Uint8List bytes) async =>
+    (await rendererKanal.invokeMethod<String>('sha1', {'bytes': bytes}))!;
+
 Future<void> beendeSitzung() => rendererKanal.invokeMethod('beenden');
 
 /// Die native Bildfläche. Hybrid Composition, damit sie eine echte Android-Ansicht ist —

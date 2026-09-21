@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -79,6 +80,28 @@ class Rezept {
     winkel: winkel ?? this.winkel,
     zuschnitt: zuschnitt ?? this.zuschnitt,
   );
+
+  /// Liest ein Rezept, wie [toJson] es schreibt; Unbekanntes wird übergangen.
+  factory Rezept.fromJson(Map<String, dynamic> j) {
+    final g = j['geometry'] as Map<String, dynamic>?;
+    return Rezept(
+      regler: {
+        for (final w in werkzeuge)
+          if (j[w.schluessel] is num)
+            w.schluessel: (j[w.schluessel] as num).toDouble(),
+      },
+      viertel: (g?['quarterTurns'] as num?)?.toInt() ?? 0,
+      spiegeln: g?['flip'] == true,
+      winkel: (g?['angle'] as num?)?.toDouble() ?? 0,
+      zuschnitt: [
+        for (final z in (g?['crop'] as List?) ?? const [0, 0, 1, 1])
+          (z as num).toDouble(),
+      ],
+    );
+  }
+
+  /// Gleich im Sinn des Rezepts (was gespeichert würde).
+  bool gleich(Rezept o) => jsonEncode(toJson()) == jsonEncode(o.toJson());
 
   Map<String, Object> toJson() => {
     'v': 1,

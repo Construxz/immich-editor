@@ -18,6 +18,9 @@ class Immich {
   final String basis;
   final String token;
 
+  /// Eine Verbindung für alle Anfragen (Keep-Alive): spart je Anfrage den TLS-Handshake.
+  final _http = http.Client();
+
   /// Zeitgrenzen: kurze Anfragen, Originale laden, Hochladen.
   static const _kurz = Duration(seconds: 30);
   static const _lang = Duration(minutes: 3);
@@ -48,37 +51,103 @@ class Immich {
   Future<int> hauptversion() async =>
       _json(
             await _warten(
-              http.get(_uri('/server/version'), headers: kopf),
+              _http.get(_uri('/server/version'), headers: kopf),
               _kurz,
             ),
           )['major']
           as int;
 
-  Future<List<Foto>> fotos() async {
+  /// Die Monate der Timeline, neueste zuerst; Stapel zählen einmal.
+  Future<List<Monat>> monate() async {
     final r = await _warten(
-      http.post(
+      _http.get(
+        _uri('/timeline/buckets', {
+          'withStacked': 'true',
+          'visibility': 'timeline',
+        }),
+        headers: kopf,
+      ),
+      _kurz,
+    );
+    return [
+      for (final m in _json(r) as List)
+        (beginn: m['timeBucket'] as String, anzahl: m['count'] as int),
+    ];
+  }
+
+  /// Die Fotos eines Monats, neueste zuerst — von einem Stapel nur das vordere (Videos nicht).
+  Future<List<Kachel>> monat(String beginn) async {
+    final r = await _warten(
+      _http.get(
+        _uri('/timeline/bucket', {
+          'timeBucket': beginn,
+          'withStacked': 'true',
+          'visibility': 'timeline',
+        }),
+        headers: kopf,
+      ),
+      _kurz,
+    );
+    final d = _json(r);
+    final ids = d['id'] as List, bild = d['isImage'] as List;
+    final verhaeltnis = d['ratio'] as List, stapel = d['stack'] as List;
+    return [
+      for (var i = 0; i < ids.length; i++)
+        if (bild[i] == true)
+          (
+            id: ids[i] as String,
+            seitenverhaeltnis: (verhaeltnis[i] as num).toDouble(),
+            stapel: stapel[i] == null ? 1 : int.parse('${stapel[i][1]}'),
+          ),
+    ];
+  }
+
+  /// Was der Editor über ein Foto wissen muss.
+  Future<Foto> foto(String id) async {
+    final a = _json(
+      await _warten(_http.get(_uri('/assets/$id'), headers: kopf), _kurz),
+    );
+    return Foto(
+      id: a['id'],
+      dateiname: a['originalFileName'],
+      aufgenommen: a['fileCreatedAt'],
+      pruefsumme: a['checksum'],
+    );
+  }
+
+  /// Das Asset mit der Prüfsumme [sha1] (Base64), oder null.
+  Future<String?> perPruefsumme(String sha1) async {
+    final r = await _warten(
+      _http.post(
         _uri('/search/metadata'),
         headers: {...kopf, 'Content-Type': 'application/json'},
-        body: jsonEncode({'type': 'IMAGE', 'order': 'desc', 'size': 200}),
+        body: jsonEncode({'checksum': sha1, 'withStacked': true, 'size': 1}),
       ),
       _kurz,
     );
     final items = _json(r)['assets']['items'] as List;
-    return [
-      for (final a in items)
-        Foto(
-          id: a['id'],
-          dateiname: a['originalFileName'],
-          aufgenommen: a['fileCreatedAt'],
-          pruefsumme: a['checksum'],
-        ),
-    ];
+    return items.isEmpty ? null : items.first['id'] as String;
   }
+
+  /// In den Papierkorb — dort bleibt es wiederherstellbar.
+  Future<void> papierkorb(List<String> ids) async => _ok(
+    await _warten(
+      _http.delete(
+        _uri('/assets'),
+        headers: {...kopf, 'Content-Type': 'application/json'},
+        body: jsonEncode({'ids': ids, 'force': false}),
+      ),
+      _kurz,
+    ),
+  );
 
   Uri miniatur(String id) => _uri('/assets/$id/thumbnail');
 
   Future<Uint8List> original(String id) async => _ok(
-    await _warten(http.get(_uri('/assets/$id/original'), headers: kopf), _lang),
+    await _warten(
+      _http.get(_uri('/assets/$id/original'), headers: kopf),
+      _lang,
+    ),
   ).bodyBytes;
 
   /// Lädt ein neues Asset hoch und gibt seine ID zurück.
@@ -95,14 +164,14 @@ class Immich {
         http.MultipartFile.fromBytes('assetData', bytes, filename: dateiname),
       );
     return _json(
-      await _warten(req.send().then(http.Response.fromStream), _lang),
+      await _warten(_http.send(req).then(http.Response.fromStream), _lang),
     )['id'];
   }
 
   /// Stapelt die Assets; das erste liegt vorn.
   Future<void> stapeln(List<String> ids) async => _ok(
     await _warten(
-      http.post(
+      _http.post(
         _uri('/stacks'),
         headers: {...kopf, 'Content-Type': 'application/json'},
         body: jsonEncode({'assetIds': ids}),
@@ -113,7 +182,7 @@ class Immich {
 
   Future<List<String>> albenVon(String id) async {
     final r = await _warten(
-      http.get(_uri('/albums', {'assetId': id}), headers: kopf),
+      _http.get(_uri('/albums', {'assetId': id}), headers: kopf),
       _kurz,
     );
     return [for (final a in jsonDecode(_ok(r).body) as List) a['id'] as String];
@@ -121,7 +190,7 @@ class Immich {
 
   Future<void> insAlbum(String album, List<String> ids) async => _ok(
     await _warten(
-      http.put(
+      _http.put(
         _uri('/albums/$album/assets'),
         headers: {...kopf, 'Content-Type': 'application/json'},
         body: jsonEncode({'ids': ids}),
