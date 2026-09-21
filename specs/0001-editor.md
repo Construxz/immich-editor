@@ -176,7 +176,10 @@ Hauptversion warnen.
 
 **Rezept-Format:** JSON mit Versionsnummer (`v: 1`) im XMP unter eigenem Namensraum
 `https://github.com/Construxz/immich-editor/ns/1.0/` (Präfix `ife`): `ife:recipe` trägt das JSON
-(bisher `{"v":1,"brightness":…}`, −1 … 1), `ife:originalSha1` die SHA-1 des Originals in Base64,
+(bisher `{"v":1,"brightness":…,"geometry":{"quarterTurns":0…3,"flip":…,"angle":−45…45,"crop":[x,y,b,h]}}`;
+Helligkeit −1 … 1; Geometrie nur, wenn sie etwas ändert — Reihenfolge: Vierteldrehungen im
+Uhrzeigersinn, Spiegeln in der gedrehten Ansicht, Geraderichten mit Zoom ohne leere Ecken,
+Zuschnitt 0 … 1 im gedrehten Rahmen; alles nach dem Aufrichten gemäß EXIF), `ife:originalSha1` die SHA-1 des Originals in Base64,
 wie Immich sie als `checksum` führt. Ab dem ersten Release ein Versprechen: spätere Fassungen lesen ältere.
 
 **Getestet wird mit einem eigenen Immich-Benutzer**, damit Versuchskopien und -stapel nicht in

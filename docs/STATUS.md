@@ -13,7 +13,8 @@ Stand: 21.09.2026, nach M1.
     Immich-Hauptversion nicht 3 ist.
   - Galerie: die neuesten 200 Server-Fotos als Raster — ohne Blättern, ohne Gerätefotos, und
     die hinteren Assets eines Stapels erscheinen mit.
-  - Editor: nur ein Helligkeitsregler und ein HDR-Knopf. Vorschau und Export rechnet der native
+  - Editor: Helligkeitsregler, HDR-Knopf und vorläufige Geometrie-Knöpfe (Drehen, Spiegeln,
+    Seitenverhältnis, Geraderichten; D-21). Vorschau und Export rechnet der native
     Renderer (AGSL, `Renderer.kt`); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
     D-20). `minSdk 34`.
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
@@ -25,7 +26,7 @@ Stand: 21.09.2026, nach M1.
     (M2), Zeitgrenzen für Netzwerkanfragen (hängt der Server, dreht die App endlos).
 - Code: `lib/server/` (Immich-Client mit den neun Endpunkten der Spec),
   `lib/gallery/`, `lib/editor/`, `lib/export/`, `lib/foto.dart`; Tests in `test/` (JPEG-Segmente,
-  Orientierung, XMP, Ultra-HDR-Aufbau; Start ohne Sitzung). Keine Google-Play-Dienste, kein Firebase. Konzept in
+  Ultra-HDR-Aufbau, Rezept; Start ohne Sitzung) und `android/app/src/test/` (Geometrie, JVM). Keine Google-Play-Dienste, kein Firebase. Konzept in
   [specs/0001-editor.md](../specs/0001-editor.md).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,
   analyze, test, Debug-APK.

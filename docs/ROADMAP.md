@@ -12,7 +12,8 @@ Teile, in dieser Reihenfolge:
 - 🔶 Nativer Renderer (AGSL) mit HDR-Vorschau als native Ansicht, HDR-Knopf im Editor; Export
   über denselben Renderer; `minSdk 34` (D-17, D-18, D-20). Offen: Instrumented Test für den
   Renderer.
-- ⬜ Zuschneiden, Drehen, Spiegeln, Geraderichten — Gain-Map wird mittransformiert.
+- 🔶 Zuschneiden, Drehen, Spiegeln, Geraderichten — Gain-Map wird mittransformiert (D-21).
+  Offen: Zuschnitt mit Eck-Anfassern (kommt mit der Bedienung).
 - ⬜ Stufe-1-Regler (Spec, *Funktionen*).
 - ⬜ Editor in der Bedienung der Spec (*Bedienung*, nach Google Fotos); Einstellung „HDR".
 - ⬜ Zeitgrenzen und verständliche Fehler bei Netzwerkanfragen.

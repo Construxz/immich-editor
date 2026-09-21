@@ -18,6 +18,8 @@ Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storag
 | [http](https://github.com/dart-lang/http) | Immich-API | BSD-3-Clause | ja |
 | [flutter_secure_storage](https://github.com/juliansteenbakker/flutter_secure_storage) | Anmeldedaten | BSD-3-Clause | ja |
 | [Tink](https://github.com/tink-crypto/tink-java) (`tink-android`) | Verschlüsselung in `flutter_secure_storage`; Google-Bibliothek, lokal, ohne Play-Dienste | Apache-2.0 | ja |
+| [JUnit 4](https://github.com/junit-team/junit4) | nur Tests (JVM), nicht in der App | EPL-1.0 | ja — wird nicht weitergegeben |
+| [org.json](https://github.com/stleary/JSON-java) | nur Tests (JVM): echtes JSON statt Androids Attrappe | Public Domain | ja |
 | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | Modelle auf dem Gerät (M5) | MIT | ja |
 
 ## Modell-Kandidaten (M5)

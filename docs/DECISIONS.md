@@ -7,6 +7,30 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-21: Geometrie für Bild und Gain-Map aus einer Rechnung; EXIF-Orientierung
+
+Umsetzung: `Geometrie.kt` rechnet eine Matrix Quelle → Ausgabe (Vierteldrehungen, Spiegeln in
+der gedrehten Ansicht, Geraderichten mit Zoom ohne leere Ecken, Zuschnitt). Das Bild bekommt sie
+als Shader-Matrix auf der GPU, die Gain-Map dieselbe in ihrer eigenen Auflösung auf der CPU,
+ihre HDR-Kennwerte bleiben. JVM-Tests prüfen Ecken, Drehsinn, Spiegeln, Zuschnitt und dass
+Geraderichten keine leeren Ecken lässt.
+
+Befund: `BitmapFactory` richtet nicht nach EXIF auf — anders als Flutters Dekoder, auf den sich
+M1 verließ. Seit dem nativen Renderer (M2/1) wären hochkant gespeicherte, per EXIF gedrehte Fotos
+quer herausgekommen, weil die Kopie Orientierung 1 trägt. Jetzt ist die EXIF-Orientierung die
+Grund-Geometrie (`nachExif`), die Einstellungen des Nutzers kommen darauf.
+
+Wie geprüft, im Emulator: das Testfoto A mit EXIF-Orientierung 6 (Pixel samt Gain-Map
+unverändert) erscheint richtig gedreht; dazu eine Vierteldrehung, 4:3 und etwa 13°
+Geraderichten, gespeichert: „Gespeichert und geprüft", 3072×2304, EXIF-Orientierung 1, vorn im
+Stapel. Gain-Map der Kopie 697×523 (Seitenverhältnis 1,3327 zu 1,3333 des Bildes),
+`gainmap-max-content-boost` 4,653 (libvips). Passt sie zum Bild? Korrelation Helligkeit ↔
+Gain-Map, je auf 96×96: Original 0,745; Kopie **0,633**; Gegenprobe Gain-Map um 180° gedreht
+−0,033, gespiegelt −0,071.
+
+**Anwenden:** Jede neue Geometrie-Funktion (Perspektive, M2/M3) kommt in `Geometrie.kt` und wirkt
+damit auf beide.
+
 ## 2026-09-21 · D-20: Befund — die HDR-Vorschau wirkt auf dem Pixel
 
 Wie geprüft: App (Stand `b38bde9` + HDR-Knopf) im Release-Build auf dem Pixel 7 Pro des
