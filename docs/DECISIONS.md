@@ -7,6 +7,45 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-16: Ultra HDR — die Kopie behält die Gain-Map (E2)
+
+Umsetzung: Der Kodierkanal bekommt das Original, Android (ab 14, API 34) dekodiert es samt
+Gain-Map; die hängt an der bearbeiteten Bitmap, und `Bitmap.compress` schreibt ein
+Ultra-HDR-JPEG. Tonwert-Änderungen wirken damit auf SDR- und HDR-Darstellung gleich — die
+Gain-Map beschreibt das Verhältnis HDR/SDR, nicht absolute Helligkeit. Unter Android 14 geht die
+Gain-Map verloren (wie in D-12).
+
+Befund zur Ausgabe des Kodierers (Emulator und Pixel 7 Pro, API 37): JFIF, ein eigenes kleines
+EXIF, ein XMP-Paket mit `hdrgm:Version` und Gain-Map-Verzeichnis (`Container:Directory`), ICC,
+ISO-21496-1-Metadaten, MPF hinter den Tabellen; die Gain-Map als zweites JPEG mit eigenem
+`hdrgm`-XMP und ISO-21496-1. Einfach EXIF und Rezept-XMP davorzusetzen ergab je **zwei** EXIF-
+und XMP-Segmente und eine MPF-Größe des Hauptbilds, die unsere Segmente nicht mitzählte. Deshalb
+arbeitet `zusammensetzen` jetzt auf Segmenten: EXIF des Originals ersetzt das des Kodierers, das
+Rezept geht ins vorhandene XMP-Paket, MPF wird angepasst.
+
+Wie geprüft, mit `testfoto-a-hdr2.jpg` (das Testfoto A aus D-12 mit zwei Nullbytes am
+Ende, damit Immich es nicht als Duplikat ablehnt), App im Emulator, Helligkeit +0,33:
+
+- App: „Gespeichert und geprüft" (Byte-Vergleich), 13 s bis zur Meldung.
+- Struktur der Kopie: ein EXIF (das des Originals), ein XMP mit `ife:recipe` **und**
+  `hdrgm:Version`, MPF-Größe des Hauptbilds 2 847 906 = Beginn der Gain-Map; Gain-Map-Metadaten
+  wie im Original (`GainMapMax` 2,217993).
+- **Androids eigener Dekoder** (`BitmapFactory`, vorübergehender Prüfaufruf im Emulator):
+  Original — Gain-Map 697×926, `ratioMax` 4,6525; Kopie — Gain-Map 697×926, `ratioMax` 4,6525;
+  Gegenprobe Kopie aus M1 — keine Gain-Map.
+- Stapel, Aufnahmezeit, Ort wie in D-12.
+- Test `jpeg_test.dart` mit einem winzigen Ultra-HDR-Fixture im selben Aufbau
+  (`test/fixtures/ultrahdr_klein.py`).
+
+Nebenbefunde:
+
+- Pixel-Fotos sind oft **Motion Photos** (Video am Dateiende, `GCamera:MotionPhoto`); die Kopie
+  ist ein Standbild — für eine Bearbeitung richtig.
+- Die Vorschau im Editor ist SDR; Flutter dekodiert ohne Gain-Map.
+
+**Anwenden:** Geometrie-Werkzeuge (M2) müssen die Gain-Map mittransformieren — sonst passt sie
+nicht mehr zum Bild. Eine HDR-Vorschau ist offen.
+
 ## 2026-09-21 · D-15: Doku und Specs auf Englisch (E3)
 
 Das Repo wird öffentlich (D-4), die Immich-Community schreibt Englisch. Entschieden vom

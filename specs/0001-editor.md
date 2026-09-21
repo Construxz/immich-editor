@@ -42,7 +42,9 @@ Gerätegalerie; die Immich-App sichert beide wie jedes andere Foto. Gestapelt wi
 auf dem Server sind — die Prüfsumme im XMP ordnet sie zu. Bis dahin stehen beide kurz
 nebeneinander.
 
-**HDR:** Der Export muss eine vorhandene Gain-Map übertragen (D-8).
+**HDR:** Die Kopie behält die Gain-Map des Originals (Ultra HDR, D-16); Tonwert-Änderungen wirken
+auf SDR- und HDR-Darstellung gleich. Geometrie (Zuschneiden, Drehen, Perspektive) muss die
+Gain-Map mittransformieren. Die Vorschau im Editor zeigt bisher nur SDR.
 
 **Zu prüfen:** ob Immich Gesichter und Suchtreffer gestapelter, nicht vorne liegender Assets
 ausblendet oder doppelt zählt.

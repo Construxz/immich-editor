@@ -38,5 +38,7 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
 
 - Windows, Projekt unter `<Projektordner>`. Shells: PowerShell und Git Bash.
 - Remote: `https://github.com/Construxz/immich-editor.git` (privat bis zum ersten Release, D-4).
+- **Ausprobieren im Emulator** `editor_pixel7pro` (STATUS), `adb` immer mit `-s emulator-5554`.
+  Das Telefon des Besitzers nur nach Rückfrage steuern — er benutzt es nebenher.
 - Werkzeuge: siehe README, *Development*. Installationen, die Administratorrechte, Käufe oder
   Konten brauchen, übernimmt der Besitzer — vorher fragen, nicht selbst anstoßen.

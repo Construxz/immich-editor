@@ -17,11 +17,13 @@ Stand: 21.09.2026, nach M1.
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
     des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,
     Byte für Byte gegenprüfen, vor das Original stapeln, in dessen Alben legen.
-  - **Noch nicht:** erneut bearbeiten (ein Original, das schon im Stapel liegt), Gain-Map (E2),
-    Gerätefotos (M2).
+  - Ultra HDR: Die Kopie behält die Gain-Map des Originals (ab Android 14, D-16); die Vorschau
+    zeigt nur SDR.
+  - **Noch nicht:** erneut bearbeiten (ein Original, das schon im Stapel liegt), Gerätefotos
+    (M2), Zeitgrenzen für Netzwerkanfragen (hängt der Server, dreht die App endlos).
 - Code: `lib/server/` (Immich-Client mit den neun Endpunkten der Spec),
   `lib/gallery/`, `lib/editor/`, `lib/export/`, `lib/foto.dart`; Tests in `test/` (JPEG-Segmente,
-  Orientierung, XMP; Start ohne Sitzung). Keine Google-Play-Dienste, kein Firebase. Konzept in
+  Orientierung, XMP, Ultra-HDR-Aufbau; Start ohne Sitzung). Keine Google-Play-Dienste, kein Firebase. Konzept in
   [specs/0001-editor.md](../specs/0001-editor.md).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,
   analyze, test, Debug-APK.
@@ -46,7 +48,9 @@ Geprüft 21.09.2026 mit `flutter doctor`: keine Befunde.
 | Android Studio | Build 261.26222.65 | `C:\Program Files\Android\Android Studio` |
 | Android SDK | Plattform 37.0, Build-Tools 36.0.0, Platform-Tools 37.0.1, cmdline-tools 23.0, NDK 28.2.13676358 | `%LOCALAPPDATA%\Android\Sdk` |
 | AGP / Gradle / Kotlin | 9.1.0 / 9.3.1 / 2.4.0 | aus dem Flutter-Template |
-| Testgerät | Pixel 7 Pro, USB-Debugging | — |
+| Android SDK Command-line Tools | `android sdk install …` statt `sdkmanager` (der stürzt in 23.0 ab) | `%LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest\bin\android.exe` |
+| Emulator | AVD `editor_pixel7pro`: Pixel 7 Pro, API 37 (`google_apis`, x86_64), 6 GB RAM, Host-GPU, WHPX | `%USERPROFILE%\.android\avd` |
+| Testgerät | Pixel 7 Pro (Android 17) des Besitzers, USB-Debugging — nur nach Rückfrage | — |
 
 Die CI nutzt dieselbe Flutter-Version, fest eingetragen in beiden Workflows, und Temurin 25.
 Flutter aktualisieren heißt: lokal **und** in beiden Workflows ändern.
@@ -55,8 +59,9 @@ Flutter aktualisieren heißt: lokal **und** in beiden Workflows ändern.
 
 Für die Entwicklung gibt es auf dem Server des Besitzers den Benutzer **„Editor Test"**
 (angelegt 21.09.2026): kein Admin, 10 GB Kontingent, eigene Bibliothek. Darin (21.09.2026): zwei
-Testfotos (A, B; D-12) samt je einer bearbeiteten Kopie im Stapel, Album
-„M1-Test" mit allen vier. Server-Adresse, API-Schlüssel (Berechtigung „all", wirkt nur auf die eigene Bibliothek),
+Testfotos (A, B; D-12) und zwei Varianten des Testfoto A
+(`testfoto-a-hdr.jpg`, `testfoto-a-hdr2.jpg`, D-16), jeweils mit bearbeiteter Kopie im Stapel;
+Album „M1-Test" mit den ersten vier. Server-Adresse, API-Schlüssel (Berechtigung „all", wirkt nur auf die eigene Bibliothek),
 E-Mail und Passwort stehen in der lokalen `.env` im Projektordner (`IMMICH_SERVER`,
 `IMMICH_API_KEY`, `IMMICH_TEST_EMAIL`, `IMMICH_TEST_PASSWORD`; von `.gitignore` erfasst).
 Zugriff über `x-api-key` gegen `IMMICH_SERVER/api/…`. Geprüft 21.09.2026: `GET /api/users/me`

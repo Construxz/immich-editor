@@ -28,10 +28,5 @@ Stufe 3 (`patch`), Modelle nach D-6.
 
 ## Offene Entscheidungen
 
-**E2. HDR-Gain-Map übertragen.** ⬜ Siehe D-8 und D-12. Ansatz zu prüfen: Android 14 (API 34)
-hat `Bitmap.getGainmap`/`setGainmap`; die Gain-Map des Originals an die bearbeitete Bitmap hängen
-und prüfen, ob `Bitmap.compress` dann ein Ultra-HDR-JPEG schreibt.
-*Abnahme:* ein Foto mit Gain-Map ist nach der Bearbeitung weiter HDR — vor M2.
-
 **E4. MediaPipe zulässig?** ⬜ Siehe D-6.
 *Abnahme:* entschieden vor M5.
