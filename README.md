@@ -7,7 +7,8 @@ An open-source mobile photo library and editor for Immich.
 
 ## Status
 
-Milestone M0 done: empty app, CI, signed release APKs. No features yet.
+Milestones M0–M1 done: the storage path works end to end (log in, change brightness, upload a
+copy with the recipe in XMP, stack it in front of the original). No real editor or gallery yet.
 
 ## Idea
 

@@ -3,13 +3,25 @@
 **Diese Datei wird überschrieben, nicht fortgeschrieben.** Warum etwas so ist, steht in
 [DECISIONS.md](DECISIONS.md), was noch fehlt, in [ROADMAP.md](ROADMAP.md).
 
-Stand: 21.09.2026, nach M0.
+Stand: 21.09.2026, nach M1.
 
 ## Was es gibt
 
-- **Ein leeres Flutter-Projekt** (Android + iOS), das nur „Editor for Immich" anzeigt, und
-  ein Widget-Test. Application-/Bundle-ID `io.github.construxz.photoeditor`, Dart-Paket
-  `immich_editor` (D-10). Keine Google-Play-Dienste, kein Firebase. Konzept in
+- **Eine Flutter-App** (Android + iOS; Application-/Bundle-ID `io.github.construxz.photoeditor`,
+  Dart-Paket `immich_editor`, D-10), die den Speicherweg durchgeht (D-12):
+  - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
+    Immich-Hauptversion nicht 3 ist.
+  - Galerie: die neuesten 200 Server-Fotos als Raster — ohne Blättern, ohne Gerätefotos, und
+    die hinteren Assets eines Stapels erscheinen mit.
+  - Editor: nur ein Helligkeitsregler; Vorschau und Export über denselben `ColorFilter`.
+  - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
+    des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,
+    Byte für Byte gegenprüfen, vor das Original stapeln, in dessen Alben legen.
+  - **Noch nicht:** erneut bearbeiten (ein Original, das schon im Stapel liegt), Gain-Map (E2),
+    iOS-Kodierung (E5), Gerätefotos (M2).
+- Code: `lib/server/` (Immich-Client mit den neun Endpunkten der Spec),
+  `lib/gallery/`, `lib/editor/`, `lib/export/`, `lib/foto.dart`; Tests in `test/` (JPEG-Segmente,
+  Orientierung, XMP; Start ohne Sitzung). Keine Google-Play-Dienste, kein Firebase. Konzept in
   [specs/0001-editor.md](../specs/0001-editor.md).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,
   analyze, test, Debug-APK.
@@ -42,8 +54,9 @@ Flutter aktualisieren heißt: lokal **und** in beiden Workflows ändern.
 ## Immich-Testbenutzer
 
 Für die Entwicklung gibt es auf dem Server des Besitzers den Benutzer **„Editor Test"**
-(angelegt 21.09.2026): kein Admin, 10 GB Kontingent, eigene Bibliothek — am 21.09.2026 noch
-leer. Server-Adresse, API-Schlüssel (Berechtigung „all", wirkt nur auf die eigene Bibliothek),
+(angelegt 21.09.2026): kein Admin, 10 GB Kontingent, eigene Bibliothek. Darin (21.09.2026): zwei
+Testfotos (A, B; D-12) samt je einer bearbeiteten Kopie im Stapel, Album
+„M1-Test" mit allen vier. Server-Adresse, API-Schlüssel (Berechtigung „all", wirkt nur auf die eigene Bibliothek),
 E-Mail und Passwort stehen in der lokalen `.env` im Projektordner (`IMMICH_SERVER`,
 `IMMICH_API_KEY`, `IMMICH_TEST_EMAIL`, `IMMICH_TEST_PASSWORD`; von `.gitignore` erfasst).
 Zugriff über `x-api-key` gegen `IMMICH_SERVER/api/…`. Geprüft 21.09.2026: `GET /api/users/me`
@@ -53,5 +66,6 @@ Admin-Kontos mit der echten Bibliothek.
 ## Gegen welche Immich-Version geplant wird
 
 Die neun Endpunkte der App sind gegen `open-api/immich-openapi-specs.json` in
-`immich-app/immich`, Zweig `main`, Spec-Version **3.2.0** geprüft (21.09.2026). Der Server
-des Testbenutzers meldet über `GET /api/server/version` **3.1.0** (21.09.2026).
+`immich-app/immich` geprüft: Zweig `main`, Spec-Version **3.2.0**, und Tag `v3.1.0` — in beiden
+gleich, samt Pflichtfeldern (21.09.2026). Der Server des Testbenutzers läuft mit **3.1.0**; gegen
+ihn ist M1 abgenommen (D-12).

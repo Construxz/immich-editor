@@ -7,6 +7,62 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-13: JPEG-Kodierer — der des Systems, nicht Dart (E1)
+
+Wie gemessen: Pixel 7 Pro, Release-Build, ein 12,5-MP-Kamerafoto (3072×4080, Pixel 7 Pro,
+s. D-12), je drei Läufe; Zeiten nach dem ersten Lauf stabil.
+
+| Schritt | Zeit | Größe (Qualität 95) |
+|---|---|---|
+| Dekodieren (`instantiateImageCodec`) | 111–159 ms | |
+| Rendern mit Rezept + RGBA auslesen | 77–89 ms | |
+| **`Bitmap.compress`** über Plattformkanal, inkl. Übergabe von 48 MB RGBA | **248–355 ms** | 2,82 MB |
+| `image` 4.10.1 (reines Dart, `encodeJpg`) | 3 191–3 215 ms | 3,35 MB |
+
+Gewählt: **der Systemkodierer** — zwölfmal schneller, kleinere Dateien, keine Abhängigkeit
+(ein Plattformkanal `immich_editor/jpeg` in `MainActivity.kt`). Preis: je Plattform eine
+Gegenseite; die für iOS fehlt noch (E5 in [ROADMAP.md](ROADMAP.md)).
+
+**Anwenden:** Export kodiert über den Kanal. Der Android-Kodierer schreibt ein eigenes
+sRGB-ICC-Profil; ob Fotos mit Display-P3-Profil farbtreu bleiben, ist nicht geprüft (beide
+Testfotos sind sRGB).
+
+## 2026-09-21 · D-12: Befund — M1 abgenommen: der Speicherweg trägt (D-2 bestätigt)
+
+Wie geprüft, mit dem Testbenutzer „Editor Test" (STATUS) gegen Immich 3.1.0, App im
+Release-Build auf einem Pixel 7 Pro:
+
+- Testfotos von Wikimedia Commons, Pixel 7 Pro, CC BY-SA 4.0 (nur auf dem Testserver, nicht im
+  Repo): „<Ort>" (03.05.2026, mit Ultra-HDR-Gain-Map) und
+  „<Ort>" (30.10.2022). Beide mit EXIF-Zeit samt Zeitzone und GPS,
+  beide im Album „M1-Test".
+- In der App je ein Foto geöffnet, Helligkeit geändert (Testfoto A +0,32, Testfoto B dunkler),
+  gespeichert. Die App lädt die Kopie danach über `/original` und vergleicht sie **Byte für
+  Byte** mit dem Gesendeten, erst dann stapelt sie: „Gespeichert und geprüft" (Testfoto B).
+  Unabhängig davon: SHA-1 der heruntergeladenen Testfoto-A-Kopie = Immichs `checksum`.
+- Per API: Kopie ist `primaryAssetId` des Stapels (2 Assets); `localDateTime`, Zeitzone,
+  Koordinaten und Ort der Kopie gleich denen des Originals; Album „M1-Test" enthält die Kopien.
+  XMP der Kopie enthält `ife:recipe` und `ife:originalSha1` = `checksum` des Originals.
+  Mittlere Helligkeit der Testfoto-A-Kopie +40,6 (erwartet 0,32 × 128 ≈ 40,8): Vorschau und
+  Export rechnen gleich.
+- Der Besitzer hat in Immichs Weboberfläche als Testbenutzer geprüft: Die Stapel werden korrekt
+  angezeigt, die Bearbeitung vorn.
+- Dauer vom Tippen auf „Speichern" bis zurück in der Galerie: 7,5 s (Rendern, Kodieren,
+  Upload, erneuter Download zum Vergleich, Stapel, Alben; WLAN).
+
+Nebenbefunde:
+
+- **Die Gain-Map geht verloren**, wie in D-8 erwartet: Kopien tragen weder MPF noch das
+  Google-XMP des Originals (E2).
+- Das übernommene EXIF enthält die Miniatur (IFD1) des **unbearbeiteten** Originals. Immich
+  erzeugt eigene Vorschauen; andere Betrachter könnten die alte zeigen.
+- `POST /search/metadata` liefert auch die hinteren Assets eines Stapels — die Galerie zeigt
+  Originale derzeit doppelt (M2).
+- Flutter wendet die EXIF-Orientierung beim Dekodieren an (Test `jpeg_test.dart`); die Kopie
+  bekommt deshalb Orientierung 1.
+
+**Anwenden:** Der Weg „neues Asset + Rezept-XMP + Stapel" ist tragfähig; M2 baut darauf.
+
 ## 2026-09-21 · D-11: Befund — M0 abgenommen: signierte APK aus dem Tag läuft auf dem Gerät
 
 Wie geprüft:

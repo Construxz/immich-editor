@@ -133,7 +133,7 @@ einmal** — gehört in den ersten Wurf.
 | `server/` | Immich-Client für neun Endpunkte; Immich-Typen bleiben hier | `http`; Anmeldedaten in `flutter_secure_storage` |
 | `gallery/` | Gerätefotos + Server-Assets, über die Prüfsumme zusammengeführt | `photo_manager` |
 | `editor/` | Rezept-Modell, Vorschau per Fragment-Shader | keine |
-| `export/` | volle Auflösung rendern, JPEG kodieren, EXIF übernehmen, XMP und Gain-Map einfügen | Kodierer offen (E1) |
+| `export/` | volle Auflösung rendern, JPEG kodieren, EXIF übernehmen, XMP und Gain-Map einfügen | Systemkodierer über einen Plattformkanal (D-13) |
 | `stapeln/` | lokal entstandene Kopien nach dem Backup dem Original zuordnen | — |
 
 **Die neun Endpunkte** (geprüft gegen die OpenAPI-Spezifikation 3.2.0): `POST /auth/login`
@@ -144,8 +144,10 @@ einmal** — gehört in den ersten Wurf.
 Client für die ganze API. Beim Anmelden die Server-Version prüfen und bei unbekannter
 Hauptversion warnen.
 
-**Rezept-Format:** JSON mit Versionsnummer (`v: 1`) im XMP unter eigenem Namensraum, dazu die
-Prüfsumme des Originals. Ab dem ersten Release ein Versprechen: spätere Fassungen lesen ältere.
+**Rezept-Format:** JSON mit Versionsnummer (`v: 1`) im XMP unter eigenem Namensraum
+`https://github.com/Construxz/immich-editor/ns/1.0/` (Präfix `ife`): `ife:recipe` trägt das JSON
+(bisher `{"v":1,"brightness":…}`, −1 … 1), `ife:originalSha1` die SHA-1 des Originals in Base64,
+wie Immich sie als `checksum` führt. Ab dem ersten Release ein Versprechen: spätere Fassungen lesen ältere.
 
 **Getestet wird mit einem eigenen Immich-Benutzer**, damit Versuchskopien und -stapel nicht in
 einer echten Bibliothek landen.

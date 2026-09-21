@@ -7,13 +7,6 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 
 ## Meilensteine
 
-**M1. Speicherweg ohne Editor.** ⬜
-Anmelden, ein Server-Foto laden, nur die Helligkeit ändern, als Kopie mit Rezept-XMP hochladen,
-stapeln, Aufnahmezeit/Ort/Alben übernehmen. Prüft die eine Annahme, an der alles hängt (D-2).
-Mit einem eigenen Immich-Testbenutzer.
-*Abnahme:* In Immichs App steht die Bearbeitung vorn im Stapel, am selben Platz in Timeline und
-Karte; die über `/original` wieder geladene Kopie ist Byte für Byte die hochgeladene.
-
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** ⬜
 *Abnahme:* 20 Bilder wählen, ein eigenes Preset anwenden, 20 Stapel entstehen — auch für ein
 Foto, das nur auf dem Gerät lag, sobald die Immich-App es gesichert hat.
@@ -33,10 +26,6 @@ Stufe 3 (`patch`), Modelle nach D-6.
 
 ## Offene Entscheidungen
 
-**E1. JPEG-Kodierer.** ⬜ Dart-eigene Kodierung ist für 12-Megapixel-Bilder vermutlich zu
-langsam, eine native Bibliothek eine Abhängigkeit mehr.
-*Abnahme:* in M1 an einem echten Kamerafoto gemessen, Wahl in DECISIONS.
-
 **E2. HDR-Gain-Map übertragen.** ⬜ Siehe D-8.
 *Abnahme:* ein Foto mit Gain-Map ist nach der Bearbeitung weiter HDR — vor M2.
 
@@ -47,5 +36,6 @@ langsam, eine native Bibliothek eine Abhängigkeit mehr.
 *Abnahme:* entschieden vor M5.
 
 **E5. iOS-Build in der CI.** ⬜ Ein Job auf einem macOS-Runner
-(`flutter build ios --no-codesign`), damit der iOS-Teil nicht unbemerkt bricht.
+(`flutter build ios --no-codesign`), damit der iOS-Teil nicht unbemerkt bricht. Dazu gehört
+die iOS-Seite des Kodierkanals `immich_editor/jpeg` (D-13) — bisher gibt es nur die Android-Seite.
 *Abnahme:* der Job läuft grün, bevor iOS-Nutzer zum Ziel werden.
