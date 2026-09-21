@@ -7,7 +7,7 @@ Stand: 21.09.2026, nach M1.
 
 ## Was es gibt
 
-- **Eine Flutter-App** (Android + iOS; Application-/Bundle-ID `io.github.construxz.photoeditor`,
+- **Eine Flutter-App** (nur Android, D-14; Application-ID `io.github.construxz.photoeditor`,
   Dart-Paket `immich_editor`, D-10), die den Speicherweg durchgeht (D-12):
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
     Immich-Hauptversion nicht 3 ist.
@@ -18,7 +18,7 @@ Stand: 21.09.2026, nach M1.
     des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,
     Byte für Byte gegenprüfen, vor das Original stapeln, in dessen Alben legen.
   - **Noch nicht:** erneut bearbeiten (ein Original, das schon im Stapel liegt), Gain-Map (E2),
-    iOS-Kodierung (E5), Gerätefotos (M2).
+    Gerätefotos (M2).
 - Code: `lib/server/` (Immich-Client mit den neun Endpunkten der Spec),
   `lib/gallery/`, `lib/editor/`, `lib/export/`, `lib/foto.dart`; Tests in `test/` (JPEG-Segmente,
   Orientierung, XMP; Start ohne Sitzung). Keine Google-Play-Dienste, kein Firebase. Konzept in

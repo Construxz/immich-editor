@@ -11,7 +11,7 @@ Lizenzen in [LICENSES.md](../docs/LICENSES.md).
 2. **Dazu, was Google fehlt:** lokale Anpassungen mit Masken (keine Ebenen) und eigene Presets,
    die sich auf viele Bilder zugleich anwenden lassen.
 3. **Alles, was geht, auf dem Gerät gerechnet**, ohne Cloud-Dienst (D-6).
-4. **Eine eigenständige Flutter-App** für Android und iOS, mit eigener Galerie über lokale Fotos
+4. **Eine eigenständige Flutter-App** für Android (iOS nicht, D-14), mit eigener Galerie über lokale Fotos
    **und** den Immich-Server; Bearbeiten ohne Umweg über Teilen, Mehrfachauswahl inklusive (D-1).
 5. **Immich bleibt unverändert** — kein Server-Fork, keine Schemaänderung, kein Eingriff in
    Backup oder Bildverwaltung.
@@ -60,6 +60,31 @@ langfristig oder durch die Community. Heute keine Abstraktion dafür, aber eine 
 alle Server-Aufrufe in `server/`, und **Immich-Typen verlassen dieses Modul nicht**; Galerie und
 Editor arbeiten mit einem eigenen `Foto`-Modell. Das XMP-Rezept ist ohnehin backend-neutral.
 Offen wäre je Backend nur, wie dort Original und Kopie verknüpft werden.
+
+## Bedienung
+
+Aufbau und Gesten wie der Bearbeiten-Modus von Google Fotos (Android, Stand 09/2026; der
+Besitzer hat Bildschirmfotos als Vorlage gezeigt, sie liegen nicht im Repo). Dunkler
+Hintergrund, das Bild füllt die Mitte, alle Bedienelemente unten.
+
+- **Oben:** Schließen (×), Rückgängig und Wiederholen, rechts die Hauptschaltfläche
+  **„Speichern"** — die App speichert immer als Kopie — mit einem ⋮-Menü daneben (etwa
+  „Als Preset sichern", „Zurücksetzen").
+- **Unten, zuunterst:** die Bereiche als waagerecht scrollende Reiter, der aktive als Pille
+  hervorgehoben. Reihenfolge: **Presets** (bei Google „Vorschläge"), **Zuschneiden**,
+  **Anpassen**, **Filter**, später **Markieren** (M3) und **Lokal** (M4).
+- **Darüber die Werkzeuge des Bereichs**, ebenfalls waagerecht scrollend:
+  - *Anpassen:* runde Symbol-Schaltflächen mit Beschriftung — Helligkeit, Kontrast,
+    Weißpunkt, Spitzlichter, Schatten, Schwarzpunkt, Sättigung, Wärme, Färbung, Blautöne,
+    Vignettierung, Schärfe. Ein veränderter Regler ist am Symbol erkennbar.
+  - *Presets* und *Filter:* kleine Vorschaubilder des aktuellen Fotos mit Namen darunter.
+- **Ein Regler** ersetzt die Werkzeugzeile, sobald ein Werkzeug gewählt ist: ein
+  Skalen-Lineal mit Strichen, Nullpunkt in der Mitte, der Wert darüber; Doppeltippen setzt auf 0
+  zurück.
+- **Zuschneiden:** das Bild mit Eck-Anfassern; darüber Seitenverhältnis (Menü: Frei,
+  Original, Quadrat, 5:4, 4:3, 3:2, 16:9 und die Hochformate), Spiegeln, 90° drehen; darunter
+  ein Winkel-Lineal zum Geraderichten (±45°) und „Zurücksetzen".
+- **Vergleichen:** Gedrückthalten auf dem Bild zeigt das Original.
 
 ## Funktionen, nach Aufwand eingeteilt
 

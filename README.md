@@ -1,6 +1,6 @@
 # Editor for Immich
 
-An open-source mobile photo library and editor for Immich.
+An open-source Android photo library and editor for Immich.
 
 > **Unofficial.** This project is not affiliated with, endorsed by, or connected to Immich
 > or FUTO. "Immich" is a trademark of FUTO.
@@ -31,7 +31,6 @@ Required (versions in use: [docs/STATUS.md](docs/STATUS.md)):
   Android Studio is optional, but the easiest way to install the SDK and an emulator
 - **VS Code** with the *Flutter* and *Dart* extensions, or any Flutter-capable editor
 - a **real device** with USB debugging — a real gallery beats an emulator
-- iOS builds need **macOS with Xcode**
 
 Signing keys and `.env` files never go into the repository (see `.gitignore`).
 

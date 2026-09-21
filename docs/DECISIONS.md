@@ -7,6 +7,25 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-15: Doku und Specs auf Englisch (E3)
+
+Das Repo wird öffentlich (D-4), die Immich-Community schreibt Englisch. Entschieden vom
+Besitzer. Die bestehende Doku ist noch Deutsch.
+
+**Anwenden:** Specs, `docs/` und `CLAUDE.md` werden in einem Durchgang übersetzt, spätestens
+bevor das Repo öffentlich wird (M2 in [ROADMAP.md](ROADMAP.md)); bis dahin bleibt die Doku
+einheitlich Deutsch. Code-Bezeichner bleiben, wie sie sind.
+
+## 2026-09-21 · D-14: Nur Android, kein iOS
+
+Der Besitzer hat keine Apple-Geräte und kann iOS weder bauen noch testen; ungetesteter
+iOS-Code wäre ein Versprechen, das niemand prüft. Entschieden vom Besitzer. Der Ordner `ios/`
+ist entfernt, E5 (iOS-Build in der CI) entfällt, ebenso die iOS-Seite des Kodierkanals (D-13).
+
+**Anwenden:** Android-APIs direkt nutzen, wo sie etwas billig lösen (Kodierer, Gain-Map).
+Kommt iOS später — etwa durch die Community —, erzeugt `flutter create --platforms ios .` das
+Gerüst neu; dann braucht jeder Plattformkanal eine Gegenseite.
+
 ## 2026-09-21 · D-13: JPEG-Kodierer — der des Systems, nicht Dart (E1)
 
 Wie gemessen: Pixel 7 Pro, Release-Build, ein 12,5-MP-Kamerafoto (3072×4080, Pixel 7 Pro,
@@ -21,7 +40,7 @@ s. D-12), je drei Läufe; Zeiten nach dem ersten Lauf stabil.
 
 Gewählt: **der Systemkodierer** — zwölfmal schneller, kleinere Dateien, keine Abhängigkeit
 (ein Plattformkanal `immich_editor/jpeg` in `MainActivity.kt`). Preis: je Plattform eine
-Gegenseite; die für iOS fehlt noch (E5 in [ROADMAP.md](ROADMAP.md)).
+Gegenseite (für iOS entfallen, D-14).
 
 **Anwenden:** Export kodiert über den Kanal. Der Android-Kodierer schreibt ein eigenes
 sRGB-ICC-Profil; ob Fotos mit Display-P3-Profil farbtreu bleiben, ist nicht geprüft (beide

@@ -1,6 +1,6 @@
 # Arbeitsanweisung für Agenten
 
-**Editor for Immich** — eine eigenständige Flutter-App (Android + iOS), die über die Immich-API
+**Editor for Immich** — eine eigenständige Flutter-App für Android (kein iOS, D-14), die über die Immich-API
 Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht in
 [specs/0001-editor.md](specs/0001-editor.md), die Begründungen in
 [docs/DECISIONS.md](docs/DECISIONS.md). Vor jeder Arbeit **STATUS, ROADMAP und die Spec lesen.**
@@ -29,7 +29,8 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
 - **Doku nach der Rollenteilung** in der README (*Documentation*): jede Aussage hat genau einen
   Besitzer. Erledigtes verlässt die ROADMAP, das Ergebnis geht mit Datum und Messweg in
   DECISIONS, der Ist-Stand wird in STATUS überschrieben. Danach `python doccheck.py`.
-- Doku-Sprache Deutsch (E3 offen), README englisch.
+- Doku-Sprache wird Englisch (D-15); bis zur Übersetzung in M2 bleibt sie einheitlich Deutsch.
+  README englisch.
 - **Commits:** Dateien einzeln benennen, nie `git add -A`; die Nachricht sagt, was jetzt anders
   ist. Pushen auf `origin` (privat) ist erlaubt; Tags und Releases nur nach Rückfrage.
 
