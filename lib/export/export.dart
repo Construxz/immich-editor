@@ -1,38 +1,24 @@
-import 'dart:ui' as ui;
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
 import '../editor/rezept.dart';
+import '../editor/vorschau.dart';
 import 'jpeg.dart';
 
-const _kanal = MethodChannel('immich_editor/jpeg');
-
-/// Rendert [bild] in voller Auflösung mit [rezept] und gibt ein JPEG zurück,
-/// das EXIF des [original]s und das Rezept als XMP trägt.
+/// Rendert das Original in voller Auflösung mit [rezept] (nativer Renderer, D-17) und gibt ein
+/// JPEG zurück, das EXIF des [original]s und das Rezept als XMP trägt — mit [hdr] als Ultra HDR.
 Future<Uint8List> exportieren(
-  ui.Image bild,
   Rezept rezept,
   Uint8List original,
-  String originalSha1,
-) async {
-  final recorder = ui.PictureRecorder();
-  ui.Canvas(recorder)
-      .drawImage(bild, ui.Offset.zero, ui.Paint()..colorFilter = rezept.filter);
-  final gerendert = await recorder.endRecording().toImage(
-    bild.width,
-    bild.height,
-  );
-  final rgba = await gerendert.toByteData(format: ui.ImageByteFormat.rawRgba);
-  gerendert.dispose();
-
-  final kodiert = await _kanal.invokeMethod<Uint8List>('encode', {
-    'rgba': rgba!.buffer.asUint8List(),
-    'width': bild.width,
-    'height': bild.height,
+  String originalSha1, {
+  required bool hdr,
+}) async {
+  final kodiert = await rendererKanal.invokeMethod<Uint8List>('exportieren', {
+    'rezept': jsonEncode(rezept.toJson()),
     'quality': 95,
-    'original': original,
+    'hdr': hdr,
   });
-
   final exif = exifAus(original);
   if (exif != null) orientierungNormal(exif);
   return zusammensetzen(

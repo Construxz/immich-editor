@@ -1,12 +1,12 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../export/export.dart';
 import '../foto.dart';
+import '../main.dart' show speicher;
 import '../server/immich.dart';
 import 'rezept.dart';
+import 'vorschau.dart';
 
 class EditorSeite extends StatefulWidget {
   const EditorSeite({super.key, required this.immich, required this.foto});
@@ -20,7 +20,7 @@ class EditorSeite extends StatefulWidget {
 
 class _EditorSeiteState extends State<EditorSeite> {
   Uint8List? _original;
-  ui.Image? _bild;
+  var _hdr = true;
   Object? _fehler;
   var _rezept = const Rezept();
   var _speichert = false;
@@ -30,13 +30,13 @@ class _EditorSeiteState extends State<EditorSeite> {
     super.initState();
     () async {
       try {
+        final hdr = await speicher.read(key: 'hdr') != 'aus';
         final original = await widget.immich.original(widget.foto.id);
-        final codec = await ui.instantiateImageCodec(original);
-        final bild = (await codec.getNextFrame()).image;
-        if (!mounted) return bild.dispose();
+        await ladeOriginal(original, hdr: hdr);
+        if (!mounted) return;
         setState(() {
           _original = original;
-          _bild = bild;
+          _hdr = hdr;
         });
       } catch (e) {
         if (mounted) setState(() => _fehler = e);
@@ -46,7 +46,7 @@ class _EditorSeiteState extends State<EditorSeite> {
 
   @override
   void dispose() {
-    _bild?.dispose();
+    beendeSitzung();
     super.dispose();
   }
 
@@ -60,10 +60,10 @@ class _EditorSeiteState extends State<EditorSeite> {
     final foto = widget.foto;
     try {
       final kopie = await exportieren(
-        _bild!,
         _rezept,
         _original!,
         foto.pruefsumme,
+        hdr: _hdr,
       );
       final id = await immich.hochladen(
         kopie,
@@ -92,13 +92,13 @@ class _EditorSeiteState extends State<EditorSeite> {
 
   @override
   Widget build(BuildContext context) {
-    final bild = _bild;
+    final geladen = _original != null;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.foto.dateiname),
         actions: [
           TextButton(
-            onPressed: bild == null || _speichert || _rezept.helligkeit == 0
+            onPressed: !geladen || _speichert || _rezept.helligkeit == 0
                 ? null
                 : _speichern,
             child: const Text('Speichern'),
@@ -107,14 +107,18 @@ class _EditorSeiteState extends State<EditorSeite> {
       ),
       body: _fehler != null
           ? Center(child: Text('$_fehler'))
-          : bild == null || _speichert
+          : !geladen
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 Expanded(
-                  child: ColorFiltered(
-                    colorFilter: _rezept.filter,
-                    child: RawImage(image: bild, fit: BoxFit.contain),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      const Vorschau(),
+                      if (_speichert)
+                        const Center(child: CircularProgressIndicator()),
+                    ],
                   ),
                 ),
                 Padding(
@@ -127,8 +131,14 @@ class _EditorSeiteState extends State<EditorSeite> {
                           value: _rezept.helligkeit,
                           min: -1,
                           max: 1,
-                          onChanged: (v) =>
-                              setState(() => _rezept = Rezept(helligkeit: v)),
+                          onChanged: _speichert
+                              ? null
+                              : (v) {
+                                  setState(
+                                    () => _rezept = Rezept(helligkeit: v),
+                                  );
+                                  zeigeRezept(_rezept);
+                                },
                         ),
                       ),
                     ],
