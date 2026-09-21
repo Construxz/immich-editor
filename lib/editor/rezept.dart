@@ -1,19 +1,45 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
+/// Ein Regler im Bereich „Anpassen": JSON-Schlüssel (wie im Renderer), Name, Symbol.
+typedef Werkzeug = ({String schluessel, String name, IconData symbol});
+
+/// Die Regler der Stufe 1, in der Reihenfolge der Werkzeugleiste (Spec, *Bedienung*).
+const werkzeuge = <Werkzeug>[
+  (schluessel: 'brightness', name: 'Helligkeit', symbol: Icons.brightness_6),
+  (schluessel: 'contrast', name: 'Kontrast', symbol: Icons.contrast),
+  (schluessel: 'whitePoint', name: 'Weißpunkt', symbol: Icons.circle),
+  (schluessel: 'highlights', name: 'Spitzlichter', symbol: Icons.wb_sunny),
+  (schluessel: 'shadows', name: 'Schatten', symbol: Icons.nights_stay),
+  (
+    schluessel: 'blackPoint',
+    name: 'Schwarzpunkt',
+    symbol: Icons.circle_outlined,
+  ),
+  (schluessel: 'saturation', name: 'Sättigung', symbol: Icons.water_drop),
+  (schluessel: 'warmth', name: 'Wärme', symbol: Icons.thermostat),
+  (schluessel: 'tint', name: 'Färbung', symbol: Icons.colorize),
+  (schluessel: 'blueTones', name: 'Blautöne', symbol: Icons.water),
+  (schluessel: 'vignette', name: 'Vignette', symbol: Icons.vignette),
+  (schluessel: 'sharpness', name: 'Schärfe', symbol: Icons.details),
+];
+
 /// Die Einstellungen einer Bearbeitung. Wird als JSON im XMP der Kopie
 /// gespeichert und an den nativen Renderer gegeben; ab dem ersten Release lesen
 /// spätere Fassungen ältere.
+@immutable
 class Rezept {
   const Rezept({
-    this.helligkeit = 0,
+    this.regler = const {},
     this.viertel = 0,
     this.spiegeln = false,
     this.winkel = 0,
     this.zuschnitt = const [0, 0, 1, 1],
   });
 
-  /// −1 … 1; 0 lässt das Bild unverändert.
-  final double helligkeit;
+  /// Werte der [werkzeuge], je −1 … 1; fehlend = 0 = unverändert.
+  final Map<String, double> regler;
 
   /// Vierteldrehungen im Uhrzeigersinn, 0 … 3.
   final int viertel;
@@ -27,22 +53,27 @@ class Rezept {
   /// x, y, Breite, Höhe; 0 … 1 im gedrehten Rahmen.
   final List<double> zuschnitt;
 
-  bool get _geometrieNeutral =>
+  double wert(String schluessel) => regler[schluessel] ?? 0;
+
+  bool get geometrieNeutral =>
       viertel == 0 &&
       !spiegeln &&
       winkel == 0 &&
       zuschnitt.join(',') == '0.0,0.0,1.0,1.0';
 
-  bool get istNeutral => helligkeit == 0 && _geometrieNeutral;
+  bool get istNeutral => geometrieNeutral && regler.values.every((v) => v == 0);
+
+  Rezept mitWert(String schluessel, double wert) =>
+      kopie(regler: {...regler, schluessel: wert});
 
   Rezept kopie({
-    double? helligkeit,
+    Map<String, double>? regler,
     int? viertel,
     bool? spiegeln,
     double? winkel,
     List<double>? zuschnitt,
   }) => Rezept(
-    helligkeit: helligkeit ?? this.helligkeit,
+    regler: regler ?? this.regler,
     viertel: viertel ?? this.viertel,
     spiegeln: spiegeln ?? this.spiegeln,
     winkel: winkel ?? this.winkel,
@@ -51,8 +82,9 @@ class Rezept {
 
   Map<String, Object> toJson() => {
     'v': 1,
-    'brightness': helligkeit,
-    if (!_geometrieNeutral)
+    for (final MapEntry(:key, :value) in regler.entries)
+      if (value != 0) key: value,
+    if (!geometrieNeutral)
       'geometry': {
         'quarterTurns': viertel,
         'flip': spiegeln,

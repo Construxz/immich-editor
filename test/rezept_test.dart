@@ -2,9 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:immich_editor/editor/rezept.dart';
 
 void main() {
-  test('neutral: nur Helligkeit im JSON', () {
-    expect(const Rezept().toJson(), {'v': 1, 'brightness': 0.0});
+  test('neutral: nur die Version im JSON', () {
+    expect(const Rezept().toJson(), {'v': 1});
     expect(const Rezept().istNeutral, isTrue);
+  });
+
+  test('Regler: nur veränderte ins JSON', () {
+    final r = const Rezept().mitWert('contrast', 0.3).mitWert('warmth', 0);
+    expect(r.toJson(), {'v': 1, 'contrast': 0.3});
+    expect(r.istNeutral, isFalse);
   });
 
   test('Geometrie im JSON, wie der Renderer sie liest', () {

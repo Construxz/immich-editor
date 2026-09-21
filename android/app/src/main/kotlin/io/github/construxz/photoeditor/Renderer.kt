@@ -21,19 +21,84 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * Der eine Renderer für Vorschau und Export (D-17): Geometrie und Rezept per AGSL auf der GPU,
+ * Der eine Renderer für Vorschau und Export (D-17): Geometrie und Regler per AGSL auf der GPU,
  * Ergebnis als sRGB-Bitmap. Die Gain-Map bekommt dieselbe Geometrie ([gainmap]).
  */
 object Renderer {
-    // Farbwerte kommen im Farbraum des Ziels (sRGB, nicht linear) an — wie in M1 (D-12).
+    /** Regler des Rezepts (JSON-Schlüssel → Uniform), je −1 … 1, 0 = unverändert (Spec, Stufe 1). */
+    val REGLER = mapOf(
+        "brightness" to "helligkeit", "contrast" to "kontrast", "whitePoint" to "weiss",
+        "blackPoint" to "schwarz", "highlights" to "lichter", "shadows" to "tiefen",
+        "saturation" to "saettigung", "warmth" to "waerme", "tint" to "faerbung",
+        "blueTones" to "blau", "vignette" to "vignette", "sharpness" to "schaerfe",
+    )
+
+    // Farbwerte kommen im Farbraum des Ziels an (sRGB, nicht linear). Weißabgleich rechnet in
+    // linearem Licht, Tonwerte in der wahrgenommenen Helligkeit. Alle Regler auf 0 = unverändert.
     private const val AGSL = """
         uniform shader bild;
-        uniform float helligkeit;
+        uniform float2 groesse; // Ausgabe in Pixeln
+        uniform float helligkeit, kontrast, weiss, schwarz, lichter, tiefen,
+                      saettigung, waerme, faerbung, blau, vignette, schaerfe;
+
+        float3 zuLinear(float3 c) {
+            return mix(c / 12.92, pow((c + 0.055) / 1.055, float3(2.4)), step(0.04045, c));
+        }
+        float3 zuSrgb(float3 c) {
+            c = max(c, 0.0);
+            return mix(c * 12.92, 1.055 * pow(c, float3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+        }
+        float luma(float3 c) { return dot(c, float3(0.2126, 0.7152, 0.0722)); }
+        float farbton(float3 c) { // 0 … 1
+            float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), d = mx - mn;
+            if (d < 1e-5) return 0.0;
+            float h = mx == c.r ? mod((c.g - c.b) / d, 6.0) : mx == c.g ? (c.b - c.r) / d + 2.0 : (c.r - c.g) / d + 4.0;
+            return h / 6.0;
+        }
+        // Anheben (a > 0) zieht Richtung 1, Absenken Richtung 0 — nie über den Rand hinaus.
+        float3 schieben(float3 c, float a) { return a >= 0.0 ? c + a * (1.0 - c) : c + a * c; }
 
         half4 main(float2 p) {
-            half4 c = bild.eval(p);
-            c.rgb = saturate(c.rgb + half(helligkeit * 128.0 / 255.0));
-            return c;
+            float3 c = bild.eval(p).rgb;
+
+            // Schärfe: Unscharfmaske, Radius relativ zur Bildgröße — Vorschau wie Export.
+            if (schaerfe != 0.0) {
+                float r = max(1.0, max(groesse.x, groesse.y) / 2000.0);
+                float3 weich = (bild.eval(p + float2(r, 0)).rgb + bild.eval(p - float2(r, 0)).rgb
+                              + bild.eval(p + float2(0, r)).rgb + bild.eval(p - float2(0, r)).rgb) * 0.25;
+                c += (c - weich) * schaerfe * 1.5;
+            }
+
+            // Wärme und Färbung in linearem Licht.
+            float3 l = zuLinear(saturate(c)) * float3(1.0 + 0.15 * waerme, 1.0 - 0.15 * faerbung, 1.0 - 0.15 * waerme);
+            c = zuSrgb(l);
+
+            // Weiß- und Schwarzpunkt.
+            float sp = 0.15 * schwarz, wp = 1.0 - 0.15 * weiss;
+            c = saturate((c - sp) / (wp - sp));
+
+            // Helligkeit: Mitteltöne, Enden bleiben.
+            c = pow(c, float3(exp2(-helligkeit)));
+
+            // Spitzlichter und Schatten nach Luminanz.
+            float L = luma(c);
+            c = schieben(c, 0.35 * tiefen * (1.0 - smoothstep(0.0, 0.6, L)));
+            c = schieben(c, 0.35 * lichter * smoothstep(0.4, 1.0, L));
+
+            // Kontrast: S-Kurve (mehr) oder zur Mitte hin (weniger).
+            c = kontrast >= 0.0 ? mix(c, c * c * (3.0 - 2.0 * c), kontrast) : 0.5 + (c - 0.5) * (1.0 + 0.6 * kontrast);
+
+            // Sättigung; Blautöne nur um den Farbton Blau.
+            L = luma(c);
+            c = mix(float3(L), c, 1.0 + saettigung);
+            float nahBlau = saturate(1.0 - abs(farbton(c) - 0.6) * 8.0);
+            c = mix(float3(luma(c)), c, 1.0 + blau * nahBlau);
+
+            // Vignette: Ecken dunkler (> 0) oder heller (< 0).
+            float d = length((p / groesse - 0.5) * 2.0) / 1.41421356;
+            c = schieben(c, -0.8 * vignette * smoothstep(0.35, 1.0, d));
+
+            return half4(half3(saturate(c)), 1.0);
         }
     """
 
@@ -50,7 +115,10 @@ object Renderer {
         }
         val shader = RuntimeShader(AGSL).apply {
             setInputShader("bild", bildShader)
-            setFloatUniform("helligkeit", rezept.optDouble("brightness", 0.0).toFloat())
+            setFloatUniform("groesse", breite.toFloat(), hoehe.toFloat())
+            for ((schluessel, uniform) in REGLER) {
+                setFloatUniform(uniform, rezept.optDouble(schluessel, 0.0).toFloat().coerceIn(-1f, 1f))
+            }
         }
 
         val reader = ImageReader.newInstance(

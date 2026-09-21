@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../editor/editor_seite.dart';
 import '../foto.dart';
+import '../main.dart' show speicher;
 import '../server/immich.dart';
 
 // ponytail: nur die neuesten 200 Server-Fotos; Blättern und lokale Fotos in M2.
@@ -21,6 +22,13 @@ class GalerieSeite extends StatefulWidget {
 
 class _GalerieSeiteState extends State<GalerieSeite> {
   late Future<List<Foto>> _fotos = widget.immich.fotos();
+  var _hdr = true;
+
+  @override
+  void initState() {
+    super.initState();
+    speicher.read(key: 'hdr').then((w) => setState(() => _hdr = w != 'aus'));
+  }
 
   Future<void> _oeffnen(Foto foto) async {
     await Navigator.of(context).push(
@@ -37,10 +45,23 @@ class _GalerieSeiteState extends State<GalerieSeite> {
       appBar: AppBar(
         title: const Text('Editor for Immich'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Abmelden',
-            onPressed: widget.onAbmelden,
+          PopupMenuButton<String>(
+            tooltip: 'Mehr',
+            onSelected: (w) {
+              if (w == 'abmelden') widget.onAbmelden();
+              if (w == 'hdr') {
+                setState(() => _hdr = !_hdr);
+                speicher.write(key: 'hdr', value: _hdr ? 'an' : 'aus');
+              }
+            },
+            itemBuilder: (_) => [
+              CheckedPopupMenuItem(
+                value: 'hdr',
+                checked: _hdr,
+                child: const Text('HDR (Ultra HDR erhalten)'),
+              ),
+              const PopupMenuItem(value: 'abmelden', child: Text('Abmelden')),
+            ],
           ),
         ],
       ),
@@ -65,6 +86,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                 widget.immich.miniatur(fotos[i].id).toString(),
                 headers: widget.immich.kopf,
                 fit: BoxFit.cover,
+                semanticLabel: fotos[i].dateiname,
               ),
             ),
           );

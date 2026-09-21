@@ -28,6 +28,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     // key.properties entsteht nur in der CI aus den Secrets (release.yml) und liegt nie im Repo.
@@ -66,4 +67,7 @@ dependencies {
     // nur für JVM-Tests (src/test); nicht in der App
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20250517")
+    // Renderer-Tests laufen im Emulator (AGSL braucht die GPU): gradlew connectedDebugAndroidTest
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
 }
