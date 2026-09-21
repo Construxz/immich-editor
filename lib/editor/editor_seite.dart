@@ -363,6 +363,8 @@ class _EditorSeiteState extends State<EditorSeite> {
           anzeige: 1,
           einheit: '°',
           strich: 1,
+          stufe: 0.1,
+          fang: 0.5,
           onChanged: (v) => _aendern(_rezept.kopie(winkel: v), merken: false),
           onEnde: _merken,
         ),

@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+/// Rastet einen Rohwert auf die angezeigte [stufe] und — innerhalb von [fang] angezeigten
+/// Einheiten um 0 — auf 0 ein. So ist, was als 0 dasteht, auch 0 (kein „verändert"-Punkt).
+double rasten(
+  double roh, {
+  required double anzeige,
+  required double stufe,
+  required double fang,
+}) {
+  final angezeigt = (roh * anzeige / stufe).round() * stufe;
+  return angezeigt.abs() <= fang ? 0 : angezeigt / anzeige;
+}
 
 /// Skalen-Lineal wie bei Google Fotos: Die Striche wandern unter einer festen Mitte,
-/// der Wert steht darüber. Doppeltippen setzt auf 0 zurück.
+/// der Wert steht darüber. Die Null ist magnetisch; Doppeltippen setzt auf 0 zurück.
 class Lineal extends StatefulWidget {
   const Lineal({
     super.key,
@@ -13,6 +26,8 @@ class Lineal extends StatefulWidget {
     this.anzeige = 100,
     this.einheit = '',
     this.strich = 5,
+    this.stufe = 1,
+    this.fang = 2,
   });
 
   final double wert, min, max;
@@ -28,6 +43,9 @@ class Lineal extends StatefulWidget {
   /// Angezeigte Einheiten je Strich.
   final double strich;
 
+  /// Feinste angezeigte Stufe (Regler 1, Winkel 0,1°) und Fangbereich der Null.
+  final double stufe, fang;
+
   static const _pixelProStrich = 10.0;
 
   double get _pixelProWert => _pixelProStrich / strich * anzeige;
@@ -39,7 +57,7 @@ class Lineal extends StatefulWidget {
 class _LinealState extends State<Lineal> {
   // Während des Ziehens zählt der eigene Wert: kommen mehrere Züge im selben Frame, ginge
   // sonst Bewegung verloren, weil jeder vom alten widget.wert aus rechnete.
-  var _wert = 0.0;
+  var _roh = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -47,12 +65,19 @@ class _LinealState extends State<Lineal> {
     final farbe = Theme.of(context).colorScheme;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onHorizontalDragStart: (_) => _wert = w.wert,
+      onHorizontalDragStart: (_) => _roh = w.wert,
       onHorizontalDragUpdate: (d) {
-        _wert = (_wert - d.delta.dx / w._pixelProWert)
+        _roh = (_roh - d.delta.dx / w._pixelProWert)
             .clamp(w.min, w.max)
             .toDouble();
-        w.onChanged(_wert);
+        final neu = rasten(
+          _roh,
+          anzeige: w.anzeige,
+          stufe: w.stufe,
+          fang: w.fang,
+        );
+        if (neu == 0 && w.wert != 0) HapticFeedback.selectionClick();
+        if (neu != w.wert) w.onChanged(neu);
       },
       onHorizontalDragEnd: (_) => w.onEnde?.call(),
       onDoubleTap: () {
@@ -64,7 +89,7 @@ class _LinealState extends State<Lineal> {
         child: Column(
           children: [
             Text(
-              '${(w.wert * w.anzeige).round()}${w.einheit}',
+              '${(w.wert * w.anzeige).toStringAsFixed(w.stufe < 1 ? 1 : 0)}${w.einheit}',
               style: TextStyle(color: farbe.primary, fontSize: 13),
             ),
             const SizedBox(height: 6),
