@@ -112,8 +112,20 @@ class Immich {
       dateiname: a['originalFileName'],
       aufgenommen: a['fileCreatedAt'],
       pruefsumme: a['checksum'],
+      stapelVorn: a['stack']?['primaryAssetId'],
     );
   }
+
+  /// Die ersten 64 KB des Originals — genug für EXIF und XMP.
+  Future<Uint8List> anfang(String id) async => _ok(
+    await _warten(
+      _http.get(
+        _uri('/assets/$id/original'),
+        headers: {...kopf, 'Range': 'bytes=0-65535'},
+      ),
+      _kurz,
+    ),
+  ).bodyBytes;
 
   /// Das Asset mit der Prüfsumme [sha1] (Base64), oder null.
   Future<String?> perPruefsumme(String sha1) async {

@@ -11,12 +11,14 @@ const _mpfKennung = 'MPF\x00';
 /// Ein Segment im Kopf eines JPEG: Marker (etwa 0xE1) und Nutzlast ohne Längenfeld.
 typedef Segment = ({int marker, Uint8List daten});
 
-/// Zerlegt [jpeg] in die Segmente vor den Bilddaten und den Rest ab SOS.
+/// Zerlegt [jpeg] in die Segmente vor den Bilddaten und den Rest ab SOS. Verträgt auch den
+/// Anfang einer Datei (Teilabruf): ein abgeschnittenes Segment endet die Liste.
 (List<Segment>, Uint8List) zerlegen(Uint8List jpeg) {
   final segmente = <Segment>[];
   var i = 2;
-  while (jpeg[i] == 0xFF && jpeg[i + 1] != 0xDA) {
+  while (i + 4 <= jpeg.length && jpeg[i] == 0xFF && jpeg[i + 1] != 0xDA) {
     final laenge = (jpeg[i + 2] << 8) | jpeg[i + 3];
+    if (i + 2 + laenge > jpeg.length) break;
     segmente.add((
       marker: jpeg[i + 1],
       daten: Uint8List.sublistView(jpeg, i + 4, i + 2 + laenge),

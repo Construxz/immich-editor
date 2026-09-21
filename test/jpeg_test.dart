@@ -132,4 +132,17 @@ void main() {
     });
     expect(rezeptAus(gedreht), isNull); // kein Rezept
   });
+
+  test('rezeptAus liest auch aus dem Anfang einer Datei', () {
+    final kopie = zusammensetzen(ultraHdr, rezept: {'v': 1}, originalSha1: 's');
+    final xmpEnde = kopie.length ~/ 2; // irgendwo hinter dem XMP abgeschnitten
+    expect(
+      rezeptAus(Uint8List.sublistView(kopie, 0, xmpEnde))?.originalSha1,
+      's',
+    );
+    expect(
+      rezeptAus(Uint8List.sublistView(kopie, 0, 30)),
+      isNull,
+    ); // mitten im EXIF
+  });
 }

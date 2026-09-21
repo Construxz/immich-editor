@@ -208,9 +208,17 @@ class _EditorSeiteState extends State<EditorSeite> {
       for (final album in await immich.albenVon(foto.id)) {
         await immich.insAlbum(album, [id]);
       }
-      // Die bisherige Kopie steht jetzt allein (Immich löst ihren Stapel auf).
-      final alt = _alteKopie;
-      if (alt != null) await immich.papierkorb([alt.id]);
+      // Frühere Kopien stünden jetzt allein (Immich löst den alten Stapel auf): die geöffnete
+      // und die, die bisher vorn lag — diese nur, wenn sie eine Kopie dieser App ist.
+      final weg = {?_alteKopie?.id};
+      final vorn = foto.stapelVorn;
+      if (vorn != null &&
+          vorn != foto.id &&
+          !weg.contains(vorn) &&
+          rezeptAus(await immich.anfang(vorn)) != null) {
+        weg.add(vorn);
+      }
+      if (weg.isNotEmpty) await immich.papierkorb(weg.toList());
 
       meldung.showSnackBar(
         const SnackBar(content: Text('Gespeichert und geprüft')),

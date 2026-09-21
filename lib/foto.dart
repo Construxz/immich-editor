@@ -5,6 +5,7 @@ class Foto {
     required this.dateiname,
     required this.aufgenommen,
     required this.pruefsumme,
+    this.stapelVorn,
   });
 
   final String id;
@@ -15,6 +16,9 @@ class Foto {
 
   /// SHA-1 des Originals, Base64.
   final String pruefsumme;
+
+  /// Was vorn im Stapel liegt, wenn das Foto gestapelt ist.
+  final String? stapelVorn;
 }
 
 /// Ein Eintrag der Galerie, so knapp, wie die Timeline ihn liefert.
