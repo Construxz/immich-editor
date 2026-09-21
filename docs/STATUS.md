@@ -39,7 +39,19 @@ Geprüft 21.09.2026 mit `flutter doctor`: keine Befunde.
 Die CI nutzt dieselbe Flutter-Version, fest eingetragen in beiden Workflows, und Temurin 25.
 Flutter aktualisieren heißt: lokal **und** in beiden Workflows ändern.
 
+## Immich-Testbenutzer
+
+Für die Entwicklung gibt es auf dem Server des Besitzers den Benutzer **„Editor Test"**
+(angelegt 21.09.2026): kein Admin, 10 GB Kontingent, eigene Bibliothek — am 21.09.2026 noch
+leer. Server-Adresse, API-Schlüssel (Berechtigung „all", wirkt nur auf die eigene Bibliothek),
+E-Mail und Passwort stehen in der lokalen `.env` im Projektordner (`IMMICH_SERVER`,
+`IMMICH_API_KEY`, `IMMICH_TEST_EMAIL`, `IMMICH_TEST_PASSWORD`; von `.gitignore` erfasst).
+Zugriff über `x-api-key` gegen `IMMICH_SERVER/api/…`. Geprüft 21.09.2026: `GET /api/users/me`
+liefert „Editor Test", kein Admin. **Nur diesen Zugang verwenden**, nie einen Schlüssel des
+Admin-Kontos mit der echten Bibliothek.
+
 ## Gegen welche Immich-Version geplant wird
 
 Die neun Endpunkte der App sind gegen `open-api/immich-openapi-specs.json` in
-`immich-app/immich`, Zweig `main`, Spec-Version **3.2.0** geprüft (21.09.2026).
+`immich-app/immich`, Zweig `main`, Spec-Version **3.2.0** geprüft (21.09.2026). Der Server
+des Testbenutzers meldet über `GET /api/server/version` **3.1.0** (21.09.2026).
