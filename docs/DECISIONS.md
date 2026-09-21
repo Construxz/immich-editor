@@ -7,6 +7,37 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-18: Mindestens Android 14 (API 34)
+
+AGSL-Shader (D-17) gibt es ab Android 13, die Gain-Map-API und HDR-Fenster ab Android 14. Mit
+Android 14 als Untergrenze gibt es einen Weg statt zwei; Android 14 ist von 2023. Entschieden vom
+Besitzer.
+
+**Anwenden:** `minSdk = 34`; kein Code für ältere Versionen.
+
+## 2026-09-21 · D-17: Renderer nativ in Android — für eine echte HDR-Vorschau
+
+Befund: Flutter kann auf Android kein HDR darstellen — Wide Gamut gibt es nur auf iOS, Gain-Maps
+gar nicht (Flutter-Doku, Stand 3.47). Immichs Maintainer kamen zum selben Schluss: „Displaying
+Ultra HDR images likely requires us to write a custom image library backed by native
+Kotlin/Swift viewers" ([immich#7262](https://github.com/immich-app/immich/discussions/7262),
+März 2025); die Flutter-Galerie Aves wartet seit 2023 auf Flutter
+([aves#838](https://github.com/deckerst/aves/issues/838)).
+
+Der Besitzer will eine HDR-Vorschau beim Bearbeiten wie in Google Fotos — damit deren Nutzer
+ohne Verlust wechseln können — und HDR in den Einstellungen abschaltbar.
+
+Entscheidung: **Die Bildberechnung lebt in Android** (Kotlin, AGSL-Shader auf der GPU), für
+Vorschau und Export — weiter ein Renderer (D-2). Die Bildfläche im Editor ist eine native
+Android-Ansicht im HDR-Fenster; Android zeigt ein Bild mit Gain-Map selbst in HDR. Geometrie
+wirkt mit derselben Rechnung auf Bild und Gain-Map. Flutter bleibt für Bedienung, Galerie,
+Server und das Zusammensetzen der Datei (`jpeg.dart`); das Rezept wandert als JSON über einen
+Kanal. Ersetzt „Vorschau per Fragment-Shader" der Spec.
+
+**Anwenden:** Bildmathematik in AGSL/Kotlin; Tests dafür laufen als Instrumented Tests im
+Emulator. Die HDR-Darstellung selbst lässt sich nur auf einem Gerät mit HDR-Display prüfen
+(Pixel des Besitzers, nach Rückfrage).
+
 ## 2026-09-21 · D-16: Ultra HDR — die Kopie behält die Gain-Map (E2)
 
 Umsetzung: Der Kodierkanal bekommt das Original, Android (ab 14, API 34) dekodiert es samt

@@ -43,8 +43,9 @@ auf dem Server sind — die Prüfsumme im XMP ordnet sie zu. Bis dahin stehen be
 nebeneinander.
 
 **HDR:** Die Kopie behält die Gain-Map des Originals (Ultra HDR, D-16); Tonwert-Änderungen wirken
-auf SDR- und HDR-Darstellung gleich. Geometrie (Zuschneiden, Drehen, Perspektive) muss die
-Gain-Map mittransformieren. Die Vorschau im Editor zeigt bisher nur SDR.
+auf SDR- und HDR-Darstellung gleich, Geometrie (Zuschneiden, Drehen, Perspektive) wirkt mit
+derselben Rechnung auf Bild und Gain-Map. Die Vorschau zeigt HDR, wie Google Fotos (D-17).
+**Abschaltbar** in den Einstellungen („HDR"): dann SDR-Vorschau und Kopien ohne Gain-Map.
 
 **Zu prüfen:** ob Immich Gesichter und Suchtreffer gestapelter, nicht vorne liegender Assets
 ausblendet oder doppelt zählt.
@@ -69,6 +70,7 @@ Aufbau und Gesten wie der Bearbeiten-Modus von Google Fotos (Android, Stand 09/2
 Besitzer hat Bildschirmfotos als Vorlage gezeigt, sie liegen nicht im Repo). Dunkler
 Hintergrund, das Bild füllt die Mitte, alle Bedienelemente unten.
 
+- **Galerie, oben rechts:** ⋮-Menü mit Einstellungen (HDR an/aus) und Abmelden.
 - **Oben:** Schließen (×), Rückgängig und Wiederholen, rechts die Hauptschaltfläche
   **„Speichern"** — die App speichert immer als Kopie — mit einem ⋮-Menü daneben (etwa
   „Als Preset sichern", „Zurücksetzen").
@@ -92,7 +94,7 @@ Hintergrund, das Bild füllt die Mitte, alle Bedienelemente unten.
 
 Vorbild ist der Bearbeiten-Bereich von Google Fotos (Stand 09/2026), ohne dessen Cloud-KI.
 
-**Stufe 1 — reine Rechnung.** Ein Shader, ein Rezept-Eintrag. Der Kern.
+**Stufe 1 — reine Rechnung.** Ein AGSL-Shader, ein Rezept-Eintrag. Der Kern.
 
 | Funktion | Umsetzung |
 |---|---|
@@ -159,7 +161,7 @@ einmal** — gehört in den ersten Wurf.
 |---|---|---|
 | `server/` | Immich-Client für neun Endpunkte; Immich-Typen bleiben hier | `http`; Anmeldedaten in `flutter_secure_storage` |
 | `gallery/` | Gerätefotos + Server-Assets, über die Prüfsumme zusammengeführt | `photo_manager` |
-| `editor/` | Rezept-Modell, Vorschau per Fragment-Shader | keine |
+| `editor/` | Rezept-Modell und Bedienung (Flutter); Renderer für Vorschau und Export nativ in Android — AGSL-Shader, Bildfläche als native Ansicht im HDR-Fenster (D-17) | keine |
 | `export/` | volle Auflösung rendern, JPEG kodieren, EXIF übernehmen, XMP und Gain-Map einfügen | Systemkodierer über einen Plattformkanal (D-13) |
 | `stapeln/` | lokal entstandene Kopien nach dem Backup dem Original zuordnen | — |
 

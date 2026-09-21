@@ -8,9 +8,21 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 ## Meilensteine
 
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** ⬜
-Editor in der Bedienung der Spec (*Bedienung*, nach Google Fotos).
+Teile, in dieser Reihenfolge:
+- ⬜ Nativer Renderer (AGSL) mit HDR-Vorschau als native Ansicht; Export über denselben Renderer;
+  `minSdk 34` (D-17, D-18).
+- ⬜ Zuschneiden, Drehen, Spiegeln, Geraderichten — Gain-Map wird mittransformiert.
+- ⬜ Stufe-1-Regler (Spec, *Funktionen*).
+- ⬜ Editor in der Bedienung der Spec (*Bedienung*, nach Google Fotos); Einstellung „HDR".
+- ⬜ Zeitgrenzen und verständliche Fehler bei Netzwerkanfragen.
+- ⬜ Galerie: Gerätefotos und Server, über die Prüfsumme zusammengeführt, Stapel nur einmal;
+  Blättern durch große Bibliotheken; Mehrfachauswahl.
+- ⬜ Presets: speichern, auf viele Bilder anwenden; Gerätefotos später stapeln (Spec, *Speicherweg*).
+
 *Abnahme:* 20 Bilder wählen, ein eigenes Preset anwenden, 20 Stapel entstehen — auch für ein
-Foto, das nur auf dem Gerät lag, sobald die Immich-App es gesichert hat.
+Foto, das nur auf dem Gerät lag, sobald die Immich-App es gesichert hat. Auf dem Pixel zeigt die
+Vorschau eines Ultra-HDR-Fotos HDR, auch nach Zuschneiden und Drehen, und die Kopie ist Ultra
+HDR mit passender Gain-Map; mit „HDR" aus entstehen SDR-Kopien.
 → erstes Release; Repo wird öffentlich (D-4), vorher Mail an Immich (D-5) und die Doku ins
 Englische übersetzt (D-15).
 
