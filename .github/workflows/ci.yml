@@ -22,5 +22,6 @@ jobs:
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
-      - run: cd android && ./gradlew :app:testDebugUnitTest
       - run: flutter build apk --debug
+      # gradlew erzeugt Flutter erst beim Build (nicht im Repo)
+      - run: cd android && ./gradlew :app:testDebugUnitTest
