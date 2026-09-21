@@ -23,9 +23,8 @@ Vorschlag und Entscheidung des Besitzers:
 - **Netz:** Ob Originale und Uploads auch über mobile Daten laufen oder nur im WLAN, entscheidet
   der Nutzer in den Einstellungen.
 
-Offen (Rückfrage an den Besitzer, 21.09.2026): Soll eine Bearbeitung eines *nur online*
-liegenden Fotos wie bisher direkt auf den Server (und nur dort liegen), oder ebenfalls erst
-lokal gespeichert, von der Immich-App gesichert und danach lokal wieder entfernt werden?
+Offen: wohin die Bearbeitung eines *nur online* liegenden Fotos geht — E6 in
+[ROADMAP.md](ROADMAP.md).
 
 **Anwenden:** Galerie mit Gerätefotos (M2) baut darauf; Einstellungen „Mobile Daten" und
 „Bearbeitungen lokaler Fotos: Gerät / direkt auf den Server".
