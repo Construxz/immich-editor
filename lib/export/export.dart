@@ -30,12 +30,15 @@ Future<Uint8List> exportieren(
     'width': bild.width,
     'height': bild.height,
     'quality': 95,
+    'original': original,
   });
 
-  final exif = exifSegment(original);
+  final exif = exifAus(original);
   if (exif != null) orientierungNormal(exif);
-  return einsetzen(kodiert!, [
-    ?exif,
-    xmpSegment(rezept.toJson(), originalSha1),
-  ]);
+  return zusammensetzen(
+    kodiert!,
+    exif: exif,
+    rezept: rezept.toJson(),
+    originalSha1: originalSha1,
+  );
 }
