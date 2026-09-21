@@ -9,10 +9,10 @@ Stand: 21.09.2026.
 
 - **Kein Code.** Das Projekt ist in der Planung; Konzept in
   [specs/0001-editor.md](../specs/0001-editor.md).
-- Lokales Git-Repository, Zweig `main`, **kein Remote**. Geplant: privat unter `Construxz`,
+- Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git` (privat, am 21.09.2026 noch leer),
   öffentlich ab dem ersten Release (D-4).
 - `LICENSE` (AGPL-3.0), `README.md`, `.gitignore` für Signierschlüssel und `.env`,
-  `doccheck.py`.
+  `doccheck.py`, `CLAUDE.md` (Arbeitsanweisung für Agenten).
 
 ## Entwicklungsumgebung
 

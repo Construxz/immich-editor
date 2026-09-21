@@ -45,6 +45,7 @@ The project docs are in German. Every statement lives in exactly one file; the o
 | [docs/ROADMAP.md](docs/ROADMAP.md) | what is **open**: milestones and open decisions, each with acceptance criteria | deleting what is done |
 | [docs/LICENSES.md](docs/LICENSES.md) | register of dependencies, models and references with their licenses | adding entries |
 | [specs/0001-editor.md](specs/0001-editor.md) | the concept: scope, storage path, gallery, features, structure | one spec per feature |
+| [CLAUDE.md](CLAUDE.md) | working rules for coding agents: constraints, workflow, environment | editing when a rule changes |
 
 Check the docs with `python doccheck.py` (standard library only): broken links, dead anchors,
 duplicate item numbers, files without an owner entry.
