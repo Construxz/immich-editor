@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+
+      - name: Signierschlüssel aus den Secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_BASE64" || { echo "Secret ANDROID_KEYSTORE_BASE64 fehlt"; exit 1; }
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload.jks
+          cat > android/key.properties <<PROPS
+          storeFile=upload.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          PROPS
+
+      - run: flutter pub get
+      - name: APKs bauen
+        run: |
+          V="--build-name=${GITHUB_REF_NAME#v} --build-number=${{ github.run_number }}"
+          flutter build apk --release --split-per-abi $V
+          flutter build apk --release $V
+
+      - name: Umbenennen und Prüfsummen
+        run: |
+          mkdir dist
+          cd build/app/outputs/flutter-apk
+          for f in app-*release.apk; do
+            abi=${f#app-}; abi=${abi%release.apk}; abi=${abi%-}
+            cp "$f" "../../../../dist/immich-editor-$GITHUB_REF_NAME-${abi:-universal}.apk"
+          done
+          cd ../../../../dist && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt
+
+      - name: GitHub-Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --generate-notes

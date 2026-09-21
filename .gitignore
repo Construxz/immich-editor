@@ -4,3 +4,10 @@ key.properties
 *.keystore
 .env
 .env.*
+
+# Flutter/Dart
+.dart_tool/
+build/
+.flutter-plugins-dependencies
+*.iml
+.idea/
