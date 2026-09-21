@@ -52,6 +52,13 @@ object Sitzung {
         return mapOf("hatGainmap" to (quelle?.gainmap != null))
     }
 
+    val hatGainmap get() = quelle?.gainmap != null
+
+    fun setzeHdr(an: Boolean) {
+        hdr = an
+        neuRendern()
+    }
+
     fun setzeRezept(json: String) {
         rezept = JSONObject(json)
         neuRendern()

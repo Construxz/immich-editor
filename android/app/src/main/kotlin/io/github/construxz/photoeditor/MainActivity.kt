@@ -21,10 +21,14 @@ class MainActivity : FlutterActivity() {
                     "laden" -> {
                         val hdr = call.argument<Boolean>("hdr")!!
                         val antwort = Sitzung.laden(call.argument<ByteArray>("original")!!, hdr)
-                        // HDR-Fenster nur, wenn es etwas zu zeigen gibt (D-17).
-                        window.colorMode = if (hdr && antwort["hatGainmap"] == true)
-                            ActivityInfo.COLOR_MODE_HDR else ActivityInfo.COLOR_MODE_DEFAULT
+                        hdrFenster(hdr)
                         result.success(antwort)
+                    }
+                    "hdr" -> {
+                        val an = call.argument<Boolean>("an")!!
+                        Sitzung.setzeHdr(an)
+                        hdrFenster(an)
+                        result.success(null)
                     }
                     "rezept" -> {
                         Sitzung.setzeRezept(call.argument<String>("rezept")!!)
@@ -52,6 +56,12 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    /** HDR-Fenster nur, wenn es etwas zu zeigen gibt (D-17). */
+    private fun hdrFenster(an: Boolean) {
+        window.colorMode = if (an && Sitzung.hatGainmap)
+            ActivityInfo.COLOR_MODE_HDR else ActivityInfo.COLOR_MODE_DEFAULT
     }
 
     /**

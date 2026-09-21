@@ -21,6 +21,7 @@ class EditorSeite extends StatefulWidget {
 class _EditorSeiteState extends State<EditorSeite> {
   Uint8List? _original;
   var _hdr = true;
+  var _hatGainmap = false;
   Object? _fehler;
   var _rezept = const Rezept();
   var _speichert = false;
@@ -32,11 +33,12 @@ class _EditorSeiteState extends State<EditorSeite> {
       try {
         final hdr = await speicher.read(key: 'hdr') != 'aus';
         final original = await widget.immich.original(widget.foto.id);
-        await ladeOriginal(original, hdr: hdr);
+        final hatGainmap = await ladeOriginal(original, hdr: hdr);
         if (!mounted) return;
         setState(() {
           _original = original;
           _hdr = hdr;
+          _hatGainmap = hatGainmap;
         });
       } catch (e) {
         if (mounted) setState(() => _fehler = e);
@@ -97,6 +99,18 @@ class _EditorSeiteState extends State<EditorSeite> {
       appBar: AppBar(
         title: Text(widget.foto.dateiname),
         actions: [
+          if (_hatGainmap)
+            IconButton(
+              icon: Icon(_hdr ? Icons.hdr_on : Icons.hdr_off),
+              tooltip: _hdr ? 'HDR an' : 'HDR aus',
+              onPressed: _speichert
+                  ? null
+                  : () {
+                      setState(() => _hdr = !_hdr);
+                      zeigeHdr(_hdr);
+                      speicher.write(key: 'hdr', value: _hdr ? 'an' : 'aus');
+                    },
+            ),
           TextButton(
             onPressed: !geladen || _speichert || _rezept.helligkeit == 0
                 ? null

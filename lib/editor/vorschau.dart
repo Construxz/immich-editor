@@ -25,6 +25,8 @@ Future<void> zeigeRezept(Rezept rezept) => rendererKanal.invokeMethod(
   {'rezept': jsonEncode(rezept.toJson())},
 );
 
+Future<void> zeigeHdr(bool an) => rendererKanal.invokeMethod('hdr', {'an': an});
+
 Future<void> beendeSitzung() => rendererKanal.invokeMethod('beenden');
 
 /// Die native Bildfläche. Hybrid Composition, damit sie eine echte Android-Ansicht ist —
