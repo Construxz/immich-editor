@@ -7,6 +7,24 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-20: Befund — die HDR-Vorschau wirkt auf dem Pixel
+
+Wie geprüft: App (Stand `b38bde9` + HDR-Knopf) im Release-Build auf dem Pixel 7 Pro des
+Besitzers, Editor mit `testfoto-a-hdr.jpg` (Ultra HDR, D-12) offen.
+
+- `dumpsys window`: Fenster `colorMode=COLOR_MODE_HDR`.
+- `dumpsys SurfaceFlinger`: die Ebene der App mit `currentHdrSdrRatio=5`,
+  `desiredHdrSdrRatio=5`; alle anderen Ebenen 1.
+- Der Besitzer hat den HDR-Knopf im Editor umgeschaltet und sieht einen Unterschied. Den
+  Vergleich „helle Bildstellen heller als das Weiß der Leiste" fand er ohne Schalter schwer zu
+  beurteilen — der direkte Umschalter macht ihn sichtbar.
+
+Screenshots (`screencap`) zeichnen HDR nicht auf; im Emulator gibt es kein HDR-Display
+(`supportedHdrTypes=[]`).
+
+**Anwenden:** Der Weg aus D-17 trägt: gerendertes sRGB-Bild + Gain-Map in einer nativen Ansicht
+(Hybrid Composition) im HDR-Fenster. Die HDR-Anzeige bleibt ein Test auf dem Gerät.
+
 ## 2026-09-21 · D-19: Kopien sind Standard-Ultra-HDR — Immich zeigt sie, sobald es HDR kann
 
 Anforderung des Besitzers: So, wie die App HDR-Kopien in Immich ablegt, sollen sie ohne

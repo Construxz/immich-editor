@@ -9,8 +9,9 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** ⬜
 Teile, in dieser Reihenfolge:
-- ⬜ Nativer Renderer (AGSL) mit HDR-Vorschau als native Ansicht; Export über denselben Renderer;
-  `minSdk 34` (D-17, D-18).
+- 🔶 Nativer Renderer (AGSL) mit HDR-Vorschau als native Ansicht, HDR-Knopf im Editor; Export
+  über denselben Renderer; `minSdk 34` (D-17, D-18, D-20). Offen: Instrumented Test für den
+  Renderer.
 - ⬜ Zuschneiden, Drehen, Spiegeln, Geraderichten — Gain-Map wird mittransformiert.
 - ⬜ Stufe-1-Regler (Spec, *Funktionen*).
 - ⬜ Editor in der Bedienung der Spec (*Bedienung*, nach Google Fotos); Einstellung „HDR".

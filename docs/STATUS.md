@@ -13,12 +13,14 @@ Stand: 21.09.2026, nach M1.
     Immich-Hauptversion nicht 3 ist.
   - Galerie: die neuesten 200 Server-Fotos als Raster — ohne Blättern, ohne Gerätefotos, und
     die hinteren Assets eines Stapels erscheinen mit.
-  - Editor: nur ein Helligkeitsregler; Vorschau und Export über denselben `ColorFilter`.
+  - Editor: nur ein Helligkeitsregler und ein HDR-Knopf. Vorschau und Export rechnet der native
+    Renderer (AGSL, `Renderer.kt`); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
+    D-20). `minSdk 34`.
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
     des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,
     Byte für Byte gegenprüfen, vor das Original stapeln, in dessen Alben legen.
-  - Ultra HDR: Die Kopie behält die Gain-Map des Originals (ab Android 14, D-16); die Vorschau
-    zeigt nur SDR.
+  - Ultra HDR: Die Kopie behält die Gain-Map des Originals (D-16), Standardformat (D-19); die
+    Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).
   - **Noch nicht:** erneut bearbeiten (ein Original, das schon im Stapel liegt), Gerätefotos
     (M2), Zeitgrenzen für Netzwerkanfragen (hängt der Server, dreht die App endlos).
 - Code: `lib/server/` (Immich-Client mit den neun Endpunkten der Spec),
@@ -73,4 +75,5 @@ Admin-Kontos mit der echten Bibliothek.
 Die neun Endpunkte der App sind gegen `open-api/immich-openapi-specs.json` in
 `immich-app/immich` geprüft: Zweig `main`, Spec-Version **3.2.0**, und Tag `v3.1.0` — in beiden
 gleich, samt Pflichtfeldern (21.09.2026). Der Server des Testbenutzers läuft mit **3.1.0**; gegen
-ihn ist M1 abgenommen (D-12).
+ihn ist M1 abgenommen (D-12). Am 21.09.2026 abends auf **3.2.2** aktualisiert (während des
+Neustarts „Connection refused" und 404); seitdem laufen die Tests gegen 3.2.2.
