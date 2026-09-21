@@ -7,6 +7,29 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-24: Wo bearbeitet und gespeichert wird — lokal vor Server, Netz nach Einstellung
+
+Vorschlag und Entscheidung des Besitzers:
+
+- **Original liegt auf dem Gerät** (gesichert oder nicht): Die App bearbeitet die lokale Datei
+  und fragt den Server nichts. Die Kopie (mit Rezept-XMP) geht in die Gerätegalerie; die
+  Immich-App sichert sie; unsere App stapelt auf dem Server, sobald Original und Kopie oben sind.
+  Auf dem Gerät liegen beide ungestapelt nebeneinander, im Web als Stapel. Die App lädt eine
+  solche Kopie nie selbst hoch — sonst entstünden Duplikate neben dem Backup.
+- **Original liegt nur auf dem Server:** Der Editor öffnet sofort mit Immichs Vorschaubild; das
+  Rezept ist auflösungsunabhängig. Das Original (volle Auflösung, Gain-Map) braucht es erst zum
+  Speichern — Immich kann das Rezept nicht selbst rechnen (D-2), die fertige Kopie entsteht auf
+  dem Gerät. Immichs Vorschaubilder tragen keine Gain-Map: HDR-Vorschau erst mit dem Original.
+- **Netz:** Ob Originale und Uploads auch über mobile Daten laufen oder nur im WLAN, entscheidet
+  der Nutzer in den Einstellungen.
+
+Offen (Rückfrage an den Besitzer, 21.09.2026): Soll eine Bearbeitung eines *nur online*
+liegenden Fotos wie bisher direkt auf den Server (und nur dort liegen), oder ebenfalls erst
+lokal gespeichert, von der Immich-App gesichert und danach lokal wieder entfernt werden?
+
+**Anwenden:** Galerie mit Gerätefotos (M2) baut darauf; Einstellungen „Mobile Daten" und
+„Bearbeitungen lokaler Fotos: Gerät / direkt auf den Server".
+
 ## 2026-09-21 · D-23: Galerie über die Timeline; erneut bearbeiten; Speichern in 4 s
 
 **Galerie:** `POST /search/metadata` kann Stapel nicht auf das vordere Bild reduzieren —

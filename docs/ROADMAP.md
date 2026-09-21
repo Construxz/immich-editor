@@ -20,7 +20,10 @@ Teile, in dieser Reihenfolge:
 - 🔶 Galerie: Server-Fotos nach Monaten (Timeline), Stapel nur einmal, Mehrfachauswahl; erneut
   bearbeiten (D-23). Offen: Gerätefotos, über die Prüfsumme zusammengeführt; Blättern durch eine
   große Bibliothek messen; Miniaturen auf der Platte zwischenspeichern.
-- ⬜ Presets: speichern, auf viele Bilder anwenden; Gerätefotos später stapeln (Spec, *Speicherweg*).
+- ⬜ Gerätefotos bearbeiten ohne Server; Kopie in die Gerätegalerie, später stapeln (D-24).
+- ⬜ Online-Fotos: Editor startet mit Immichs Vorschaubild, Original erst zum Speichern bzw. im
+  Hintergrund; Einstellung „Mobile Daten" (D-24).
+- ⬜ Presets: speichern, auf viele Bilder anwenden.
 
 *Abnahme:* 20 Bilder wählen, ein eigenes Preset anwenden, 20 Stapel entstehen — auch für ein
 Foto, das nur auf dem Gerät lag, sobald die Immich-App es gesichert hat. Auf dem Pixel zeigt die
