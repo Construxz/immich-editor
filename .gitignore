@@ -1,0 +1,6 @@
+# Signierschluessel und Geheimnisse - nie ins Repo
+key.properties
+*.jks
+*.keystore
+.env
+.env.*
