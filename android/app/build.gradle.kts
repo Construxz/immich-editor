@@ -61,3 +61,9 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // nur für JVM-Tests (src/test); nicht in der App
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")
+}

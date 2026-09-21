@@ -71,11 +71,11 @@ class MainActivity : FlutterActivity() {
      */
     private fun exportieren(original: ByteArray, rezept: JSONObject, qualitaet: Int, hdr: Boolean): ByteArray {
         val quelle = BitmapFactory.decodeByteArray(original, 0, original.size)
-        val gerendert = Renderer.rendern(quelle, rezept, quelle.width, quelle.height)
+        val geo = Geometrie.aus(rezept).nachExif(Renderer.orientierung(original))
+        val gerendert = Renderer.rendern(quelle, geo, rezept)
         val bitmap = gerendert.copy(Bitmap.Config.ARGB_8888, true)
         gerendert.recycle()
-        // ponytail: Geometrie (M2) muss die Gain-Map mittransformieren.
-        if (hdr) quelle.gainmap?.let { bitmap.gainmap = it }
+        if (hdr) quelle.gainmap?.let { bitmap.gainmap = Renderer.gainmap(it, geo) }
         quelle.recycle()
         val out = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, qualitaet, out)

@@ -60,12 +60,6 @@ void main() {
     expect(exifAus(Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xDA, 0, 2])), isNull);
   });
 
-  testWidgets('Flutter wendet die Orientierung beim Dekodieren an', (t) async {
-    // Die Annahme hinter orientierungNormal: Pixel kommen schon gedreht an.
-    final bild = (await t.runAsync(() => dekodieren(gedreht)))!;
-    expect([bild.width, bild.height], [2, 4]);
-  });
-
   testWidgets('ohne XMP: neues Paket, EXIF ersetzt, dekodierbar', (t) async {
     final exif = exifAus(gedreht)!;
     orientierungNormal(exif);

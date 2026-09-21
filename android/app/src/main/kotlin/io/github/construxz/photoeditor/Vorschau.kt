@@ -26,6 +26,7 @@ object Sitzung {
     var original: ByteArray? = null
         private set
     private var quelle: Bitmap? = null
+    private var orientierung = 1
     private var rezept = JSONObject()
     private var hdr = true
     private var laeuft = false
@@ -39,6 +40,7 @@ object Sitzung {
     /** Lädt das Original; die Vorschau rechnet auf einer verkleinerten Fassung. */
     fun laden(bytes: ByteArray, hdrAn: Boolean): Map<String, Any> {
         original = bytes
+        orientierung = Renderer.orientierung(bytes)
         hdr = hdrAn
         rezept = JSONObject()
         val masse = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -49,7 +51,9 @@ object Sitzung {
             bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = faktor },
         )
         neuRendern()
-        return mapOf("hatGainmap" to (quelle?.gainmap != null))
+        // Größe, wie man das Bild sieht (nach EXIF), für Seitenverhältnisse beim Zuschneiden
+        val (w, h) = Geometrie().nachExif(orientierung).rahmen(masse.outWidth.toDouble(), masse.outHeight.toDouble())
+        return mapOf("hatGainmap" to (quelle?.gainmap != null), "breite" to w.toInt(), "hoehe" to h.toInt())
     }
 
     val hatGainmap get() = quelle?.gainmap != null
@@ -75,10 +79,12 @@ object Sitzung {
         if (laeuft) { nochmal = true; return }
         val q = quelle ?: return
         val r = rezept
+        val geo = Geometrie.aus(r).nachExif(orientierung)
+        val mitHdr = hdr
         laeuft = true
         hintergrund.post {
-            val neu = Renderer.rendern(q, r, q.width, q.height)
-            if (hdr) q.gainmap?.let { neu.gainmap = it }
+            val neu = Renderer.rendern(q, geo, r)
+            if (mitHdr) q.gainmap?.let { neu.gainmap = Renderer.gainmap(it, geo) }
             haupt.post {
                 bild = neu
                 ansicht?.invalidate()

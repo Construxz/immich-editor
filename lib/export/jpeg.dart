@@ -39,9 +39,8 @@ Uint8List? exifAus(Uint8List jpeg) {
   return null;
 }
 
-/// Setzt die Orientierung in der EXIF-Nutzlast [exif] auf 1 („normal"): Die
-/// Pixel der Kopie sind bereits gedreht, weil Flutter die Orientierung beim
-/// Dekodieren anwendet.
+/// Setzt die Orientierung in der EXIF-Nutzlast [exif] auf 1 („normal"): Der
+/// Renderer hat das Bild bereits aufgerichtet (`Geometrie.nachExif`).
 void orientierungNormal(Uint8List exif) {
   const tiff = 6; // nach "Exif\0\0"
   final d = ByteData.sublistView(exif);

@@ -22,6 +22,8 @@ class _EditorSeiteState extends State<EditorSeite> {
   Uint8List? _original;
   var _hdr = true;
   var _hatGainmap = false;
+  var _masse = const Size(1, 1); // wie man das Original sieht
+  double? _verhaeltnis; // gewähltes Seitenverhältnis, null = frei
   Object? _fehler;
   var _rezept = const Rezept();
   var _speichert = false;
@@ -33,12 +35,13 @@ class _EditorSeiteState extends State<EditorSeite> {
       try {
         final hdr = await speicher.read(key: 'hdr') != 'aus';
         final original = await widget.immich.original(widget.foto.id);
-        final hatGainmap = await ladeOriginal(original, hdr: hdr);
+        final geladen = await ladeOriginal(original, hdr: hdr);
         if (!mounted) return;
         setState(() {
           _original = original;
           _hdr = hdr;
-          _hatGainmap = hatGainmap;
+          _hatGainmap = geladen.hatGainmap;
+          _masse = Size(geladen.breite, geladen.hoehe);
         });
       } catch (e) {
         if (mounted) setState(() => _fehler = e);
@@ -51,6 +54,16 @@ class _EditorSeiteState extends State<EditorSeite> {
     beendeSitzung();
     super.dispose();
   }
+
+  void _aendern(Rezept r) {
+    setState(() => _rezept = r);
+    zeigeRezept(r);
+  }
+
+  /// Zuschnitt fürs gewählte Seitenverhältnis im aktuell gedrehten Rahmen.
+  List<double> _zuschnitt(double? verhaeltnis, int viertel) => viertel.isOdd
+      ? zuschnittFuer(verhaeltnis, _masse.height, _masse.width)
+      : zuschnittFuer(verhaeltnis, _masse.width, _masse.height);
 
   /// Kopie rendern, hochladen, vor das Original stapeln, in dessen Alben legen.
   /// Aufnahmezeit und Ort reisen im übernommenen EXIF mit.
@@ -112,7 +125,7 @@ class _EditorSeiteState extends State<EditorSeite> {
                     },
             ),
           TextButton(
-            onPressed: !geladen || _speichert || _rezept.helligkeit == 0
+            onPressed: !geladen || _speichert || _rezept.istNeutral
                 ? null
                 : _speichern,
             child: const Text('Speichern'),
@@ -135,6 +148,86 @@ class _EditorSeiteState extends State<EditorSeite> {
                     ],
                   ),
                 ),
+                // ponytail: vorläufige Knöpfe; Anfasser und Bedienung nach Google Fotos folgen.
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.rotate_90_degrees_cw),
+                      tooltip: 'Drehen',
+                      onPressed: () {
+                        final v = (_rezept.viertel + 1) % 4;
+                        // Seitenverhältnis dreht mit
+                        final alt = _verhaeltnis;
+                        _verhaeltnis = alt == null ? null : 1 / alt;
+                        _aendern(
+                          _rezept.kopie(
+                            viertel: v,
+                            zuschnitt: _zuschnitt(_verhaeltnis, v),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.flip),
+                      tooltip: 'Spiegeln',
+                      onPressed: () =>
+                          _aendern(_rezept.kopie(spiegeln: !_rezept.spiegeln)),
+                    ),
+                    PopupMenuButton<double>(
+                      icon: const Icon(Icons.aspect_ratio),
+                      tooltip: 'Seitenverhältnis',
+                      onSelected: (v) {
+                        _verhaeltnis = v == 0 ? null : v;
+                        _aendern(
+                          _rezept.kopie(
+                            zuschnitt: _zuschnitt(
+                              _verhaeltnis,
+                              _rezept.viertel,
+                            ),
+                          ),
+                        );
+                      },
+                      itemBuilder: (_) => [
+                        for (final (name, v) in [
+                          ('Frei', 0.0),
+                          (
+                            'Original',
+                            _rezept.viertel.isOdd
+                                ? _masse.height / _masse.width
+                                : _masse.width / _masse.height,
+                          ),
+                          ('Quadrat', 1.0),
+                          ('4:3', 4 / 3),
+                          ('3:2', 3 / 2),
+                          ('16:9', 16 / 9),
+                          ('3:4', 3 / 4),
+                          ('2:3', 2 / 3),
+                          ('9:16', 9 / 16),
+                        ])
+                          PopupMenuItem(value: v, child: Text(name)),
+                      ],
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.straighten),
+                      Expanded(
+                        child: Slider(
+                          value: _rezept.winkel,
+                          min: -45,
+                          max: 45,
+                          onChanged: _speichert
+                              ? null
+                              : (v) => _aendern(_rezept.kopie(winkel: v)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
@@ -147,12 +240,7 @@ class _EditorSeiteState extends State<EditorSeite> {
                           max: 1,
                           onChanged: _speichert
                               ? null
-                              : (v) {
-                                  setState(
-                                    () => _rezept = Rezept(helligkeit: v),
-                                  );
-                                  zeigeRezept(_rezept);
-                                },
+                              : (v) => _aendern(_rezept.kopie(helligkeit: v)),
                         ),
                       ),
                     ],
