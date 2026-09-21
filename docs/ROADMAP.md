@@ -12,12 +12,13 @@ Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map,
 Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speichern in 4 s
 (D-17 bis D-23). Offen, in dieser Reihenfolge:
 - ⬜ **Speichern auf dem Pixel nachprüfen:** Der Besitzer bekam mit einem älteren Stand „App
-  reagiert nicht" (D-23). Der Emulator zeigt es nicht; der Pixel läuft noch auf `c032688`.
+  reagiert nicht" (D-23). Der Emulator zeigt es nicht; auf dem Pixel läuft seit 21.09. abends `4448976`.
 - ⬜ **Gerätefotos** in der Galerie (`photo_manager`), mit dem Server über die Prüfsumme
   zusammengeführt (`POST /assets/bulk-upload-check`), Prüfsummen zwischengespeichert; bearbeiten
   ohne Server, Kopie in die Gerätegalerie, später auf dem Server stapeln (D-24).
 - ⬜ **Online-Fotos:** Editor startet mit Immichs Vorschaubild, Original erst zum Speichern oder im
-  Hintergrund; Einstellung „Mobile Daten" (D-24, E6).
+  Hintergrund; Einstellungen „Mobile Daten" und „Bearbeitungen von Online-Fotos: Gerät (Vorgabe) /
+  Server" (D-24, D-25).
 - ⬜ **Presets:** Reiter „Presets" im Editor, speichern, auf eine Mehrfachauswahl anwenden.
 - ⬜ Filter (3D-LUT) mit Reiter „Filter"; Perspektive (Vier-Punkt); HDR-Spielraum sanft hochfahren
   (`setDesiredHdrHeadroom`, ab Android 15); Miniaturen auf der Platte zwischenspeichern; Blättern
@@ -44,11 +45,6 @@ Stufe 3 (`patch`), Modelle nach D-6.
 *Abnahme:* ein angetipptes Objekt verschwindet im Flugmodus.
 
 ## Offene Entscheidungen
-
-**E6. Bearbeitung eines nur online liegenden Fotos: wohin?** ⬜ (a) wie bisher direkt auf den
-Server, nur dort; oder (b) erst lokal, von der Immich-App gesichert, danach lokal entfernt.
-Empfehlung (a): kein Umweg übers Backup, gleiches Ergebnis. Siehe D-24.
-*Abnahme:* vom Besitzer entschieden, bevor „Online-Fotos" (M2) gebaut wird.
 
 **E4. MediaPipe zulässig?** ⬜ Siehe D-6.
 *Abnahme:* entschieden vor M5.

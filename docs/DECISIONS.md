@@ -7,6 +7,23 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-25: Bearbeitung eines nur online liegenden Fotos — Einstellung, Vorgabe Gerät
+
+Entscheidung des Besitzers zu E6: Der Nutzer wählt in den Einstellungen, der Besitzer selbst
+neigt zu (b), deshalb ist (b) die Vorgabe.
+
+- **(b) Gerät (Vorgabe):** Die Kopie geht wie bei Gerätefotos (D-24) in die Gerätegalerie, die
+  Immich-App sichert sie, unsere App stapelt sie auf dem Server und entfernt die lokale Datei,
+  sobald der Server sie hat (Prüfsumme, `POST /assets/bulk-upload-check`). Das Löschen aus der
+  Gerätegalerie bestätigt Android beim Nutzer (`MediaStore.createDeleteRequest`).
+- **(a) Server:** wie bisher (D-23) direkt hochladen, stapeln, gegenprüfen; auf dem Gerät bleibt
+  nichts.
+
+**Anwenden:** „Online-Fotos" (M2) baut beide Wege; Einstellung „Bearbeitungen von Online-Fotos:
+Gerät / Server".
+
+---
+
 ## 2026-09-21 · D-24: Wo bearbeitet und gespeichert wird — lokal vor Server, Netz nach Einstellung
 
 Vorschlag und Entscheidung des Besitzers:
@@ -23,8 +40,7 @@ Vorschlag und Entscheidung des Besitzers:
 - **Netz:** Ob Originale und Uploads auch über mobile Daten laufen oder nur im WLAN, entscheidet
   der Nutzer in den Einstellungen.
 
-Offen: wohin die Bearbeitung eines *nur online* liegenden Fotos geht — E6 in
-[ROADMAP.md](ROADMAP.md).
+Wohin die Bearbeitung eines *nur online* liegenden Fotos geht: D-25.
 
 **Anwenden:** Galerie mit Gerätefotos (M2) baut darauf; Einstellungen „Mobile Daten" und
 „Bearbeitungen lokaler Fotos: Gerät / direkt auf den Server".
