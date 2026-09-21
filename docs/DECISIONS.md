@@ -7,6 +7,43 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-11: Befund — M0 abgenommen: signierte APK aus dem Tag läuft auf dem Gerät
+
+Wie geprüft:
+
+- `flutter doctor` auf dem Entwicklungsrechner: „No issues found" (Versionen in
+  [STATUS.md](STATUS.md)).
+- `ci.yml` grün auf GitHub für `f7245f2` und `e2ce157` (format, analyze, test, Debug-APK),
+  je etwa 6½ Minuten.
+- Tag `v0.0.1` auf `e2ce157`: `release.yml` grün (Lauf 35618926008), Release mit vier APKs
+  (arm64-v8a, armeabi-v7a, x86_64, universal) und `SHA256SUMS.txt`. Heruntergeladen,
+  `sha256sum -c` für alle vier OK; `apksigner verify` für arm64-v8a: Schema v2, Zertifikat
+  `CN=Construxz`, SHA-256 `9adfffc3…149a131f` — nicht der Debug-Schlüssel.
+- Die arm64-APK per `adb install` auf ein Pixel 7 Pro installiert: `versionName=0.0.1`,
+  `versionCode=2001`, die App startet ohne Absturz im Log. Vorher per `flutter run` im
+  Debug-Modus auf demselben Gerät.
+
+Nebenbefunde:
+
+- **Debug- und Release-Build tragen verschiedene Schlüssel.** Beim Wechsel die App vorher
+  deinstallieren (`adb uninstall io.github.construxz.photoeditor`).
+- **versionCode im Release** = 1000 × ABI + Laufnummer von `release.yml`
+  (`--build-number=github.run_number`), versionName aus dem Tag. `pubspec.yaml` zählt nur lokal.
+- `sdkmanager` 23.0 stürzt auf Windows am Ende jedes Aufrufs ab (0xC0000409); Gradle lädt
+  fehlende SDK-Teile (NDK 28.2) trotzdem selbst nach. Der erste Build nach frischer
+  Einrichtung scheiterte einmal daran — wiederholen genügte.
+- AGP 9.1 / Gradle 9.3.1 laufen mit dem JDK 25 aus Android Studio; die CI nutzt Temurin 25.
+
+**Anwenden:** Releases entstehen nur über einen Tag `v*`; der Schlüssel liegt beim Besitzer
+außerhalb des Repos und als vier Secrets in GitHub.
+
+## 2026-09-21 · D-10: Application-ID `io.github.construxz.photoeditor`
+
+Android-Application-ID und iOS-Bundle-ID; der Dart-Paketname bleibt `immich_editor`. Ohne
+„immich" in der ID, weil sie nach dem ersten Store-Upload nicht mehr zu ändern ist — sie passt
+auch, falls die Namensnutzung (D-5) beanstandet wird oder weitere Backends dazukommen.
+`io.github.construxz` ist der GitHub-Namensraum des Besitzers.
+
 ## 2026-09-21 · D-9: IMG.LY Photo SDK verworfen
 
 Geprüft als fertige Editor-Basis. Laut Anbieter „typische Deployments 600–2 000 $/Monat",

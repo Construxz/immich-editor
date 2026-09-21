@@ -6,11 +6,14 @@ hinzu, sobald etwas eingebunden wird. **Zuerst nach Copyleft fragen.**
 
 Lizenzen nachgesehen am 21.09.2026 über die GitHub-API bzw. die README des Projekts.
 
-## Geplante Abhängigkeiten
+## Abhängigkeiten
+
+Eingebunden sind bisher Flutter und `flutter_lints`, der Rest ist geplant.
 
 | Paket | Zweck | Lizenz | passt |
 |---|---|---|---|
 | [Flutter](https://github.com/flutter/flutter) | Framework | BSD-3-Clause | ja |
+| [flutter_lints](https://github.com/flutter/packages/tree/main/packages/flutter_lints) | Lint-Regeln, nur Entwicklung | BSD-3-Clause | ja |
 | [photo_manager](https://github.com/fluttercandies/flutter_photo_manager) | Gerätegalerie; auch in Immichs App | Apache-2.0 | ja |
 | [http](https://github.com/dart-lang/http) | Immich-API | BSD-3-Clause | ja |
 | [flutter_secure_storage](https://github.com/juliansteenbakker/flutter_secure_storage) | Anmeldedaten | BSD-3-Clause | ja |

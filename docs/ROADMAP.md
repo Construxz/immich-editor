@@ -7,19 +7,6 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 
 ## Meilensteine
 
-**M0. Werkzeuge, Gerüst, CI.** ⬜
-Entwicklungsumgebung einrichten (README, Abschnitt *Development*), leeres Flutter-Projekt,
-Signierschlüssel lokal mit `keytool` erzeugen und sichern. Zwei Workflows:
-`ci.yml` bei jedem Push und Pull Request (`flutter pub get`,
-`dart format --set-exit-if-changed`, `flutter analyze`, `flutter test`,
-`flutter build apk --debug`, Flutter-Version fest eingetragen) und `release.yml` bei einem Tag
-`v*` (Schlüssel aus den Secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
-`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` zur Laufzeit nach `android/key.properties`;
-`flutter build apk --release --split-per-abi` plus Universal-APK, mit SHA-256-Prüfsummen an ein
-GitHub-Release).
-*Abnahme:* `flutter doctor` meldet für Android keine Fehler, und ein Tag `v0.0.1` erzeugt auf
-GitHub eine signierte APK, die sich auf einem Gerät installieren lässt.
-
 **M1. Speicherweg ohne Editor.** ⬜
 Anmelden, ein Server-Foto laden, nur die Helligkeit ändern, als Kopie mit Rezept-XMP hochladen,
 stapeln, Aufnahmezeit/Ort/Alben übernehmen. Prüft die eine Annahme, an der alles hängt (D-2).

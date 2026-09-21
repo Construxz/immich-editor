@@ -7,7 +7,7 @@ An open-source mobile photo library and editor for Immich.
 
 ## Status
 
-Planning. Nothing is built yet.
+Milestone M0 done: empty app, CI, signed release APKs. No features yet.
 
 ## Idea
 
@@ -22,7 +22,7 @@ gallery editor, computed on the device — without touching the Immich server:
 
 ## Development
 
-Required (planned, milestone M0):
+Required (versions in use: [docs/STATUS.md](docs/STATUS.md)):
 
 - **Flutter SDK**, stable channel (includes Dart)
 - **JDK** in the version `flutter doctor` asks for
