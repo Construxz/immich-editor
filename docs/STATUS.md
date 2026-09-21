@@ -11,8 +11,9 @@ Stand: 21.09.2026, nach M1.
   Dart-Paket `immich_editor`, D-10), die den Speicherweg durchgeht (D-12):
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
     Immich-Hauptversion nicht 3 ist.
-  - Galerie (⋮: Einstellung „HDR", Abmelden): die neuesten 200 Server-Fotos als Raster — ohne Blättern, ohne Gerätefotos, und
-    die hinteren Assets eines Stapels erscheinen mit.
+  - Galerie (⋮: Einstellung „HDR", Abmelden): Server-Fotos nach Monaten über Immichs Timeline,
+    Monate laden beim Hinscrollen, ein Stapel zählt einmal (vorn die Bearbeitung), Mehrfachauswahl
+    per langem Druck. Noch ohne Gerätefotos.
   - Editor im Aufbau von Google Fotos (D-22): schwarz; oben Schließen, Rückgängig/Wiederholen,
     HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Zuschneiden" (Rahmen mit Anfassern,
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal) und „Anpassen" (12 Regler als runde Knöpfe,
@@ -21,13 +22,15 @@ Stand: 21.09.2026, nach M1.
     D-20). `minSdk 34`.
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
     des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,
-    Byte für Byte gegenprüfen, vor das Original stapeln, in dessen Alben legen.
+    gegenprüfen (SHA-1 des Servers = eigene), vor das Original stapeln, in dessen Alben legen;
+    etwa 4 s im Emulator (D-23).
   - Netzwerk: Zeitgrenzen (30 s, Originale und Upload 3 min) und verständliche Fehler.
   - Ultra HDR: Die Kopie behält die Gain-Map des Originals (D-16), Standardformat (D-19); die
     Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).
-  - **Noch nicht:** erneut bearbeiten (ein Original, das schon im Stapel liegt), Gerätefotos
-    (M2), Filter, Presets, Perspektive.
-- Code: `lib/server/` (Immich-Client mit den neun Endpunkten der Spec),
+  - Erneut bearbeiten: Öffnet man eine Kopie, öffnet der Editor das Original mit deren Rezept;
+    beim Speichern gehen frühere Kopien in den Papierkorb (D-23).
+  - **Noch nicht:** Gerätefotos, Filter, Presets, Perspektive.
+- Code: `lib/server/` (Immich-Client mit den Endpunkten der Spec, eine Keep-Alive-Verbindung),
   `lib/gallery/`, `lib/editor/`, `lib/export/`, `lib/foto.dart`; Tests in `test/` (JPEG-Segmente,
   Ultra-HDR-Aufbau, Rezept; Start ohne Sitzung), `android/app/src/test/` (Geometrie, JVM) und
   `android/app/src/androidTest/` (Renderer auf der GPU, im Emulator: `gradlew connectedDebugAndroidTest`

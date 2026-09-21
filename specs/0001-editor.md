@@ -48,6 +48,9 @@ derselben Rechnung auf Bild und Gain-Map. Die Vorschau zeigt HDR, wie Google Fot
 Die Kopie ist **Standard-Ultra-HDR** (`hdrgm`-XMP, ISO 21496-1, MPF), kein eigenes Format —
 Immich zeigt sie in HDR, sobald es Ultra HDR darstellt (D-19). **Abschaltbar** in den Einstellungen („HDR"): dann SDR-Vorschau und Kopien ohne Gain-Map.
 
+**Beim Neustapeln** löst Immich den alten Stapel des Originals auf; die bisherige Kopie stünde
+dann lose in der Timeline — deshalb geht sie in den Papierkorb (D-23).
+
 **Zu prüfen:** ob Immich Gesichter und Suchtreffer gestapelter, nicht vorne liegender Assets
 ausblendet oder doppelt zählt.
 
@@ -166,12 +169,14 @@ einmal** — gehört in den ersten Wurf.
 | `export/` | volle Auflösung rendern, JPEG kodieren, EXIF übernehmen, XMP und Gain-Map einfügen | Systemkodierer über einen Plattformkanal (D-13) |
 | `stapeln/` | lokal entstandene Kopien nach dem Backup dem Original zuordnen | — |
 
-**Die neun Endpunkte** (geprüft gegen die OpenAPI-Spezifikation 3.2.0): `POST /auth/login`
-(alternativ API-Schlüssel), `POST /search/metadata`, `GET /assets/{id}/thumbnail`,
-`GET /assets/{id}/original`, `POST /assets` (Pflichtfelder `assetData`, `fileCreatedAt`,
-`fileModifiedAt`), `POST /stacks`, `GET /albums?assetId=…`, `PUT /albums/{id}/assets`,
-`GET /server/version`. Von Hand statt generiert — neun Endpunkte sind weniger Code als ein
-Client für die ganze API. Beim Anmelden die Server-Version prüfen und bei unbekannter
+**Die Endpunkte** (geprüft gegen die OpenAPI-Spezifikation 3.2.2): `POST /auth/login`,
+`GET /server/version`, `GET /timeline/buckets` und `GET /timeline/bucket` (Galerie, mit
+`withStacked` — ein Stapel zählt einmal), `GET /assets/{id}` (Details, Prüfsumme, Stapel),
+`GET /assets/{id}/thumbnail`, `GET /assets/{id}/original` (auch als Teilabruf), `POST /assets`
+(Pflichtfelder `assetData`, `fileCreatedAt`, `fileModifiedAt`), `POST /search/metadata` (nur
+nach Prüfsumme), `POST /stacks`, `DELETE /assets` (Papierkorb), `GET /albums?assetId=…`,
+`PUT /albums/{id}/assets`. Von Hand statt generiert — ein Dutzend Endpunkte sind weniger Code
+als ein Client für die ganze API. Beim Anmelden die Server-Version prüfen und bei unbekannter
 Hauptversion warnen.
 
 **Rezept-Format:** JSON mit Versionsnummer (`v: 1`) im XMP unter eigenem Namensraum

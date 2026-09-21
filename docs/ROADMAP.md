@@ -17,8 +17,9 @@ Teile, in dieser Reihenfolge:
 - 🔶 Editor in der Bedienung der Spec (*Bedienung*, nach Google Fotos); Einstellung „HDR" (D-22).
   Offen: Reiter „Presets"; HDR-Spielraum sanft hochfahren (ab Android 15 `setDesiredHdrHeadroom`).
 - ✅ Zeitgrenzen und verständliche Fehler bei Netzwerkanfragen (D-22).
-- ⬜ Galerie: Gerätefotos und Server, über die Prüfsumme zusammengeführt, Stapel nur einmal;
-  Blättern durch große Bibliotheken; Mehrfachauswahl.
+- 🔶 Galerie: Server-Fotos nach Monaten (Timeline), Stapel nur einmal, Mehrfachauswahl; erneut
+  bearbeiten (D-23). Offen: Gerätefotos, über die Prüfsumme zusammengeführt; Blättern durch eine
+  große Bibliothek messen; Miniaturen auf der Platte zwischenspeichern.
 - ⬜ Presets: speichern, auf viele Bilder anwenden; Gerätefotos später stapeln (Spec, *Speicherweg*).
 
 *Abnahme:* 20 Bilder wählen, ein eigenes Preset anwenden, 20 Stapel entstehen — auch für ein

@@ -7,6 +7,40 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-23: Galerie über die Timeline; erneut bearbeiten; Speichern in 4 s
+
+**Galerie:** `POST /search/metadata` kann Stapel nicht auf das vordere Bild reduzieren —
+`withStacked:false` blendet *alle* gestapelten Bilder aus (Test: 1 statt 8 Einträge). Immichs
+Timeline (`/timeline/buckets`, `/timeline/bucket`, `withStacked=true`) liefert je Stapel das
+vordere mit Anzahl, monatsweise, so wie Immichs eigene App — 8 Einträge statt 15. Prüfsumme
+und Dateiname lädt der Editor über `GET /assets/{id}` nach.
+
+**Erneut bearbeiten** (Spec, *Speicherweg* 5): Trägt die geöffnete Datei ein Rezept dieser App,
+öffnet der Editor das Original (Suche per Prüfsumme) mit diesem Rezept. Befund: Stapelt man ein
+Original, das schon in einem Stapel liegt, neu, löst Immich den alten Stapel auf — die alte
+Kopie steht danach lose in der Timeline (Test mit `POST /stacks`). Deshalb gehen beim Speichern
+die geöffnete Kopie und die bisher vordere in den Papierkorb; die vordere nur, wenn ihr Anfang
+(Teilabruf 64 KB, Server antwortet 206) ein Rezept dieser App trägt. Im Emulator geprüft: nach
+dem Bearbeiten einer losen, älteren Kopie liegt genau eine aktive Kopie vorn im Stapel.
+
+**Speichern war zu langsam** — der Besitzer brach auf dem Pixel ab, Android meldete „App
+reagiert nicht". Gemessen im Emulator (Zeitmarken im Speicherweg): Rendern und Kodieren 0,5 s,
+Hochladen 3,8 s, **Kopie zur Prüfung neu laden 7,9 s**, Stapeln/Alben/Papierkorb 2,4 s — gesamt
+14,7 s. Vom PC dauern dieselben Anfragen 0,15 s (klein) bzw. 0,4 s (Download): Der Client baute
+für jede Anfrage eine neue Verbindung auf. Jetzt: ein Keep-Alive-Client, und statt neu zu laden
+vergleicht die App Immichs SHA-1 (beim Empfang berechnet) mit der eigenen (Android
+`MessageDigest`) — gleich streng. Danach: 0,5 s + 3,0 s + 0,2 s + 0,3 s = **4,0 s**. Das
+Dekodieren beim Öffnen lief auf dem Haupt-Thread und läuft jetzt im Hintergrund; ob damit die
+ANR-Meldung verschwindet, ist auf dem Pixel noch zu prüfen.
+
+Nebenbefund: D-22 nennt für den Speichertest „19 s" und die Werte einer anderen Kopie — an dem
+Abend wurde zweimal gespeichert (20:03 Kontrast+Geometrie, 20:18 alle Regler durch
+`adb`-Wischer über die Werkzeugleiste); untersucht wurde die von 20:03. Die Messwerte in D-22
+gehören zu ihr, die 19 s zur zweiten.
+
+**Anwenden:** Beim Prüfen nach dem Speichern die Kopie über ihre ID nehmen, nie „den ersten
+Suchtreffer".
+
 ## 2026-09-21 · D-22: Stufe-1-Regler in einem Shader; Editor nach Google Fotos
 
 Umsetzung: ein AGSL-Shader für alle zwölf Regler (Spec, Rezept-Format). Weißabgleich in
