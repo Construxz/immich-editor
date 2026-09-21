@@ -3,20 +3,20 @@
 **Hier steht nur Offenes**, jeweils mit Abnahme. Erledigtes verlässt die Datei; das Ergebnis
 steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 
-⬜ nicht gebaut · 🔶 gebaut, nicht belastbar geprüft
+⬜ nicht gebaut · 🔶 teilweise gebaut · ✅ gebaut und geprüft (Teil eines offenen Meilensteins)
 
 ## Meilensteine
 
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** ⬜
 Teile, in dieser Reihenfolge:
-- 🔶 Nativer Renderer (AGSL) mit HDR-Vorschau als native Ansicht, HDR-Knopf im Editor; Export
-  über denselben Renderer; `minSdk 34` (D-17, D-18, D-20). Offen: Instrumented Test für den
-  Renderer.
-- 🔶 Zuschneiden, Drehen, Spiegeln, Geraderichten — Gain-Map wird mittransformiert (D-21).
-  Offen: Zuschnitt mit Eck-Anfassern (kommt mit der Bedienung).
-- ⬜ Stufe-1-Regler (Spec, *Funktionen*).
-- ⬜ Editor in der Bedienung der Spec (*Bedienung*, nach Google Fotos); Einstellung „HDR".
-- ⬜ Zeitgrenzen und verständliche Fehler bei Netzwerkanfragen.
+- ✅ Nativer Renderer (AGSL) mit HDR-Vorschau als native Ansicht, HDR-Knopf im Editor; Export
+  über denselben Renderer; `minSdk 34` (D-17, D-18, D-20, D-22).
+- ✅ Zuschneiden, Drehen, Spiegeln, Geraderichten mit Anfassern — Gain-Map wird mittransformiert
+  (D-21, D-22). Offen: Perspektive (Vier-Punkt).
+- 🔶 Stufe-1-Regler (D-22). Offen: Filter (3D-LUT) samt Reiter „Filter".
+- 🔶 Editor in der Bedienung der Spec (*Bedienung*, nach Google Fotos); Einstellung „HDR" (D-22).
+  Offen: Reiter „Presets"; HDR-Spielraum sanft hochfahren (ab Android 15 `setDesiredHdrHeadroom`).
+- ✅ Zeitgrenzen und verständliche Fehler bei Netzwerkanfragen (D-22).
 - ⬜ Galerie: Gerätefotos und Server, über die Prüfsumme zusammengeführt, Stapel nur einmal;
   Blättern durch große Bibliotheken; Mehrfachauswahl.
 - ⬜ Presets: speichern, auf viele Bilder anwenden; Gerätefotos später stapeln (Spec, *Speicherweg*).

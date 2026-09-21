@@ -8,7 +8,7 @@ Lizenzen nachgesehen am 21.09.2026 über die GitHub-API bzw. die README des Proj
 
 ## Abhängigkeiten
 
-Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storage` (mit `tink-android`); der Rest ist geplant.
+Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storage` (mit `tink-android`; über `path_provider_android` kommen `jni`, `jni_flutter`, `jni_util` vom Dart-Team, BSD-3-Clause); der Rest ist geplant.
 
 | Paket | Zweck | Lizenz | passt |
 |---|---|---|---|
@@ -20,6 +20,7 @@ Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storag
 | [Tink](https://github.com/tink-crypto/tink-java) (`tink-android`) | Verschlüsselung in `flutter_secure_storage`; Google-Bibliothek, lokal, ohne Play-Dienste | Apache-2.0 | ja |
 | [JUnit 4](https://github.com/junit-team/junit4) | nur Tests (JVM), nicht in der App | EPL-1.0 | ja — wird nicht weitergegeben |
 | [org.json](https://github.com/stleary/JSON-java) | nur Tests (JVM): echtes JSON statt Androids Attrappe | Public Domain | ja |
+| [AndroidX Test](https://github.com/android/android-test) (`androidx.test.ext:junit`, `runner`) | nur Instrumented Tests im Emulator | Apache-2.0 | ja |
 | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | Modelle auf dem Gerät (M5) | MIT | ja |
 
 ## Modell-Kandidaten (M5)

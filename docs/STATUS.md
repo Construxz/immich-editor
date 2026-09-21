@@ -11,22 +11,27 @@ Stand: 21.09.2026, nach M1.
   Dart-Paket `immich_editor`, D-10), die den Speicherweg durchgeht (D-12):
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
     Immich-Hauptversion nicht 3 ist.
-  - Galerie: die neuesten 200 Server-Fotos als Raster — ohne Blättern, ohne Gerätefotos, und
+  - Galerie (⋮: Einstellung „HDR", Abmelden): die neuesten 200 Server-Fotos als Raster — ohne Blättern, ohne Gerätefotos, und
     die hinteren Assets eines Stapels erscheinen mit.
-  - Editor: Helligkeitsregler, HDR-Knopf und vorläufige Geometrie-Knöpfe (Drehen, Spiegeln,
-    Seitenverhältnis, Geraderichten; D-21). Vorschau und Export rechnet der native
+  - Editor im Aufbau von Google Fotos (D-22): schwarz; oben Schließen, Rückgängig/Wiederholen,
+    HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Zuschneiden" (Rahmen mit Anfassern,
+    Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal) und „Anpassen" (12 Regler als runde Knöpfe,
+    Skalen-Lineal); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
     Renderer (AGSL, `Renderer.kt`); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
     D-20). `minSdk 34`.
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
     des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,
     Byte für Byte gegenprüfen, vor das Original stapeln, in dessen Alben legen.
+  - Netzwerk: Zeitgrenzen (30 s, Originale und Upload 3 min) und verständliche Fehler.
   - Ultra HDR: Die Kopie behält die Gain-Map des Originals (D-16), Standardformat (D-19); die
     Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).
   - **Noch nicht:** erneut bearbeiten (ein Original, das schon im Stapel liegt), Gerätefotos
-    (M2), Zeitgrenzen für Netzwerkanfragen (hängt der Server, dreht die App endlos).
+    (M2), Filter, Presets, Perspektive.
 - Code: `lib/server/` (Immich-Client mit den neun Endpunkten der Spec),
   `lib/gallery/`, `lib/editor/`, `lib/export/`, `lib/foto.dart`; Tests in `test/` (JPEG-Segmente,
-  Ultra-HDR-Aufbau, Rezept; Start ohne Sitzung) und `android/app/src/test/` (Geometrie, JVM). Keine Google-Play-Dienste, kein Firebase. Konzept in
+  Ultra-HDR-Aufbau, Rezept; Start ohne Sitzung), `android/app/src/test/` (Geometrie, JVM) und
+  `android/app/src/androidTest/` (Renderer auf der GPU, im Emulator: `gradlew connectedDebugAndroidTest`
+  — deinstalliert danach die App, die Anmeldung ist dann weg). Keine Google-Play-Dienste, kein Firebase. Konzept in
   [specs/0001-editor.md](../specs/0001-editor.md).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,
   analyze, test, Debug-APK.

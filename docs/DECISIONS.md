@@ -7,6 +7,33 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-21 · D-22: Stufe-1-Regler in einem Shader; Editor nach Google Fotos
+
+Umsetzung: ein AGSL-Shader für alle zwölf Regler (Spec, Rezept-Format). Weißabgleich in
+linearem Licht, Tonwerte in der wahrgenommenen Helligkeit; Schärfe als Unscharfmaske mit einem
+Radius relativ zur Bildgröße, damit Vorschau und Export gleich aussehen; alle Regler 0 = Bild
+unverändert. **Helligkeit ist jetzt eine Mittelton-Kurve** (γ = 2^−Wert), nicht mehr der
+additive Versatz aus M1 (D-12) — vor dem ersten Release ist das Rezept-Format noch frei.
+
+Wie geprüft: 11 Instrumented Tests auf der GPU des Emulators (`RendererTest`): neutral weicht
+höchstens 2 von 255 ab; Helligkeit hebt Mitteltöne und lässt Schwarz; Kontrast spreizt;
+Sättigung −1 ergibt Grau; Blautöne wirken aufs blaue Feld, nicht aufs orange; Wärme hebt Rot
+und senkt Blau; Schatten, Spitzlichter, Weiß- und Schwarzpunkt, Vignette, Schärfe in ihre
+Richtung; Geometrie tauscht Breite und Höhe. Im Emulator bearbeitet (Kontrast +0,39, 7,8°,
+Zuschnitt), gespeichert: „Gespeichert und geprüft" nach 19 s, 2432×3333, `uhdrload`,
+Gain-Map 552×757, Korrelation zum Bild 0,605 (gedreht −0,089).
+
+Bedienung (Spec, *Bedienung*): schwarzer Editor, Reiter, runde Werkzeugknöpfe, Skalen-Lineal,
+Zuschnittrahmen mit Anfassern (Abdunklung außen gemessen: Helligkeit 76 → 42),
+Rückgängig/Wiederholen, Gedrückthalten zeigt das Original.
+
+Befund beim Bauen: Lineal und Zuschnittrahmen rechneten jeden Zug vom Wert des letzten
+Neuzeichnens aus — kommen mehrere Züge im selben Frame, ging Bewegung verloren (ein Zug über
+86 px ergab 1° statt 8°). Beide führen jetzt während des Ziehens einen eigenen Wert.
+
+**Anwenden:** Neue Regler kommen in `Renderer.REGLER`, den Shader und `werkzeuge` (Dart) — und
+bekommen einen Test in `RendererTest`.
+
 ## 2026-09-21 · D-21: Geometrie für Bild und Gain-Map aus einer Rechnung; EXIF-Orientierung
 
 Umsetzung: `Geometrie.kt` rechnet eine Matrix Quelle → Ausgabe (Vierteldrehungen, Spiegeln in
