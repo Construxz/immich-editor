@@ -8,7 +8,7 @@ Lizenzen nachgesehen am 21.09.2026 über die GitHub-API bzw. die README des Proj
 
 ## Abhängigkeiten
 
-Eingebunden sind bisher Flutter und `flutter_lints`, der Rest ist geplant.
+Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storage` (mit `tink-android`); der Rest ist geplant.
 
 | Paket | Zweck | Lizenz | passt |
 |---|---|---|---|
@@ -17,6 +17,7 @@ Eingebunden sind bisher Flutter und `flutter_lints`, der Rest ist geplant.
 | [photo_manager](https://github.com/fluttercandies/flutter_photo_manager) | Gerätegalerie; auch in Immichs App | Apache-2.0 | ja |
 | [http](https://github.com/dart-lang/http) | Immich-API | BSD-3-Clause | ja |
 | [flutter_secure_storage](https://github.com/juliansteenbakker/flutter_secure_storage) | Anmeldedaten | BSD-3-Clause | ja |
+| [Tink](https://github.com/tink-crypto/tink-java) (`tink-android`) | Verschlüsselung in `flutter_secure_storage`; Google-Bibliothek, lokal, ohne Play-Dienste | Apache-2.0 | ja |
 | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | Modelle auf dem Gerät (M5) | MIT | ja |
 
 ## Modell-Kandidaten (M5)
