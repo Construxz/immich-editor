@@ -37,6 +37,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   final _geladen = <String, Future<List<Kachel>>>{};
   final _auswahl = <String>{};
   var _hdr = true;
+  var _onlineAufsGeraet = true;
   var _aufGeraet = true;
   late Future<int?> _geraet = _geraetZaehlen();
   final _geraetSeiten = <int, Future<List<AssetEntity>>>{};
@@ -45,6 +46,9 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   void initState() {
     super.initState();
     speicher.read(key: 'hdr').then((w) => setState(() => _hdr = w != 'aus'));
+    speicher
+        .read(key: 'online')
+        .then((w) => setState(() => _onlineAufsGeraet = w != 'server'));
     _stapeln();
   }
 
@@ -207,12 +211,26 @@ class _GalerieSeiteState extends State<GalerieSeite> {
             setState(() => _hdr = !_hdr);
             speicher.write(key: 'hdr', value: _hdr ? 'an' : 'aus');
           }
+          if (w == 'online') {
+            setState(() => _onlineAufsGeraet = !_onlineAufsGeraet);
+            speicher.write(
+              key: 'online',
+              value: _onlineAufsGeraet ? 'geraet' : 'server',
+            );
+          }
         },
         itemBuilder: (_) => [
           CheckedPopupMenuItem(
             value: 'hdr',
             checked: _hdr,
             child: const Text('HDR (Ultra HDR erhalten)'),
+          ),
+          CheckedPopupMenuItem(
+            value: 'online',
+            checked: _onlineAufsGeraet,
+            child: const Text(
+              'Bearbeitungen von Online-Fotos übers Gerät sichern',
+            ),
           ),
           const PopupMenuItem(value: 'abmelden', child: Text('Abmelden')),
         ],

@@ -7,6 +7,24 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-22 · D-28: Online-Fotos übers Gerät gesichert — gebaut
+
+Nach D-25: Einstellung in der Galerie (⋮) „Bearbeitungen von Online-Fotos übers Gerät sichern",
+Vorgabe an (`online` = `geraet`/`server`). Ist sie an, legt der Editor die Kopie eines reinen
+Server-Fotos in den Kameraordner (`DCIM/Camera/`) und merkt sie mit ihrer Geräte-ID vor. Beim
+Stapeln nach dem Backup (D-26) geht eine ersetzte Server-Kopie in Immichs Papierkorb, die lokale
+Kopie in den des Geräts — für alle erledigten zusammen eine Rückfrage von Android.
+
+Grenze: Die Immich-App sichert die Kopie nur, wenn der Kameraordner zum Backup gehört; sonst
+bleibt sie auf dem Gerät und vorgemerkt.
+
+**Gemessen** 22.09.2026 im Emulator: `testfoto-a-exif6` (nur auf dem Server, mit älterer Kopie)
+bearbeitet → `testfoto-a-exif6.edit.jpg` im Kameraordner; Backup simuliert (Datei unverändert per
+`POST /assets`); Aktualisieren → neue Kopie vorn im Stapel, alte Kopie im Papierkorb des
+Servers, Rückfrage von Android, lokale Kopie weg.
+
+---
+
 ## 2026-09-22 · D-27: Keine Server-Erweiterung; das Rezept-Format ist die Schnittstelle
 
 Frage des Besitzers: eine abnehmbare Erweiterung für den Immich-Server, wie Noodle Gallery sie

@@ -18,9 +18,9 @@ Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speich
   (`POST /assets/bulk-upload-check`, Prüfsummen zwischengespeichert), mit Kennzeichen „gesichert";
   ein Serverfoto, das auch auf dem Gerät liegt, lokal bearbeiten (D-24); Vorgemerktes, das nie
   auf dem Server ankommt (Foto gelöscht, Backup aus), irgendwann verwerfen oder anzeigen.
-- ⬜ **Online-Fotos:** Editor startet mit Immichs Vorschaubild, Original erst zum Speichern oder im
-  Hintergrund; Einstellungen „Mobile Daten" und „Bearbeitungen von Online-Fotos: Gerät (Vorgabe) /
-  Server" (D-24, D-25).
+- 🔶 **Online-Fotos:** Speichern übers Gerät oder direkt auf den Server gebaut (D-28). Offen:
+  Editor startet mit Immichs Vorschaubild, Original erst zum Speichern oder im Hintergrund;
+  Einstellung „Mobile Daten" (D-24).
 - ⬜ **Presets:** Reiter „Presets" im Editor, speichern, auf eine Mehrfachauswahl anwenden.
 - ⬜ **Noodle Gallery als Server** prüfen: gleiche API wie Immich 3.2.2, aber Hauptversion 5 —
   die App warnt dann beim Anmelden (`bekannteHauptversionen`). Gegen einen Noodle-Server testen

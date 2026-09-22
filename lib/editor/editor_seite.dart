@@ -43,6 +43,8 @@ class _EditorSeiteState extends State<EditorSeite> {
   Foto? _alteKopie;
   Uint8List? _original;
   var _hdr = true;
+  var _aufsGeraet =
+      true; // Kopie in die Gerätegalerie statt direkt auf den Server
   var _hatGainmap = false;
   var _masse = const Size(1, 1); // wie man das Original sieht
   double? _verhaeltnis; // gewähltes Seitenverhältnis, null = frei
@@ -67,6 +69,9 @@ class _EditorSeiteState extends State<EditorSeite> {
     () async {
       try {
         final hdr = await speicher.read(key: 'hdr') != 'aus';
+        // Online-Fotos nach Einstellung, Vorgabe Gerät (D-25).
+        final aufsGeraet =
+            widget.geraet || await speicher.read(key: 'online') != 'server';
         final immich = widget.immich;
         Future<(Foto, Uint8List)> laden(String id) async => widget.geraet
             ? await geraetOriginal(id)
@@ -96,6 +101,7 @@ class _EditorSeiteState extends State<EditorSeite> {
           _rezept = start;
           _original = original;
           _hdr = hdr;
+          _aufsGeraet = aufsGeraet;
           _hatGainmap = geladen.hatGainmap;
           _masse = Size(geladen.breite, geladen.hoehe);
         });
@@ -185,8 +191,8 @@ class _EditorSeiteState extends State<EditorSeite> {
     if (verwerfen == true && mounted) Navigator.of(context).pop();
   }
 
-  /// Kopie rendern, hochladen, vor das Original stapeln, in dessen Alben legen — oder, bei einem
-  /// Gerätefoto, in die Gerätegalerie legen und zum Stapeln vormerken (D-24).
+  /// Kopie rendern, hochladen, vor das Original stapeln, in dessen Alben legen — oder in die
+  /// Gerätegalerie legen und zum Stapeln vormerken (D-24, D-25).
   /// Aufnahmezeit und Ort reisen im übernommenen EXIF mit.
   Future<void> _speichern() async {
     setState(() {
@@ -204,15 +210,18 @@ class _EditorSeiteState extends State<EditorSeite> {
         foto.pruefsumme,
         hdr: _hdr,
       );
-      if (widget.geraet) {
-        await geraetSpeichern(kopie, foto);
+      if (_aufsGeraet) {
+        final lokal = await geraetSpeichern(kopie, foto);
         await vormerken((
           kopie: await sha1(kopie),
           original: foto.pruefsumme,
           alt: _alteKopie?.pruefsumme,
+          entfernen: widget.geraet ? null : lokal,
         ));
+        // Eine alte Kopie auf dem Gerät geht in dessen Papierkorb; eine auf dem Server erst
+        // beim Stapeln (alt).
         final alt = _alteKopie;
-        if (alt != null) await geraetPapierkorb(alt.id);
+        if (alt != null && widget.geraet) await geraetPapierkorb([alt.id]);
         meldung.showSnackBar(
           const SnackBar(
             content: Text(

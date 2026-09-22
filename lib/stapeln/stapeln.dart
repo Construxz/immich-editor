@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../export/jpeg.dart' show rezeptAus;
 import '../foto.dart';
+import '../gallery/geraet.dart' show geraetPapierkorb;
 import '../main.dart' show speicher;
 import '../server/immich.dart';
 
@@ -30,8 +31,14 @@ Future<void> vorOriginal(
 }
 
 /// Eine Kopie, die auf dem Gerät entstand und gestapelt wird, sobald die Immich-App sie und das
-/// Original gesichert hat (D-24). Prüfsummen SHA-1, Base64.
-typedef Vorgemerkt = ({String kopie, String original, String? alt});
+/// Original gesichert hat (D-24). Prüfsummen SHA-1, Base64. Mit [entfernen] (ID auf dem Gerät)
+/// verlässt die Kopie danach das Gerät — das Original lag nur auf dem Server (D-25).
+typedef Vorgemerkt = ({
+  String kopie,
+  String original,
+  String? alt,
+  String? entfernen,
+});
 
 /// Merkt [neu] vor; eine noch wartende Kopie, die [neu] ersetzt, fällt heraus — sonst läge sie
 /// womöglich nachher vorn.
@@ -45,14 +52,24 @@ const _schluessel = 'stapeln';
 
 Future<List<Vorgemerkt>> _lesen() async => [
   for (final v in jsonDecode(await speicher.read(key: _schluessel) ?? '[]'))
-    (kopie: v['kopie'], original: v['original'], alt: v['alt']),
+    (
+      kopie: v['kopie'],
+      original: v['original'],
+      alt: v['alt'],
+      entfernen: v['entfernen'],
+    ),
 ];
 
 Future<void> _schreiben(List<Vorgemerkt> liste) => speicher.write(
   key: _schluessel,
   value: jsonEncode([
     for (final v in liste)
-      {'kopie': v.kopie, 'original': v.original, 'alt': v.alt},
+      {
+        'kopie': v.kopie,
+        'original': v.original,
+        'alt': v.alt,
+        'entfernen': v.entfernen,
+      },
   ]),
 );
 
@@ -86,4 +103,5 @@ Future<void> _stapeln(Immich immich) async {
     for (final v in await _lesen())
       if (!erledigt.contains(v)) v,
   ]);
+  await geraetPapierkorb([for (final v in erledigt) ?v.entfernen]);
 }

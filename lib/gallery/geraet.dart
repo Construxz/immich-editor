@@ -73,24 +73,27 @@ Future<String?> geraetPerPruefsumme(String sha1Wert, String aufgenommen) async {
 }
 
 /// Legt die Kopie neben das [original] in die Gerätegalerie — derselbe Ordner, damit die
-/// Immich-App sie mit sichert, und dieselbe Aufnahmezeit, damit sie daneben steht.
-Future<void> geraetSpeichern(Uint8List kopie, Foto original) {
+/// Immich-App sie mit sichert, und dieselbe Aufnahmezeit, damit sie daneben steht. Liegt das
+/// Original nur auf dem Server, in den Kameraordner. Gibt die ID der Kopie zurück.
+// ponytail: fester Kameraordner; wählbar machen, falls ihn jemand nicht sichern lässt.
+Future<String> geraetSpeichern(Uint8List kopie, Foto original) async {
   final name = original.dateiname.replaceFirst(
     RegExp(r'(\.[^.]*)?$'),
     '.edit.jpg',
   );
   // Den Dateinamen setzt photo_manager auf Android aus title, nicht aus filename.
-  return PhotoManager.editor.saveImage(
+  final a = await PhotoManager.editor.saveImage(
     kopie,
     filename: name,
     title: name,
-    relativePath: original.ordner,
+    relativePath: original.ordner ?? 'DCIM/Camera/',
     creationDate: DateTime.parse(original.aufgenommen),
   );
+  return a.id;
 }
 
-/// In den Papierkorb des Geräts; Android fragt den Nutzer.
-Future<void> geraetPapierkorb(String id) async {
-  final a = await AssetEntity.fromId(id);
-  if (a != null) await PhotoManager.editor.android.moveToTrash([a]);
+/// In den Papierkorb des Geräts; Android fragt den Nutzer, einmal für alle.
+Future<void> geraetPapierkorb(List<String> ids) async {
+  final fotos = [for (final id in ids) ?await AssetEntity.fromId(id)];
+  if (fotos.isNotEmpty) await PhotoManager.editor.android.moveToTrash(fotos);
 }

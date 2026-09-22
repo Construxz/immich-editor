@@ -11,7 +11,8 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   Dart-Paket `immich_editor`, D-10), `minSdk 34` (D-18):
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
     Immich-Hauptversion nicht 3 ist.
-  - Galerie (⋮: Einstellung „HDR", Abmelden) mit zwei Reitern: „Gerät" (Fotos auf dem Gerät,
+  - Galerie (⋮: Einstellungen „HDR" und „Bearbeitungen von Online-Fotos übers Gerät sichern",
+    Abmelden) mit zwei Reitern: „Gerät" (Fotos auf dem Gerät,
     neueste zuerst, D-26) und „Immich": Server-Fotos nach Monaten über Immichs Timeline,
     Monate laden beim Hinscrollen, ein Stapel zählt einmal (vorn die Bearbeitung), Mehrfachauswahl
     per langem Druck.
@@ -26,7 +27,9 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     gegenprüfen (SHA-1 des Servers = eigene), vor das Original stapeln, in dessen Alben legen;
     etwa 4 s im Emulator (D-23). **Gerätefotos** speichert die App ohne Server: Kopie in
     denselben Ordner der Gerätegalerie, vorgemerkt; sobald die Immich-App Original und Kopie
-    gesichert hat, stapelt die Galerie beim Öffnen oder Aktualisieren (D-26).
+    gesichert hat, stapelt die Galerie beim Öffnen oder Aktualisieren (D-26). **Online-Fotos**
+    ebenso (Vorgabe) in den Kameraordner; nach dem Stapeln verlässt die Kopie das Gerät (D-28).
+    Mit der Einstellung aus direkt auf den Server wie oben.
   - Netzwerk: Zeitgrenzen (30 s, Originale und Upload 3 min) und verständliche Fehler.
   - Ultra HDR: Die Kopie behält die Gain-Map des Originals (D-16), Standardformat (D-19); die
     Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).
