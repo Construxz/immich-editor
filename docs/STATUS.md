@@ -13,7 +13,9 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Immich-Hauptversion nicht 3 ist.
   - Galerie; oben rechts das Profilbild wie bei Immich → Konto, wartende Bearbeitungen,
     Abmelden, **Einstellungen** (Seite nach Abschnitten: HDR; Online-Fotos übers Gerät, mobile
-    Daten (D-30); Stapeln mit „Jetzt stapeln"; Konto — D-32). Zwei Reiter: „Gerät" (Fotos auf dem Gerät,
+    Daten (D-30); Stapeln mit „Jetzt stapeln"; Konto — D-32). Antippen öffnet den **Betrachter**
+    (D-33): wischen, zoomen, im Stapel wechseln, hochwischen für Infos, „Bearbeiten" → Editor →
+    zurück zum Ergebnis. Zwei Reiter: „Gerät" (Fotos auf dem Gerät,
     neueste zuerst, D-26) und „Immich": Server-Fotos nach Monaten über Immichs Timeline,
     Monate laden beim Hinscrollen, ein Stapel zählt einmal (vorn die Bearbeitung), Mehrfachauswahl
     per langem Druck.

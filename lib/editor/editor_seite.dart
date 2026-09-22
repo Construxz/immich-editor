@@ -335,7 +335,7 @@ class _EditorSeiteState extends State<EditorSeite> {
             ),
           ),
         );
-        navigator.pop();
+        navigator.pop((id: lokal, geraet: true));
         return;
       }
       setState(() => _schritt = 'Wird hochgeladen …');
@@ -362,7 +362,7 @@ class _EditorSeiteState extends State<EditorSeite> {
       meldung.showSnackBar(
         const SnackBar(content: Text('Gespeichert und geprüft')),
       );
-      navigator.pop();
+      navigator.pop((id: id, geraet: false));
     } catch (e) {
       meldung.showSnackBar(
         SnackBar(content: Text('Speichern fehlgeschlagen: $e')),

@@ -3,11 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-import '../editor/editor_seite.dart';
 import '../einstellungen.dart';
 import '../foto.dart';
 import '../server/immich.dart';
 import '../stapeln/stapeln.dart';
+import 'betrachter.dart';
 import 'geraet.dart';
 
 const _monatsnamen = [
@@ -72,11 +72,29 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   Future<List<Kachel>> _monat(String beginn) =>
       _geladen[beginn] ??= widget.immich.monat(beginn);
 
-  Future<void> _oeffnen(String id, {bool geraet = false}) async {
+  static const _seite = 120; // Gerätefotos je Abruf
+
+  Future<List<AssetEntity>> _geraetSeite(int i) =>
+      _geraetSeiten[i ~/ _seite] ??= geraetFotos(
+        i ~/ _seite * _seite,
+        (i ~/ _seite + 1) * _seite,
+      );
+
+  /// Öffnet den Betrachter bei [start]; danach neu laden, es kann Neues geben.
+  // ponytail: Server-Fotos nur innerhalb ihres Monats; über Monate wischen, wenn es fehlt.
+  Future<void> _oeffnen(
+    int anzahl,
+    Future<Eintrag> Function(int) eintragBei,
+    int start,
+  ) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            EditorSeite(immich: widget.immich, id: id, geraet: geraet),
+        builder: (_) => BetrachterSeite(
+          immich: widget.immich,
+          anzahl: anzahl,
+          eintragBei: eintragBei,
+          start: start,
+        ),
       ),
     );
     await _neuLaden();
@@ -132,7 +150,6 @@ class _GalerieSeiteState extends State<GalerieSeite> {
       if (anzahl == 0) {
         return const Center(child: Text('Keine Fotos auf dem Gerät.'));
       }
-      const seite = 120;
       return RefreshIndicator(
         onRefresh: _neuLaden,
         child: GridView.builder(
@@ -144,18 +161,15 @@ class _GalerieSeiteState extends State<GalerieSeite> {
           ),
           itemCount: anzahl,
           itemBuilder: (context, i) => FutureBuilder(
-            future: _geraetSeiten[i ~/ seite] ??= geraetFotos(
-              i ~/ seite * seite,
-              (i ~/ seite + 1) * seite,
-            ),
+            future: _geraetSeite(i),
             builder: (context, s) {
               final fotos = s.data;
-              if (fotos == null || i % seite >= fotos.length) {
+              if (fotos == null || i % _seite >= fotos.length) {
                 return ColoredBox(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 );
               }
-              final a = fotos[i % seite];
+              final a = fotos[i % _seite];
               return _Kachel(
                 key: ValueKey(a.id),
                 bild: _GeraetMiniatur(a),
@@ -163,7 +177,14 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                 gewaehlt: _auswahl.contains(a.id),
                 waehlt: _auswahl.isNotEmpty,
                 onTap: () => _auswahl.isEmpty
-                    ? _oeffnen(a.id, geraet: true)
+                    ? _oeffnen(
+                        anzahl,
+                        (j) async => (
+                          id: (await _geraetSeite(j))[j % _seite].id,
+                          geraet: true,
+                        ),
+                        i,
+                      )
                     : _waehlen(a.id),
                 onLongPress: () => _waehlen(a.id),
               );
@@ -249,7 +270,13 @@ class _GalerieSeiteState extends State<GalerieSeite> {
               stapel: k.stapel,
               gewaehlt: _auswahl.contains(k.id),
               waehlt: _auswahl.isNotEmpty,
-              onTap: () => _auswahl.isEmpty ? _oeffnen(k.id) : _waehlen(k.id),
+              onTap: () => _auswahl.isEmpty
+                  ? _oeffnen(
+                      kacheln.length,
+                      (j) async => (id: kacheln[j].id, geraet: false),
+                      i,
+                    )
+                  : _waehlen(k.id),
               onLongPress: () => _waehlen(k.id),
             );
           },

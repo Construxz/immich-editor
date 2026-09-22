@@ -42,6 +42,13 @@ Future<void> zeigeHdr(bool an) => rendererKanal.invokeMethod('hdr', {'an': an});
 Future<String> sha1(Uint8List bytes) async =>
     (await rendererKanal.invokeMethod<String>('sha1', {'bytes': bytes}))!;
 
+/// EXIF-Felder, gelesen von Androids `ExifInterface`: Texte (Make, Model, LensModel), Zahlen
+/// (FNumber, ExposureTime in s, PhotographicSensitivity, FocalLength), lat/lon.
+Future<Map<String, Object?>> exifLesen(Uint8List bytes) async =>
+    (await rendererKanal.invokeMapMethod<String, Object?>('exif', {
+      'bytes': bytes,
+    }))!;
+
 /// Kostet die Verbindung gerade Datenvolumen (Mobilfunk, Hotspot)? Android entscheidet.
 Future<bool> getaktet() async =>
     (await rendererKanal.invokeMethod<bool>('getaktet'))!;

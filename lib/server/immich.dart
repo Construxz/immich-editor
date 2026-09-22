@@ -119,16 +119,75 @@ class Immich {
   }
 
   /// Was der Editor über ein Foto wissen muss.
-  Future<Foto> foto(String id) async {
-    final a = _json(
-      await _warten(_http.get(_uri('/assets/$id'), headers: kopf), _kurz),
+  Future<Foto> foto(String id) async => _fotoAus(await _asset(id));
+
+  Future<Map<String, dynamic>> _asset(String id) async => _json(
+    await _warten(_http.get(_uri('/assets/$id'), headers: kopf), _kurz),
+  );
+
+  static Foto _fotoAus(Map<String, dynamic> a) => Foto(
+    id: a['id'],
+    dateiname: a['originalFileName'],
+    aufgenommen: a['fileCreatedAt'],
+    pruefsumme: a['checksum'],
+    stapelVorn: a['stack']?['primaryAssetId'],
+  );
+
+  /// Alle Fotos im Stapel von [id], das vordere zuerst; ohne Stapel nur das Foto selbst.
+  Future<List<Foto>> stapelMit(String id) async {
+    final a = await _asset(id);
+    final stapel = a['stack']?['id'];
+    if (stapel == null) return [_fotoAus(a)];
+    final s = _json(
+      await _warten(_http.get(_uri('/stacks/$stapel'), headers: kopf), _kurz),
     );
-    return Foto(
-      id: a['id'],
-      dateiname: a['originalFileName'],
-      aufgenommen: a['fileCreatedAt'],
-      pruefsumme: a['checksum'],
-      stapelVorn: a['stack']?['primaryAssetId'],
+    final alle = [
+      for (final x in s['assets'] as List)
+        if (x['isTrashed'] != true) _fotoAus(x),
+    ];
+    final vorn = s['primaryAssetId'];
+    return [
+      ...alle.where((f) => f.id == vorn),
+      ...alle.where((f) => f.id != vorn),
+    ];
+  }
+
+  /// Aufnahme, Ort und Kamera, wie Immich sie aus dem EXIF gelesen hat.
+  Future<FotoInfo> info(String id) async {
+    final a = await _asset(id);
+    final e = (a['exifInfo'] ?? const {}) as Map<String, dynamic>;
+    final zeit = e['exposureTime'] as String?; // etwa „1/120"
+    final bruch = zeit?.split('/');
+    final ort = [e['city'], e['country']].whereType<String>().join(', ');
+    return (
+      name: a['originalFileName'] as String,
+      // Ortszeit der Aufnahme, wie Immich sie zeigt (als UTC notiert, gemeint ist die Uhr vor Ort)
+      aufgenommen: DateTime.tryParse(
+        (a['localDateTime'] as String? ?? '').replaceFirst(
+          RegExp(r'(Z|[+-]\d\d:\d\d)$'),
+          '',
+        ),
+      ),
+      ort: ort.isNotEmpty
+          ? ort
+          : e['latitude'] == null
+          ? null
+          : '${e['latitude']}, ${e['longitude']}',
+      kamera: kameraAus(e['make'], e['model']),
+      objektiv: e['lensModel'] as String?,
+      belichtung: belichtungAus(
+        blende: e['fNumber'],
+        sekunden: bruch == null
+            ? null
+            : bruch.length == 2
+            ? num.parse(bruch[0]) / num.parse(bruch[1])
+            : num.tryParse(bruch[0]),
+        iso: e['iso'],
+        brennweite: e['focalLength'],
+      ),
+      breite: e['exifImageWidth'] as int?,
+      hoehe: e['exifImageHeight'] as int?,
+      bytes: e['fileSizeInByte'] as int?,
     );
   }
 
@@ -172,15 +231,12 @@ class Immich {
   Uri miniatur(String id) => _uri('/assets/$id/thumbnail');
 
   /// Immichs Vorschaubild (JPEG, lange Kante 1440 px, schon aufgerichtet, ohne Gain-Map).
-  Future<Uint8List> vorschau(String id) async => _ok(
-    await _warten(
-      _http.get(
-        _uri('/assets/$id/thumbnail', {'size': 'preview'}),
-        headers: kopf,
-      ),
-      _kurz,
-    ),
-  ).bodyBytes;
+  Uri vorschauUri(String id) =>
+      _uri('/assets/$id/thumbnail', {'size': 'preview'});
+
+  Future<Uint8List> vorschau(String id) async =>
+      _ok(await _warten(_http.get(vorschauUri(id), headers: kopf), _kurz))
+          .bodyBytes;
 
   Future<Uint8List> original(String id) async => _ok(
     await _warten(

@@ -11,11 +11,8 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speichern in 4 s
 (D-17 bis D-23). Offen, in dieser Reihenfolge:
-- ⬜ **Betrachter:** Tippen auf eine Kachel öffnet das Foto groß — wischen durch die Galerie,
-  zoomen, im Stapel zwischen Original und Kopien wechseln; „Bearbeiten" öffnet den Editor, nach
-  dem Speichern zurück zum Ergebnis. Nach oben wischen: Name, Datum und Uhrzeit, Ort als Text,
-  Kamera, Objektiv, Blende, Belichtung, ISO, Auflösung, Größe. Teilen, Alben, Papierkorb, Karte
-  bleiben bei Immich (Entscheidung des Besitzers, 22.09.2026).
+- ⬜ **Betrachter, Rest:** über Monatsgrenzen wischen (Server-Fotos bisher nur im Monat); HDR im
+  Betrachter; Objektiv bei Gerätefotos (das Framework-`ExifInterface` liefert `LensModel` nicht).
 - 🔶 **Gerätefotos:** bearbeiten, Kopie in die Gerätegalerie, nach dem Backup stapeln — gebaut
   (D-26). Offen: eine Zeitleiste über Gerät und Server, über die Prüfsumme zusammengeführt
   (`POST /assets/bulk-upload-check`, Prüfsummen zwischengespeichert), mit Kennzeichen „gesichert";

@@ -25,6 +25,44 @@ class Foto {
   final String? ordner;
 }
 
+/// Ein Foto in Galerie und Betrachter: auf dem Gerät ([geraet]) oder auf dem Server.
+typedef Eintrag = ({String id, bool geraet});
+
+/// Was der Betrachter beim Hochwischen zeigt; was fehlt, bleibt null.
+typedef FotoInfo = ({
+  String name,
+  DateTime? aufgenommen,
+  String? ort,
+  String? kamera,
+  String? objektiv,
+  String? belichtung,
+  int? breite,
+  int? hoehe,
+  int? bytes,
+});
+
+/// „Google Pixel 7 Pro" statt „Google Google Pixel 7 Pro".
+String? kameraAus(String? hersteller, String? modell) {
+  if (modell == null) return hersteller;
+  if (hersteller == null || modell.startsWith(hersteller)) return modell;
+  return '$hersteller $modell';
+}
+
+/// „f/1,9 · 1/120 s · ISO 50 · 6,8 mm" — nur, was bekannt ist.
+String? belichtungAus({num? blende, num? sekunden, num? iso, num? brennweite}) {
+  String zahl(num x) =>
+      (x == x.roundToDouble() ? x.round().toString() : x.toStringAsFixed(1))
+          .replaceAll('.', ',');
+  final teile = [
+    if (blende != null && blende > 0) 'f/${zahl(blende)}',
+    if (sekunden != null && sekunden > 0)
+      sekunden < 1 ? '1/${(1 / sekunden).round()} s' : '${zahl(sekunden)} s',
+    if (iso != null && iso > 0) 'ISO ${iso.round()}',
+    if (brennweite != null && brennweite > 0) '${zahl(brennweite)} mm',
+  ];
+  return teile.isEmpty ? null : teile.join(' · ');
+}
+
 /// Der angemeldete Nutzer: [farbe] ist Immichs Avatarfarbe, [hatBild] ein eigenes Profilbild.
 typedef Konto = ({
   String id,

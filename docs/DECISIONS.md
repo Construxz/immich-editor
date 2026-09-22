@@ -7,6 +7,30 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-22 · D-33: Betrachter zwischen Galerie und Editor
+
+Entscheidung des Besitzers: Fotos erst groß ansehen, dann bearbeiten; nach dem Speichern das
+Ergebnis sehen. Teilen, Alben, Papierkorb und Karte bleiben bei der Immich-App.
+
+Gebaut: Tippen auf eine Kachel öffnet den Betrachter — wischen durch die Fotos (Gerät: alle;
+Server: bisher der Monat), zoomen bis 8×, bei Server-Stapeln unten die Mitglieder („Original",
+„Bearbeitung", „Bearbeitung 2" — am Namen `.edit` erkannt), „Bearbeiten" öffnet den Editor mit
+dem gezeigten Mitglied; der Editor gibt die neue Kopie zurück und der Betrachter zeigt sie.
+Hochwischen zeigt Datum und Uhrzeit, Name, Megapixel, Maße, Größe, Kamera, Objektiv,
+Belichtung, Ort — für Server-Fotos aus Immichs `exifInfo` (Ortszeit aus `localDateTime`, Ort als
+Stadt und Land), für Gerätefotos aus Androids `ExifInterface` über den Plattformkanal (Ort als
+Koordinaten; ISO steht dort unter dem alten Namen `ISOSpeedRatings`). Keine neue Abhängigkeit.
+
+Stolperstein: Hochwischen im `GestureDetector` erreicht die App nicht, der `InteractiveViewer`
+nimmt die Geste; ausgewertet wird sie in dessen `onInteractionEnd`, nur ungezoomt.
+
+**Geprüft** 22.09.2026 im Emulator: Server-Foto öffnen, Stapel mit drei Mitgliedern, Infos
+(Google Pixel 7 Pro, f/1,9 · 1/231 s · ISO 47 · 6,8 mm, <Ort>), seitlich zum
+nächsten Stapel; Bearbeiten → „Kopie ersetzen" → zurück im Betrachter mit der neuen Kopie;
+Gerätefoto mit Infos aus dem EXIF.
+
+---
+
 ## 2026-09-22 · D-32: Profilbild, Konto und eine Einstellungsseite
 
 Befund des Besitzers: Eine Bearbeitung vom Gerät wurde gesichert, aber nie gestapelt. Ursache: Die

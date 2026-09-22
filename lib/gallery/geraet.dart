@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:photo_manager/photo_manager.dart';
 
-import '../editor/vorschau.dart' show sha1;
+import '../editor/vorschau.dart' show exifLesen, sha1;
 import '../foto.dart';
 
 /// Fotos auf dem Gerät (`photo_manager`), neueste Aufnahme zuerst.
@@ -90,6 +90,38 @@ Future<String> geraetSpeichern(Uint8List kopie, Foto original) async {
     creationDate: DateTime.parse(original.aufgenommen),
   );
   return a.id;
+}
+
+/// Aufnahme, Ort und Kamera eines Gerätefotos; die Kameradaten aus dem EXIF am Dateianfang.
+Future<FotoInfo> geraetInfo(String id) async {
+  final a = await AssetEntity.fromId(id);
+  final bytes = await a?.originBytes;
+  if (a == null || bytes == null) {
+    throw Exception('Foto nicht mehr auf dem Gerät');
+  }
+  final e = await exifLesen(
+    Uint8List.sublistView(bytes, 0, bytes.length.clamp(0, 256 * 1024)),
+  );
+  num? zahl(String k) => e[k] as num?;
+  final lat = zahl('lat'), lon = zahl('lon');
+  return (
+    name: a.title ?? '',
+    aufgenommen: a.createDateTime,
+    ort: lat == null
+        ? null
+        : '${lat.toStringAsFixed(5)}, ${lon!.toStringAsFixed(5)}',
+    kamera: kameraAus(e['Make'] as String?, e['Model'] as String?),
+    objektiv: e['LensModel'] as String?,
+    belichtung: belichtungAus(
+      blende: zahl('FNumber'),
+      sekunden: zahl('ExposureTime'),
+      iso: zahl('PhotographicSensitivity'),
+      brennweite: zahl('FocalLength'),
+    ),
+    breite: a.orientatedWidth,
+    hoehe: a.orientatedHeight,
+    bytes: bytes.length,
+  );
 }
 
 /// In den Papierkorb des Geräts; Android fragt den Nutzer, einmal für alle.

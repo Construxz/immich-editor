@@ -3,7 +3,9 @@ package io.github.construxz.photoeditor
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.ExifInterface
 import android.net.ConnectivityManager
+import java.io.ByteArrayInputStream
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -66,6 +68,20 @@ class MainActivity : FlutterActivity() {
                                 runOnUiThread { result.error("export", e.toString(), null) }
                             }
                         }
+                    }
+                    "exif" -> {
+                        val e = ExifInterface(ByteArrayInputStream(call.argument<ByteArray>("bytes")!!))
+                        val werte = mutableMapOf<String, Any>()
+                        for (t in listOf("Make", "Model", "LensModel")) e.getAttribute(t)?.let { werte[t] = it.trim() }
+                        // Tag 0x8827; das Framework kennt ihn je nach Version unter dem alten Namen
+                        listOf("PhotographicSensitivity", "ISOSpeedRatings").map { e.getAttributeInt(it, 0) }
+                            .firstOrNull { it > 0 }?.let { werte["PhotographicSensitivity"] = it }
+                        for (t in listOf("FNumber", "ExposureTime", "FocalLength")) {
+                            e.getAttributeDouble(t, -1.0).takeIf { it > 0 }?.let { werte[t] = it }
+                        }
+                        val ort = FloatArray(2)
+                        if (e.getLatLong(ort)) { werte["lat"] = ort[0].toDouble(); werte["lon"] = ort[1].toDouble() }
+                        result.success(werte)
                     }
                     "getaktet" -> result.success(
                         getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered,
