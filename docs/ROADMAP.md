@@ -11,10 +11,16 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speichern in 4 s
 (D-17 bis D-23). Offen, in dieser Reihenfolge:
+- ⬜ **Betrachter:** Tippen auf eine Kachel öffnet das Foto groß — wischen durch die Galerie,
+  zoomen, im Stapel zwischen Original und Kopien wechseln; „Bearbeiten" öffnet den Editor, nach
+  dem Speichern zurück zum Ergebnis. Nach oben wischen: Name, Datum und Uhrzeit, Ort als Text,
+  Kamera, Objektiv, Blende, Belichtung, ISO, Auflösung, Größe. Teilen, Alben, Papierkorb, Karte
+  bleiben bei Immich (Entscheidung des Besitzers, 22.09.2026).
 - 🔶 **Gerätefotos:** bearbeiten, Kopie in die Gerätegalerie, nach dem Backup stapeln — gebaut
   (D-26). Offen: eine Zeitleiste über Gerät und Server, über die Prüfsumme zusammengeführt
   (`POST /assets/bulk-upload-check`, Prüfsummen zwischengespeichert), mit Kennzeichen „gesichert";
-  ein Serverfoto, das auch auf dem Gerät liegt, lokal bearbeiten (D-24); Vorgemerktes, das nie
+  ein Serverfoto, das auch auf dem Gerät liegt, lokal bearbeiten (D-24); im Hintergrund stapeln,
+  ohne dass man die App öffnet; Vorgemerktes, das nie
   auf dem Server ankommt (Foto gelöscht, Backup aus), irgendwann verwerfen oder anzeigen.
 - ⬜ **Presets:** Reiter „Presets" im Editor, speichern, auf eine Mehrfachauswahl anwenden.
 - ⬜ **Noodle Gallery als Server** prüfen: gleiche API wie Immich 3.2.2, aber Hauptversion 5 —

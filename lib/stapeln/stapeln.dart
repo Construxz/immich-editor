@@ -69,6 +69,9 @@ Future<void> _schreiben(List<Vorgemerkt> liste) => speicher.write(
   ]),
 );
 
+/// Wie viele Kopien noch auf das Backup warten.
+Future<int> wartendeStapel() async => (await _lesen()).length;
+
 Future<void> vormerken(Vorgemerkt neu) async =>
     _schreiben(vormerkenIn(await _lesen(), neu));
 

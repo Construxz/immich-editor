@@ -7,6 +7,24 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-22 · D-32: Profilbild, Konto und eine Einstellungsseite
+
+Befund des Besitzers: Eine Bearbeitung vom Gerät wurde gesichert, aber nie gestapelt. Ursache: Die
+App war mit dem Testbenutzer angemeldet, die Immich-App mit seinem eigenen Konto — gestapelt wird
+nur im Konto, in dem die App angemeldet ist (D-26). Das war nirgends zu sehen.
+
+Deshalb, auf Wunsch des Besitzers nach dem Vorbild der Immich-App: oben rechts das Profilbild
+(`GET /users/me`, `GET /users/{id}/profile-image`; ohne Bild die Initiale auf Immichs
+`avatarColor`). Antippen zeigt Name, E-Mail, Server, wie viele Bearbeitungen aufs Backup warten
+(mit dem Hinweis, dass die Immich-App mit diesem Konto sichern muss), „Abmelden" und
+„Einstellungen". Die Einstellungen stehen auf einer eigenen Seite nach Abschnitten (Bearbeiten,
+Speichern, Stapeln mit „Jetzt stapeln", Konto) statt im ⋮-Menü.
+
+**Geprüft** 22.09.2026 im Emulator: Initiale „E" in Blau, Konto-Fenster mit „3 Bearbeitungen
+warten auf das Backup", Einstellungsseite mit allen Schaltern.
+
+---
+
 ## 2026-09-22 · D-31: Eine Kopie ersetzen oder daneben legen; Miniaturen neuer Kopien
 
 Anlass: Rückmeldung des Besitzers (Pixel, Stand `4448976`). Speichern geht dort — das „App

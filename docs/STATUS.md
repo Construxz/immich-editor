@@ -11,8 +11,9 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   Dart-Paket `immich_editor`, D-10), `minSdk 34` (D-18):
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
     Immich-Hauptversion nicht 3 ist.
-  - Galerie (⋮: Einstellungen „HDR", „Originale und Uploads über mobile Daten" (D-30) und
-    „Bearbeitungen von Online-Fotos übers Gerät sichern", Abmelden) mit zwei Reitern: „Gerät" (Fotos auf dem Gerät,
+  - Galerie; oben rechts das Profilbild wie bei Immich → Konto, wartende Bearbeitungen,
+    Abmelden, **Einstellungen** (Seite nach Abschnitten: HDR; Online-Fotos übers Gerät, mobile
+    Daten (D-30); Stapeln mit „Jetzt stapeln"; Konto — D-32). Zwei Reiter: „Gerät" (Fotos auf dem Gerät,
     neueste zuerst, D-26) und „Immich": Server-Fotos nach Monaten über Immichs Timeline,
     Monate laden beim Hinscrollen, ein Stapel zählt einmal (vorn die Bearbeitung), Mehrfachauswahl
     per langem Druck.

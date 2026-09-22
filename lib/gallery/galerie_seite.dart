@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../editor/editor_seite.dart';
+import '../einstellungen.dart';
 import '../foto.dart';
-import '../main.dart' show speicher;
 import '../server/immich.dart';
 import '../stapeln/stapeln.dart';
 import 'geraet.dart';
@@ -36,9 +36,6 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   late Future<List<Monat>> _monate = widget.immich.monate();
   final _geladen = <String, Future<List<Kachel>>>{};
   final _auswahl = <String>{};
-  var _hdr = true;
-  var _onlineAufsGeraet = true;
-  var _mobileDaten = true;
   var _aufGeraet = true;
   late Future<int?> _geraet = _geraetZaehlen();
   final _geraetSeiten = <int, Future<List<AssetEntity>>>{};
@@ -46,13 +43,6 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   @override
   void initState() {
     super.initState();
-    speicher.read(key: 'hdr').then((w) => setState(() => _hdr = w != 'aus'));
-    speicher
-        .read(key: 'online')
-        .then((w) => setState(() => _onlineAufsGeraet = w != 'server'));
-    speicher
-        .read(key: 'mobil')
-        .then((w) => setState(() => _mobileDaten = w != 'aus'));
     _stapeln();
   }
 
@@ -207,47 +197,8 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   AppBar _leiste() => AppBar(
     title: const Text('Editor for Immich'),
     actions: [
-      PopupMenuButton<String>(
-        tooltip: 'Mehr',
-        onSelected: (w) {
-          if (w == 'abmelden') widget.onAbmelden();
-          if (w == 'hdr') {
-            setState(() => _hdr = !_hdr);
-            speicher.write(key: 'hdr', value: _hdr ? 'an' : 'aus');
-          }
-          if (w == 'mobil') {
-            setState(() => _mobileDaten = !_mobileDaten);
-            speicher.write(key: 'mobil', value: _mobileDaten ? 'an' : 'aus');
-          }
-          if (w == 'online') {
-            setState(() => _onlineAufsGeraet = !_onlineAufsGeraet);
-            speicher.write(
-              key: 'online',
-              value: _onlineAufsGeraet ? 'geraet' : 'server',
-            );
-          }
-        },
-        itemBuilder: (_) => [
-          CheckedPopupMenuItem(
-            value: 'hdr',
-            checked: _hdr,
-            child: const Text('HDR (Ultra HDR erhalten)'),
-          ),
-          CheckedPopupMenuItem(
-            value: 'mobil',
-            checked: _mobileDaten,
-            child: const Text('Originale und Uploads über mobile Daten'),
-          ),
-          CheckedPopupMenuItem(
-            value: 'online',
-            checked: _onlineAufsGeraet,
-            child: const Text(
-              'Bearbeitungen von Online-Fotos übers Gerät sichern',
-            ),
-          ),
-          const PopupMenuItem(value: 'abmelden', child: Text('Abmelden')),
-        ],
-      ),
+      KontoKnopf(immich: widget.immich, onAbmelden: widget.onAbmelden),
+      const SizedBox(width: 8),
     ],
   );
 

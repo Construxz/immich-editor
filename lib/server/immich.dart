@@ -57,6 +57,22 @@ class Immich {
           )['major']
           as int;
 
+  /// Wer angemeldet ist.
+  Future<Konto> ich() async {
+    final u = _json(
+      await _warten(_http.get(_uri('/users/me'), headers: kopf), _kurz),
+    );
+    return (
+      id: u['id'] as String,
+      name: u['name'] as String,
+      email: u['email'] as String,
+      hatBild: (u['profileImagePath'] as String? ?? '').isNotEmpty,
+      farbe: u['avatarColor'] as String? ?? 'primary',
+    );
+  }
+
+  Uri profilbild(String id) => _uri('/users/$id/profile-image');
+
   /// Die Monate der Timeline, neueste zuerst; Stapel zählen einmal.
   Future<List<Monat>> monate() async {
     final r = await _warten(

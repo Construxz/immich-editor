@@ -25,6 +25,15 @@ class Foto {
   final String? ordner;
 }
 
+/// Der angemeldete Nutzer: [farbe] ist Immichs Avatarfarbe, [hatBild] ein eigenes Profilbild.
+typedef Konto = ({
+  String id,
+  String name,
+  String email,
+  bool hatBild,
+  String farbe,
+});
+
 /// Ein Eintrag der Galerie, so knapp, wie die Timeline ihn liefert.
 typedef Kachel = ({String id, double seitenverhaeltnis, int stapel});
 
