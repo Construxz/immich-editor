@@ -7,6 +7,26 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-22 · D-34: Stapel im Betrachter wie Langzeitbelichtungen bei Google Fotos
+
+Wunsch des Besitzers (Bildschirmfoto von Google Fotos als Vorlage): Oben Datum und Uhrzeit
+(Ortszeit), darunter die Version des gezeigten Fotos; unter dem Bild die Miniaturen des Stapels,
+Antippen zeigt das Mitglied. Reihenfolge fest: **Original, V1, V2 …** — Kopien nach ihrem
+Entstehen (`createdAt`), das Hauptfoto mit Stern. ⋮ an der gewählten Miniatur: **„Als Hauptfoto
+festlegen"** (`PUT /stacks/{id}`, nicht am Hauptfoto) und **„Dieses Foto behalten, den Rest
+löschen"** (nach Rückfrage: die übrigen in Immichs Papierkorb, `DELETE /stacks/{id}` löst den
+Stapel auf). Mehrfachauswahl wie bei Google entfällt — kein Bedarf (Besitzer).
+
+**Geprüft** 22.09.2026 im Emulator am Stapel `testfoto-a-hdr` (Original + 2 Kopien): V1 als
+Hauptfoto → Server meldet V1 vorn; Original behalten → beide Kopien im Papierkorb, kein Stapel
+mehr, Datum weiter sichtbar. Danach Testdaten wiederhergestellt.
+
+Zwei Fehler dabei: `setState(() => _x = future)` gibt den Future zurück, Flutter bricht ab — als
+Block schreiben; nach „Rest löschen" lud die Seite den Stapel von der gelöschten Kopie aus —
+jetzt vom gezeigten Foto.
+
+---
+
 ## 2026-09-22 · D-33: Betrachter zwischen Galerie und Editor
 
 Entscheidung des Besitzers: Fotos erst groß ansehen, dann bearbeiten; nach dem Speichern das

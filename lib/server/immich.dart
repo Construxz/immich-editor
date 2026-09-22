@@ -131,13 +131,23 @@ class Immich {
     aufgenommen: a['fileCreatedAt'],
     pruefsumme: a['checksum'],
     stapelVorn: a['stack']?['primaryAssetId'],
+    angelegt: a['createdAt'],
+    ortszeit: _ortszeit(a),
   );
 
-  /// Alle Fotos im Stapel von [id], das vordere zuerst; ohne Stapel nur das Foto selbst.
-  Future<List<Foto>> stapelMit(String id) async {
+  /// Immich notiert die Uhrzeit vor Ort als UTC (`localDateTime`); gemeint ist die Uhr vor Ort.
+  static DateTime? _ortszeit(Map<String, dynamic> a) => DateTime.tryParse(
+    (a['localDateTime'] as String? ?? '').replaceFirst(
+      RegExp(r'(Z|[+-]\d\d:\d\d)$'),
+      '',
+    ),
+  );
+
+  /// Der Stapel von [id]; ohne Stapel nur das Foto selbst.
+  Future<Stapel> stapelMit(String id) async {
     final a = await _asset(id);
-    final stapel = a['stack']?['id'];
-    if (stapel == null) return [_fotoAus(a)];
+    final stapel = a['stack']?['id'] as String?;
+    if (stapel == null) return (id: null, vorn: id, fotos: [_fotoAus(a)]);
     final s = _json(
       await _warten(_http.get(_uri('/stacks/$stapel'), headers: kopf), _kurz),
     );
@@ -145,12 +155,25 @@ class Immich {
       for (final x in s['assets'] as List)
         if (x['isTrashed'] != true) _fotoAus(x),
     ];
-    final vorn = s['primaryAssetId'];
-    return [
-      ...alle.where((f) => f.id == vorn),
-      ...alle.where((f) => f.id != vorn),
-    ];
+    return (id: stapel, vorn: s['primaryAssetId'] as String, fotos: alle);
   }
+
+  /// Legt [id] im Stapel [stapel] nach vorn.
+  Future<void> vornSetzen(String stapel, String id) async => _ok(
+    await _warten(
+      _http.put(
+        _uri('/stacks/$stapel'),
+        headers: {...kopf, 'Content-Type': 'application/json'},
+        body: jsonEncode({'primaryAssetId': id}),
+      ),
+      _kurz,
+    ),
+  );
+
+  /// Löst den Stapel auf; die Fotos bleiben.
+  Future<void> stapelAufloesen(String stapel) async => _ok(
+    await _warten(_http.delete(_uri('/stacks/$stapel'), headers: kopf), _kurz),
+  );
 
   /// „Stadt, Land" zu Koordinaten — Immich rechnet mit eigenen Ortsdaten, kein fremder Dienst.
   Future<String?> ortVon(double lat, double lon) async {
@@ -180,13 +203,7 @@ class Immich {
     final ort = [e['city'], e['country']].whereType<String>().join(', ');
     return (
       name: a['originalFileName'] as String,
-      // Ortszeit der Aufnahme, wie Immich sie zeigt (als UTC notiert, gemeint ist die Uhr vor Ort)
-      aufgenommen: DateTime.tryParse(
-        (a['localDateTime'] as String? ?? '').replaceFirst(
-          RegExp(r'(Z|[+-]\d\d:\d\d)$'),
-          '',
-        ),
-      ),
+      aufgenommen: _ortszeit(a),
       ort: ort.isEmpty ? null : ort,
       kamera: kameraAus(e['make'], e['model']),
       objektiv: e['lensModel'] as String?,

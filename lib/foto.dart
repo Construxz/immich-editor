@@ -7,6 +7,8 @@ class Foto {
     required this.pruefsumme,
     this.stapelVorn,
     this.ordner,
+    this.angelegt,
+    this.ortszeit,
   });
 
   final String id;
@@ -23,7 +25,16 @@ class Foto {
 
   /// Ordner in der Gerätegalerie, wenn das Foto auf dem Gerät liegt; sonst null (Server).
   final String? ordner;
+
+  /// Wann das Asset auf dem Server entstand (ISO 8601) — ordnet Kopien im Stapel.
+  final String? angelegt;
+
+  /// Aufnahmezeit als Uhrzeit vor Ort.
+  final DateTime? ortszeit;
 }
+
+/// Ein Stapel auf dem Server: [id] (null ohne Stapel), das vordere Foto, alle Mitglieder.
+typedef Stapel = ({String? id, String vorn, List<Foto> fotos});
 
 /// Ein Foto in Galerie und Betrachter: auf dem Gerät ([geraet]) oder auf dem Server.
 typedef Eintrag = ({String id, bool geraet});

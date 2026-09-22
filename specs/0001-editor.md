@@ -170,7 +170,7 @@ einmal** — gehört in den ersten Wurf.
 | `stapeln/` | lokal entstandene Kopien nach dem Backup dem Original zuordnen | — |
 
 **Die Endpunkte** (geprüft gegen die OpenAPI-Spezifikation 3.2.2): `POST /auth/login`,
-`GET /stacks/{id}` (Mitglieder im Betrachter), `GET /map/reverse-geocode` (Ort eines
+`GET`, `PUT` und `DELETE /stacks/{id}` (Mitglieder, Hauptfoto, auflösen — im Betrachter), `GET /map/reverse-geocode` (Ort eines
 Gerätefotos), `GET /users/me` und `GET /users/{id}/profile-image` (Profilbild wie in der Immich-App),
 `GET /server/version`, `GET /timeline/buckets` und `GET /timeline/bucket` (Galerie, mit
 `withStacked` — ein Stapel zählt einmal), `GET /assets/{id}` (Details, Prüfsumme, Stapel),
