@@ -172,7 +172,7 @@ einmal** — gehört in den ersten Wurf.
 **Die Endpunkte** (geprüft gegen die OpenAPI-Spezifikation 3.2.2): `POST /auth/login`,
 `GET /server/version`, `GET /timeline/buckets` und `GET /timeline/bucket` (Galerie, mit
 `withStacked` — ein Stapel zählt einmal), `GET /assets/{id}` (Details, Prüfsumme, Stapel),
-`GET /assets/{id}/thumbnail`, `GET /assets/{id}/original` (auch als Teilabruf), `POST /assets`
+`GET /assets/{id}/thumbnail` (auch `size=preview` als erstes Bild im Editor), `GET /assets/{id}/original` (auch als Teilabruf), `POST /assets`
 (Pflichtfelder `assetData`, `fileCreatedAt`, `fileModifiedAt`), `POST /search/metadata` (nur
 nach Prüfsumme), `POST /stacks`, `DELETE /assets` (Papierkorb), `GET /albums?assetId=…`,
 `PUT /albums/{id}/assets`. Von Hand statt generiert — ein Dutzend Endpunkte sind weniger Code

@@ -41,7 +41,12 @@ class _EditorSeiteState extends State<EditorSeite> {
   /// Beim erneuten Bearbeiten: die bisherige Kopie; sie geht nach dem Speichern in den
   /// Papierkorb (Spec, *Speicherweg* 5).
   Foto? _alteKopie;
+  var _bereit =
+      false; // Bild im Editor, zunächst womöglich Immichs Vorschaubild
+
+  /// Das Original, sobald geladen und im Renderer; bei Online-Fotos kommt es im Hintergrund.
   Uint8List? _original;
+  late Future<Uint8List> _originalFertig;
   var _hdr = true;
   var _aufsGeraet =
       true; // Kopie in die Gerätegalerie statt direkt auf den Server
@@ -73,14 +78,16 @@ class _EditorSeiteState extends State<EditorSeite> {
         final aufsGeraet =
             widget.geraet || await speicher.read(key: 'online') != 'server';
         final immich = widget.immich;
+        // Gerätefotos ganz; vom Server erst Details und Anfang (EXIF, XMP) — das Original
+        // (Megabytes) lädt im Hintergrund, der Editor startet mit Immichs Vorschaubild (D-24).
         Future<(Foto, Uint8List)> laden(String id) async => widget.geraet
             ? await geraetOriginal(id)
-            : (await immich.foto(id), await immich.original(id));
-        var (foto, original) = await laden(widget.id);
+            : (await immich.foto(id), await immich.anfang(id));
+        var (foto, bytes) = await laden(widget.id);
         // Eine Kopie dieser App? Dann das Original mit ihrem Rezept öffnen.
         Foto? alteKopie;
         var start = const Rezept();
-        final aus = rezeptAus(original);
+        final aus = rezeptAus(bytes);
         final originalId = aus == null
             ? null
             : widget.geraet
@@ -89,10 +96,14 @@ class _EditorSeiteState extends State<EditorSeite> {
         if (aus != null && originalId != null) {
           alteKopie = foto;
           start = Rezept.fromJson(aus.rezept);
-          (foto, original) = await laden(originalId);
+          (foto, bytes) = await laden(originalId);
         }
-        final geladen = await ladeOriginal(original, hdr: hdr);
-        zeigeRezept(start);
+        final original = widget.geraet ? bytes : null;
+        final geladen = await ladeOriginal(
+          original ?? await immich.vorschau(foto.id),
+          hdr: hdr,
+          rezept: start,
+        );
         if (!mounted) return;
         setState(() {
           _foto = foto;
@@ -100,15 +111,36 @@ class _EditorSeiteState extends State<EditorSeite> {
           _verlauf = [start];
           _rezept = start;
           _original = original;
+          _bereit = true;
           _hdr = hdr;
           _aufsGeraet = aufsGeraet;
           _hatGainmap = geladen.hatGainmap;
           _masse = Size(geladen.breite, geladen.hoehe);
         });
+        _originalFertig =
+            original != null
+                  ? Future.value(original)
+                  : _originalNachladen(foto.id)
+              ..ignore(); // ein Fehler zeigt sich erst beim Speichern
       } catch (e) {
         if (mounted) setState(() => _fehler = e);
       }
     }();
+  }
+
+  /// Holt das Original vom Server und tauscht es im Renderer gegen das Vorschaubild — erst jetzt
+  /// gibt es HDR und volle Auflösung. Speichern wartet darauf.
+  Future<Uint8List> _originalNachladen(String id) async {
+    final original = await widget.immich.original(id);
+    if (!mounted) return original;
+    final geladen = await ladeOriginal(original, hdr: _hdr, rezept: _gezeigt);
+    if (mounted) {
+      setState(() {
+        _original = original;
+        _hatGainmap = geladen.hatGainmap;
+      });
+    }
+    return original;
   }
 
   @override
@@ -118,11 +150,11 @@ class _EditorSeiteState extends State<EditorSeite> {
   }
 
   /// Beim Zuschneiden zeigt die Vorschau das ganze Bild; der Rahmen liegt darüber.
-  void _zeigen() => zeigeRezept(
-    _bereich == _Bereich.zuschneiden
-        ? _rezept.kopie(zuschnitt: const [0, 0, 1, 1])
-        : _rezept,
-  );
+  Rezept get _gezeigt => _bereich == _Bereich.zuschneiden
+      ? _rezept.kopie(zuschnitt: const [0, 0, 1, 1])
+      : _rezept;
+
+  void _zeigen() => zeigeRezept(_gezeigt);
 
   /// Neuer Stand; mit [merken] als Schritt fürs Rückgängigmachen.
   void _aendern(Rezept r, {bool merken = true}) {
@@ -204,9 +236,14 @@ class _EditorSeiteState extends State<EditorSeite> {
     final immich = widget.immich;
     final foto = _foto!;
     try {
+      if (_original == null) {
+        setState(() => _schritt = 'Original wird geladen …');
+      }
+      final original = await _originalFertig;
+      setState(() => _schritt = 'Wird gerendert …');
       final kopie = await exportieren(
         _rezept,
-        _original!,
+        original,
         foto.pruefsumme,
         hdr: _hdr,
       );
@@ -279,7 +316,7 @@ class _EditorSeiteState extends State<EditorSeite> {
           body: SafeArea(
             child: _fehler != null
                 ? Center(child: Text('$_fehler'))
-                : _original == null
+                : !_bereit
                 ? const Center(child: CircularProgressIndicator())
                 : Column(
                     children: [

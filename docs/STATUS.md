@@ -21,7 +21,8 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal) und „Anpassen" (12 Regler als runde Knöpfe,
     Skalen-Lineal); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
     Renderer (AGSL, `Renderer.kt`); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
-    D-20). Das Lineal rastet nahe 0 ein.
+    D-20). Das Lineal rastet nahe 0 ein. Server-Fotos öffnen mit Immichs Vorschaubild, das
+    Original (und damit HDR) kommt im Hintergrund nach; Speichern wartet darauf (D-29).
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
     des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,
     gegenprüfen (SHA-1 des Servers = eigene), vor das Original stapeln, in dessen Alben legen;
@@ -35,7 +36,7 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).
   - Erneut bearbeiten: Öffnet man eine Kopie, öffnet der Editor das Original mit deren Rezept;
     beim Speichern gehen frühere Kopien in den Papierkorb (D-23).
-  - **Noch nicht:** eine Zeitleiste über Gerät und Server, Online-Fotos zuerst aus der Vorschau, Presets, Filter,
+  - **Noch nicht:** eine Zeitleiste über Gerät und Server, Einstellung „Mobile Daten", Presets, Filter,
     Perspektive — siehe ROADMAP.
 - Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung),
   `lib/gallery/` (mit `geraet.dart` über `photo_manager`), `lib/stapeln/` (Stapeln, auch

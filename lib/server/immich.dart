@@ -155,6 +155,17 @@ class Immich {
 
   Uri miniatur(String id) => _uri('/assets/$id/thumbnail');
 
+  /// Immichs Vorschaubild (JPEG, lange Kante 1440 px, schon aufgerichtet, ohne Gain-Map).
+  Future<Uint8List> vorschau(String id) async => _ok(
+    await _warten(
+      _http.get(
+        _uri('/assets/$id/thumbnail', {'size': 'preview'}),
+        headers: kopf,
+      ),
+      _kurz,
+    ),
+  ).bodyBytes;
+
   Future<Uint8List> original(String id) async => _ok(
     await _warten(
       _http.get(_uri('/assets/$id/original'), headers: kopf),

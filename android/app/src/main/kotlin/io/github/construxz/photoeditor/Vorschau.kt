@@ -37,12 +37,12 @@ object Sitzung {
         private set
     var ansicht: View? = null
 
-    /** Lädt das Original; die Vorschau rechnet auf einer verkleinerten Fassung. */
-    fun laden(bytes: ByteArray, hdrAn: Boolean): Map<String, Any> {
+    /** Lädt das Original mit [rezeptJson]; die Vorschau rechnet auf einer verkleinerten Fassung. */
+    fun laden(bytes: ByteArray, hdrAn: Boolean, rezeptJson: String): Map<String, Any> {
         original = bytes
         orientierung = Renderer.orientierung(bytes)
         hdr = hdrAn
-        rezept = JSONObject()
+        rezept = JSONObject(rezeptJson)
         val masse = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size, masse)
         var faktor = 1

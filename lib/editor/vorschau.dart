@@ -11,15 +11,18 @@ import 'rezept.dart';
 /// Kanal zum nativen Renderer (D-17): Vorschau und Export rechnen dort.
 const rendererKanal = MethodChannel('immich_editor/renderer');
 
-/// Übergibt das Original an den Renderer. Liefert, ob es eine Gain-Map trägt, und die Größe,
-/// wie man das Bild sieht (nach EXIF-Orientierung).
+/// Übergibt das Original (oder vorerst Immichs Vorschaubild) an den Renderer, gleich mit
+/// [rezept]. Liefert, ob es eine Gain-Map trägt, und die Größe, wie man das Bild sieht (nach
+/// EXIF-Orientierung).
 Future<({bool hatGainmap, double breite, double hoehe})> ladeOriginal(
   Uint8List original, {
   required bool hdr,
+  required Rezept rezept,
 }) async {
   final antwort = await rendererKanal.invokeMapMethod<String, Object>('laden', {
     'original': original,
     'hdr': hdr,
+    'rezept': jsonEncode(rezept.toJson()),
   });
   return (
     hatGainmap: antwort!['hatGainmap'] == true,

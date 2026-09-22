@@ -7,6 +7,24 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-22 · D-29: Online-Fotos öffnen mit Immichs Vorschaubild; HDR nur im Bild
+
+Der Editor lädt von einem Server-Foto zuerst nur Details, die ersten 64 KB (EXIF, Rezept-XMP —
+genug, um eine Kopie zu erkennen) und Immichs Vorschaubild (`GET /assets/{id}/thumbnail?size=
+preview`, schon aufgerichtet, ohne Gain-Map) und zeigt es sofort. Das Original lädt im
+Hintergrund und ersetzt das Vorschaubild im Renderer, samt aktuellem Rezept (kein Aufblitzen);
+erst dann gibt es HDR. Speichern wartet auf das Original („Original wird geladen …") — die Kopie
+entsteht immer aus dem Original. Das Rezept ist auflösungsunabhängig, das Seitenverhältnis gleich.
+
+**Gemessen** 22.09.2026 im Emulator (Debug-Build, `testfoto-a-hdr`, 4,6 MB): Bild im Editor nach
+2,6 s, HDR-Knopf (Original da) nach 10,4 s; bisher kam das Bild erst mit dem Original. Sofort
+gespeichert, bevor das Original da war → Kopie 3072 × 4080 mit `hdrgm`, MPF und Rezept.
+
+**Befund des Besitzers** auf dem Pixel (22.09.2026): Der HDR-Knopf ändert nur das Bild; Leisten
+und Knöpfe bleiben in normaler Helligkeit — wie gewollt (D-17, D-20).
+
+---
+
 ## 2026-09-22 · D-28: Online-Fotos übers Gerät gesichert — gebaut
 
 Nach D-25: Einstellung in der Galerie (⋮) „Bearbeitungen von Online-Fotos übers Gerät sichern",

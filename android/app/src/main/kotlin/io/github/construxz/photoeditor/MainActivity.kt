@@ -23,9 +23,10 @@ class MainActivity : FlutterActivity() {
                     "laden" -> {
                         val hdr = call.argument<Boolean>("hdr")!!
                         val original = call.argument<ByteArray>("original")!!
+                        val rezept = call.argument<String>("rezept")!!
                         // Dekodieren nicht auf dem Haupt-Thread — sonst droht „App reagiert nicht".
                         Sitzung.hintergrund.post {
-                            val antwort = Sitzung.laden(original, hdr)
+                            val antwort = Sitzung.laden(original, hdr, rezept)
                             runOnUiThread {
                                 hdrFenster(hdr)
                                 result.success(antwort)
