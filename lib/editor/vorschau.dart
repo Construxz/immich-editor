@@ -42,6 +42,10 @@ Future<void> zeigeHdr(bool an) => rendererKanal.invokeMethod('hdr', {'an': an});
 Future<String> sha1(Uint8List bytes) async =>
     (await rendererKanal.invokeMethod<String>('sha1', {'bytes': bytes}))!;
 
+/// Kostet die Verbindung gerade Datenvolumen (Mobilfunk, Hotspot)? Android entscheidet.
+Future<bool> getaktet() async =>
+    (await rendererKanal.invokeMethod<bool>('getaktet'))!;
+
 Future<void> beendeSitzung() => rendererKanal.invokeMethod('beenden');
 
 /// Die native Bildfläche. Hybrid Composition, damit sie eine echte Android-Ansicht ist —

@@ -3,6 +3,7 @@ package io.github.construxz.photoeditor
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.ConnectivityManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -66,6 +67,9 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                     }
+                    "getaktet" -> result.success(
+                        getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered,
+                    )
                     "beenden" -> {
                         Sitzung.beenden()
                         window.colorMode = ActivityInfo.COLOR_MODE_DEFAULT

@@ -38,6 +38,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   final _auswahl = <String>{};
   var _hdr = true;
   var _onlineAufsGeraet = true;
+  var _mobileDaten = true;
   var _aufGeraet = true;
   late Future<int?> _geraet = _geraetZaehlen();
   final _geraetSeiten = <int, Future<List<AssetEntity>>>{};
@@ -49,6 +50,9 @@ class _GalerieSeiteState extends State<GalerieSeite> {
     speicher
         .read(key: 'online')
         .then((w) => setState(() => _onlineAufsGeraet = w != 'server'));
+    speicher
+        .read(key: 'mobil')
+        .then((w) => setState(() => _mobileDaten = w != 'aus'));
     _stapeln();
   }
 
@@ -211,6 +215,10 @@ class _GalerieSeiteState extends State<GalerieSeite> {
             setState(() => _hdr = !_hdr);
             speicher.write(key: 'hdr', value: _hdr ? 'an' : 'aus');
           }
+          if (w == 'mobil') {
+            setState(() => _mobileDaten = !_mobileDaten);
+            speicher.write(key: 'mobil', value: _mobileDaten ? 'an' : 'aus');
+          }
           if (w == 'online') {
             setState(() => _onlineAufsGeraet = !_onlineAufsGeraet);
             speicher.write(
@@ -224,6 +232,11 @@ class _GalerieSeiteState extends State<GalerieSeite> {
             value: 'hdr',
             checked: _hdr,
             child: const Text('HDR (Ultra HDR erhalten)'),
+          ),
+          CheckedPopupMenuItem(
+            value: 'mobil',
+            checked: _mobileDaten,
+            child: const Text('Originale und Uploads über mobile Daten'),
           ),
           CheckedPopupMenuItem(
             value: 'online',

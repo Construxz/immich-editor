@@ -7,6 +7,22 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-22 · D-30: Einstellung „Mobile Daten"
+
+Nach D-24: Galerie (⋮) „Originale und Uploads über mobile Daten", Vorgabe an — Speichern soll
+unterwegs ohne Umweg gehen. Ist sie aus und die Verbindung getaktet (Androids
+`isActiveNetworkMetered`, per Plattformkanal, keine neue Abhängigkeit; braucht
+`ACCESS_NETWORK_STATE`), lädt der Editor das Original nicht von selbst nach und fragt beim
+Speichern einmal, wenn noch ein Original zu laden oder die Kopie direkt hochzuladen ist.
+Miniaturen, Vorschaubilder und API-Aufrufe laufen immer; das Backup der Kopie auf dem Gerät regelt
+die Immich-App selbst.
+
+**Gemessen** 22.09.2026 im Emulator: Einstellung aus, WLAN aus (Mobilfunk, getaktet) → Editor
+mit Vorschaubild, nach 15 s noch kein Original (kein HDR-Knopf); Speichern → Rückfrage;
+„Trotzdem" → Kopie in voller Auflösung (3072 px breit).
+
+---
+
 ## 2026-09-22 · D-29: Online-Fotos öffnen mit Immichs Vorschaubild; HDR nur im Bild
 
 Der Editor lädt von einem Server-Foto zuerst nur Details, die ersten 64 KB (EXIF, Rezept-XMP —

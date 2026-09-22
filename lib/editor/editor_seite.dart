@@ -46,7 +46,11 @@ class _EditorSeiteState extends State<EditorSeite> {
 
   /// Das Original, sobald geladen und im Renderer; bei Online-Fotos kommt es im Hintergrund.
   Uint8List? _original;
-  late Future<Uint8List> _originalFertig;
+  Future<Uint8List>?
+  _originalFertig; // null: wartet aufs WLAN oder auf eine Rückfrage
+
+  /// Einstellung „Mobile Daten" aus (D-24): Originale und Uploads nur ohne getaktete Verbindung.
+  var _nurWlan = false;
   var _hdr = true;
   var _aufsGeraet =
       true; // Kopie in die Gerätegalerie statt direkt auf den Server
@@ -99,6 +103,7 @@ class _EditorSeiteState extends State<EditorSeite> {
           (foto, bytes) = await laden(originalId);
         }
         final original = widget.geraet ? bytes : null;
+        final nurWlan = await speicher.read(key: 'mobil') == 'aus';
         final geladen = await ladeOriginal(
           original ?? await immich.vorschau(foto.id),
           hdr: hdr,
@@ -116,12 +121,14 @@ class _EditorSeiteState extends State<EditorSeite> {
           _aufsGeraet = aufsGeraet;
           _hatGainmap = geladen.hatGainmap;
           _masse = Size(geladen.breite, geladen.hoehe);
+          _nurWlan = nurWlan;
         });
-        _originalFertig =
-            original != null
-                  ? Future.value(original)
-                  : _originalNachladen(foto.id)
-              ..ignore(); // ein Fehler zeigt sich erst beim Speichern
+        if (original != null) {
+          _originalFertig = Future.value(original);
+        } else if (!nurWlan || !await getaktet()) {
+          _originalFertig = _originalNachladen(foto.id)
+            ..ignore(); // ein Fehler zeigt sich erst beim Speichern
+        }
       } catch (e) {
         if (mounted) setState(() => _fehler = e);
       }
@@ -227,6 +234,34 @@ class _EditorSeiteState extends State<EditorSeite> {
   /// Gerätegalerie legen und zum Stapeln vormerken (D-24, D-25).
   /// Aufnahmezeit und Ort reisen im übernommenen EXIF mit.
   Future<void> _speichern() async {
+    // Muss etwas übers Netz, das die Einstellung „Mobile Daten" nur im WLAN erlaubt?
+    final netz = _originalFertig == null || !_aufsGeraet;
+    if (_nurWlan && netz && await getaktet()) {
+      if (!mounted) return;
+      final trotzdem = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Mobile Daten verwenden?'),
+          content: const Text(
+            'Zum Speichern muss das Original geladen oder die Kopie hochgeladen '
+            'werden — laut Einstellung nur im WLAN.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: const Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: const Text('Trotzdem'),
+            ),
+          ],
+        ),
+      );
+      if (trotzdem != true) return;
+    }
+    if (!mounted) return;
+    _originalFertig ??= _originalNachladen(_foto!.id);
     setState(() {
       _speichert = true;
       _schritt = 'Wird gerendert …';
@@ -239,7 +274,7 @@ class _EditorSeiteState extends State<EditorSeite> {
       if (_original == null) {
         setState(() => _schritt = 'Original wird geladen …');
       }
-      final original = await _originalFertig;
+      final original = await _originalFertig!;
       setState(() => _schritt = 'Wird gerendert …');
       final kopie = await exportieren(
         _rezept,
