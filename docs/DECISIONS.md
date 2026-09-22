@@ -19,7 +19,9 @@ dem gezeigten Mitglied; der Editor gibt die neue Kopie zurück und der Betrachte
 Hochwischen zeigt Datum und Uhrzeit, Name, Megapixel, Maße, Größe, Kamera, Objektiv,
 Belichtung, Ort — für Server-Fotos aus Immichs `exifInfo` (Ortszeit aus `localDateTime`, Ort als
 Stadt und Land), für Gerätefotos aus Androids `ExifInterface` über den Plattformkanal (Ort als
-Koordinaten; ISO steht dort unter dem alten Namen `ISOSpeedRatings`). Keine neue Abhängigkeit.
+Ortsnamen von Immichs `GET /map/reverse-geocode` — eigene Ortsdaten des Servers, kein fremder
+Dienst; bloße Koordinaten zeigt die App nicht, sie sagen niemandem etwas (Besitzer); ISO steht
+im Framework unter dem alten Namen `ISOSpeedRatings`). Keine neue Abhängigkeit.
 
 Stolperstein: Hochwischen im `GestureDetector` erreicht die App nicht, der `InteractiveViewer`
 nimmt die Geste; ausgewertet wird sie in dessen `onInteractionEnd`, nur ungezoomt.

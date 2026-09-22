@@ -143,7 +143,9 @@ class _SeiteState extends State<_Seite> {
     showDragHandle: true,
     isScrollControlled: true,
     builder: (_) => _Info(
-      _eintrag.geraet ? geraetInfo(_gezeigt) : widget.immich.info(_gezeigt),
+      _eintrag.geraet
+          ? geraetInfo(_gezeigt, widget.immich.ortVon)
+          : widget.immich.info(_gezeigt),
     ),
   );
 

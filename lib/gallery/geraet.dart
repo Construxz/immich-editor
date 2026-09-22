@@ -92,8 +92,12 @@ Future<String> geraetSpeichern(Uint8List kopie, Foto original) async {
   return a.id;
 }
 
-/// Aufnahme, Ort und Kamera eines Gerätefotos; die Kameradaten aus dem EXIF am Dateianfang.
-Future<FotoInfo> geraetInfo(String id) async {
+/// Aufnahme, Ort und Kamera eines Gerätefotos; die Kameradaten aus dem EXIF am Dateianfang, den
+/// Ortsnamen zu den GPS-Koordinaten liefert [ortVon].
+Future<FotoInfo> geraetInfo(
+  String id,
+  Future<String?> Function(double lat, double lon) ortVon,
+) async {
   final a = await AssetEntity.fromId(id);
   final bytes = await a?.originBytes;
   if (a == null || bytes == null) {
@@ -109,7 +113,7 @@ Future<FotoInfo> geraetInfo(String id) async {
     aufgenommen: a.createDateTime,
     ort: lat == null
         ? null
-        : '${lat.toStringAsFixed(5)}, ${lon!.toStringAsFixed(5)}',
+        : await ortVon(lat.toDouble(), lon!.toDouble()).catchError((_) => null),
     kamera: kameraAus(e['Make'] as String?, e['Model'] as String?),
     objektiv: e['LensModel'] as String?,
     belichtung: belichtungAus(

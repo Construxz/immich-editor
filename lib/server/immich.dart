@@ -152,6 +152,25 @@ class Immich {
     ];
   }
 
+  /// „Stadt, Land" zu Koordinaten — Immich rechnet mit eigenen Ortsdaten, kein fremder Dienst.
+  Future<String?> ortVon(double lat, double lon) async {
+    final r = _json(
+      await _warten(
+        _http.get(
+          _uri('/map/reverse-geocode', {'lat': '$lat', 'lon': '$lon'}),
+          headers: kopf,
+        ),
+        _kurz,
+      ),
+    ) as List;
+    if (r.isEmpty) return null;
+    final ort = [
+      r.first['city'],
+      r.first['country'],
+    ].whereType<String>().join(', ');
+    return ort.isEmpty ? null : ort;
+  }
+
   /// Aufnahme, Ort und Kamera, wie Immich sie aus dem EXIF gelesen hat.
   Future<FotoInfo> info(String id) async {
     final a = await _asset(id);
@@ -168,11 +187,7 @@ class Immich {
           '',
         ),
       ),
-      ort: ort.isNotEmpty
-          ? ort
-          : e['latitude'] == null
-          ? null
-          : '${e['latitude']}, ${e['longitude']}',
+      ort: ort.isEmpty ? null : ort,
       kamera: kameraAus(e['make'], e['model']),
       objektiv: e['lensModel'] as String?,
       belichtung: belichtungAus(
