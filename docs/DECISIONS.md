@@ -9,7 +9,8 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ## 2026-09-22 · D-31: Eine Kopie ersetzen oder daneben legen; Miniaturen neuer Kopien
 
-Anlass: Rückmeldung des Besitzers (Pixel, Stand `4448976`). Bei Google Fotos entstehen beim
+Anlass: Rückmeldung des Besitzers (Pixel, Stand `4448976`). Speichern geht dort — das „App
+reagiert nicht" des älteren Stands (D-23) tritt nicht mehr auf. Bei Google Fotos entstehen beim
 Bearbeiten einer Kopie immer weitere Kopien, lose in der Galerie — unübersichtlich. Wer eine
 Kopie ändert, will meist diese Kopie ändern.
 

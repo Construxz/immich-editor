@@ -11,8 +11,6 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speichern in 4 s
 (D-17 bis D-23). Offen, in dieser Reihenfolge:
-- ⬜ **Speichern auf dem Pixel nachprüfen:** Der Besitzer bekam mit einem älteren Stand „App
-  reagiert nicht" (D-23). Der Emulator zeigt es nicht; auf dem Pixel läuft seit 21.09. abends `4448976`.
 - 🔶 **Gerätefotos:** bearbeiten, Kopie in die Gerätegalerie, nach dem Backup stapeln — gebaut
   (D-26). Offen: eine Zeitleiste über Gerät und Server, über die Prüfsumme zusammengeführt
   (`POST /assets/bulk-upload-check`, Prüfsummen zwischengespeichert), mit Kennzeichen „gesichert";
