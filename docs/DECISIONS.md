@@ -7,6 +7,33 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-22 · D-27: Keine Server-Erweiterung; das Rezept-Format ist die Schnittstelle
+
+Frage des Besitzers: eine abnehmbare Erweiterung für den Immich-Server, wie Noodle Gallery sie
+anbietet, damit der Server die Bearbeitungen selbst versteht — und die auch mit Noodle läuft.
+
+Befund (README von `open-noodle/gallery`, 22.09.2026): Noodle Gallery ist **kein Plugin,
+sondern ein eigenes Server-Image** — ein Fork, der auf jede Immich-Version neu aufsetzt
+(derzeit 3.2.2, eigene Versionsnummer `v5`). Abnehmbar ist es durch ein Skript, das seine
+Tabellen und Spalten entfernt; die Datenbank bleibt mit Immich verträglich. Auf einem Server
+läuft genau ein Image — eine Erweiterung „für Immich und Noodle" hieße, einen Patch auf beiden
+Forks nach jeder Version nachzuziehen.
+
+Entscheidung des Besitzers: **vorerst nicht**, der jetzige Weg (D-2) reicht. Begründung:
+- Versteht der Server die Bearbeitung, muss er sie auch rendern (Miniaturen, Vorschau,
+  Download) — ein zweiter Renderer in TypeScript/libvips, pixelgleich zum AGSL-Shader, mit
+  Gain-Map; für Masken, 3D-LUTs und Radierer (M4, M5) kaum machbar. Genau das vermeidet D-2.
+- Der Gewinn ist klein: Web, Immich-App und geteilte Alben zeigen die Bearbeitung schon, weil die
+  Kopie vorn im Stapel liegt. Gespart würde vor allem der doppelte Speicherplatz.
+- D-1 bliebe gültig: die App läuft mit jedem unveränderten Immich-Server.
+
+Die Tür bleibt offen: Das Rezept steht versioniert als XMP (`ife:recipe`) in jeder Kopie, samt
+Prüfsumme des Originals — eine spätere Server-Erweiterung, von uns, Noodle oder Immich, kann es
+lesen. **Anwenden:** Das Rezept-Format stabil und dokumentiert halten (Spec, *Aufbau*); dass die
+App auch gegen einen Noodle-Server läuft, steht in der ROADMAP.
+
+---
+
 ## 2026-09-21 · D-26: Gerätefotos — bearbeiten ohne Server, stapeln nach dem Backup
 
 Gebaut nach D-24:

@@ -22,6 +22,10 @@ Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speich
   Hintergrund; Einstellungen „Mobile Daten" und „Bearbeitungen von Online-Fotos: Gerät (Vorgabe) /
   Server" (D-24, D-25).
 - ⬜ **Presets:** Reiter „Presets" im Editor, speichern, auf eine Mehrfachauswahl anwenden.
+- ⬜ **Noodle Gallery als Server** prüfen: gleiche API wie Immich 3.2.2, aber Hauptversion 5 —
+  die App warnt dann beim Anmelden (`bekannteHauptversionen`). Gegen einen Noodle-Server testen
+  und die Prüfung anpassen (D-27). Danach bei Noodle anfragen, ob ihr Editor das Rezept-Format
+  übernimmt.
 - ⬜ Filter (3D-LUT) mit Reiter „Filter"; Perspektive (Vier-Punkt); HDR-Spielraum sanft hochfahren
   (`setDesiredHdrHeadroom`, ab Android 15); Miniaturen auf der Platte zwischenspeichern; Blättern
   durch eine große Bibliothek messen.
