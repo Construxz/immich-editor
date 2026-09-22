@@ -234,6 +234,38 @@ class _EditorSeiteState extends State<EditorSeite> {
   /// Gerätegalerie legen und zum Stapeln vormerken (D-24, D-25).
   /// Aufnahmezeit und Ort reisen im übernommenen EXIF mit.
   Future<void> _speichern() async {
+    // Eine Kopie bearbeitet: sie ersetzen (die alte geht in den Papierkorb) oder daneben legen.
+    var ersetzen = false;
+    if (_alteKopie != null) {
+      final wahl = await showDialog<bool>(
+        context: context,
+        builder: (c) => SimpleDialog(
+          title: const Text('Speichern'),
+          children: [
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(c, true),
+              child: const ListTile(
+                leading: Icon(Icons.save),
+                title: Text('Kopie ersetzen'),
+                subtitle: Text(
+                  'Die bisherige Bearbeitung geht in den Papierkorb',
+                ),
+              ),
+            ),
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(c, false),
+              child: const ListTile(
+                leading: Icon(Icons.library_add),
+                title: Text('Als weitere Kopie speichern'),
+                subtitle: Text('Beide Bearbeitungen liegen im Stapel'),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (wahl == null || !mounted) return;
+      ersetzen = wahl;
+    }
     // Muss etwas übers Netz, das die Einstellung „Mobile Daten" nur im WLAN erlaubt?
     final netz = _originalFertig == null || !_aufsGeraet;
     if (_nurWlan && netz && await getaktet()) {
@@ -287,13 +319,15 @@ class _EditorSeiteState extends State<EditorSeite> {
         await vormerken((
           kopie: await sha1(kopie),
           original: foto.pruefsumme,
-          alt: _alteKopie?.pruefsumme,
+          alt: ersetzen ? _alteKopie?.pruefsumme : null,
           entfernen: widget.geraet ? null : lokal,
         ));
         // Eine alte Kopie auf dem Gerät geht in dessen Papierkorb; eine auf dem Server erst
         // beim Stapeln (alt).
         final alt = _alteKopie;
-        if (alt != null && widget.geraet) await geraetPapierkorb([alt.id]);
+        if (alt != null && ersetzen && widget.geraet) {
+          await geraetPapierkorb([alt.id]);
+        }
         meldung.showSnackBar(
           const SnackBar(
             content: Text(
@@ -318,7 +352,12 @@ class _EditorSeiteState extends State<EditorSeite> {
         throw Exception('Kopie auf dem Server weicht ab ($id)');
       }
       setState(() => _schritt = 'Wird gestapelt …');
-      await vorOriginal(immich, id, foto, alteKopie: _alteKopie?.id);
+      await vorOriginal(
+        immich,
+        id,
+        foto,
+        alteKopie: ersetzen ? _alteKopie?.id : null,
+      );
 
       meldung.showSnackBar(
         const SnackBar(content: Text('Gespeichert und geprüft')),

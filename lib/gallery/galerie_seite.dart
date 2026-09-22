@@ -291,11 +291,9 @@ class _GalerieSeiteState extends State<GalerieSeite> {
             }
             final k = kacheln[i];
             return _Kachel(
-              bild: Image.network(
+              bild: _ServerMiniatur(
                 widget.immich.miniatur(k.id).toString(),
-                headers: widget.immich.kopf,
-                fit: BoxFit.cover,
-                excludeFromSemantics: true,
+                widget.immich.kopf,
               ),
               stapel: k.stapel,
               gewaehlt: _auswahl.contains(k.id),
@@ -308,6 +306,46 @@ class _GalerieSeiteState extends State<GalerieSeite> {
       ),
     ];
   }
+}
+
+/// Miniatur eines Server-Fotos. Eine frisch hochgeladene Kopie hat noch keine — Immich rechnet
+/// sie erst Sekunden später; bis dahin neu versuchen statt schwarz zu bleiben.
+class _ServerMiniatur extends StatefulWidget {
+  const _ServerMiniatur(this.url, this.kopf);
+
+  final String url;
+  final Map<String, String> kopf;
+
+  @override
+  State<_ServerMiniatur> createState() => _ServerMiniaturState();
+}
+
+class _ServerMiniaturState extends State<_ServerMiniatur> {
+  var _versuch = 0;
+  var _wartet = false;
+
+  @override
+  Widget build(BuildContext context) => Image.network(
+    widget.url,
+    key: ValueKey(_versuch),
+    headers: widget.kopf,
+    fit: BoxFit.cover,
+    excludeFromSemantics: true,
+    errorBuilder: (context, fehler, stapel) {
+      if (!_wartet && _versuch < 10) {
+        _wartet = true;
+        Future.delayed(const Duration(seconds: 2), () {
+          if (!mounted) return;
+          PaintingBinding.instance.imageCache.evict(NetworkImage(widget.url));
+          setState(() {
+            _wartet = false;
+            _versuch++;
+          });
+        });
+      }
+      return const SizedBox();
+    },
+  );
 }
 
 /// Miniatur eines Gerätefotos; lädt einmal, solange die Kachel lebt.

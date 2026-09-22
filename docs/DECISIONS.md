@@ -7,6 +7,35 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-22 · D-31: Eine Kopie ersetzen oder daneben legen; Miniaturen neuer Kopien
+
+Anlass: Rückmeldung des Besitzers (Pixel, Stand `4448976`). Bei Google Fotos entstehen beim
+Bearbeiten einer Kopie immer weitere Kopien, lose in der Galerie — unübersichtlich. Wer eine
+Kopie ändert, will meist diese Kopie ändern.
+
+Entscheidung: Wer eine Kopie öffnet (der Editor lädt das Original mit ihrem Rezept, D-23), wählt
+beim Speichern **„Kopie ersetzen"** (die geöffnete geht in den Papierkorb, D-23) oder **„Als
+weitere Kopie speichern"** (beide bleiben im Stapel). Eine Datei in Immich lässt sich nicht
+ändern (D-1) — „ersetzen" heißt: neue Kopie vorn, alte in den Papierkorb, dort umkehrbar.
+Bearbeitungen sind immer umkehrbar, weil das Original im Stapel liegt.
+
+Befund zum Stapeln (Immich `v3.2.2`, `server/src/repositories/stack.repository.ts`, `create`):
+`POST /stacks` führt einen bestehenden Stapel nur dann mit dem neuen zusammen, wenn dessen
+**vorderes** Asset unter den `assetIds` ist; andernfalls wandert nur das genannte Asset um, die
+übrigen bleiben zurück. Deshalb gibt die App jetzt `[neue Kopie, Original, bisher vordere]` —
+alle Kopien bleiben in einem Stapel; das bisherige Löschen der vorderen Kopie (D-23) entfällt.
+
+Schwarze Miniatur nach dem Speichern: Immich rechnet die Miniatur einer neuen Kopie erst Sekunden
+nach dem Hochladen; die Kachel blieb nach dem Fehlschlag leer. Jetzt versucht sie es alle 2 s
+erneut (höchstens zehnmal).
+
+**Gemessen** 22.09.2026 im Emulator (direkt auf den Server): `testfoto-a-hdr` → „Als weitere
+Kopie" → Stapel mit neuer Kopie vorn, Original, älterer Kopie; Miniatur sofort in der Galerie.
+Die neue Kopie geöffnet → „Kopie ersetzen" → Stapel mit neuester Kopie, Original, älterer Kopie;
+die ersetzte im Papierkorb.
+
+---
+
 ## 2026-09-22 · D-30: Einstellung „Mobile Daten"
 
 Nach D-24: Galerie (⋮) „Originale und Uploads über mobile Daten", Vorgabe an — Speichern soll

@@ -1,33 +1,29 @@
 import 'dart:convert';
 
-import '../export/jpeg.dart' show rezeptAus;
 import '../foto.dart';
 import '../gallery/geraet.dart' show geraetPapierkorb;
 import '../main.dart' show speicher;
 import '../server/immich.dart';
 
-/// Stapelt die Kopie [kopie] vor das [original], legt sie in dessen Alben und schiebt frühere
-/// Kopien in den Papierkorb: [alteKopie] und die bisher vordere, wenn sie von dieser App ist —
-/// Immich löst den alten Stapel auf, sie stünden sonst allein (D-23).
+/// Stapelt die Kopie [kopie] vor das [original] und legt sie in dessen Alben. Die bisher vordere
+/// kommt mit in die Liste: Nur dann führt Immich ihren Stapel mit dem neuen zusammen, sonst
+/// stünden frühere Kopien allein (D-23, D-31). Die ersetzte [alteKopie] geht in den Papierkorb.
 Future<void> vorOriginal(
   Immich immich,
   String kopie,
   Foto original, {
   String? alteKopie,
 }) async {
-  await immich.stapeln([kopie, original.id]);
+  final vorn = original.stapelVorn;
+  await immich.stapeln([
+    kopie,
+    original.id,
+    if (vorn != null && vorn != original.id) vorn,
+  ]);
   for (final album in await immich.albenVon(original.id)) {
     await immich.insAlbum(album, [kopie]);
   }
-  final weg = {?alteKopie};
-  final vorn = original.stapelVorn;
-  if (vorn != null &&
-      vorn != original.id &&
-      !weg.contains(vorn) &&
-      rezeptAus(await immich.anfang(vorn)) != null) {
-    weg.add(vorn);
-  }
-  if (weg.isNotEmpty) await immich.papierkorb(weg.toList());
+  if (alteKopie != null) await immich.papierkorb([alteKopie]);
 }
 
 /// Eine Kopie, die auf dem Gerät entstand und gestapelt wird, sobald die Immich-App sie und das

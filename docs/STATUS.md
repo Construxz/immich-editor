@@ -35,7 +35,8 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Ultra HDR: Die Kopie behält die Gain-Map des Originals (D-16), Standardformat (D-19); die
     Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).
   - Erneut bearbeiten: Öffnet man eine Kopie, öffnet der Editor das Original mit deren Rezept;
-    beim Speichern gehen frühere Kopien in den Papierkorb (D-23).
+    beim Speichern „Kopie ersetzen" (die alte in den Papierkorb) oder „Als weitere Kopie
+    speichern" — alle Kopien bleiben in einem Stapel (D-31).
   - **Noch nicht:** eine Zeitleiste über Gerät und Server, Presets, Filter,
     Perspektive — siehe ROADMAP.
 - Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung),
