@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'editor/vorschau.dart' show appVersion;
 import 'foto.dart';
+import 'gallery/pruefsummen.dart' show abgleichStand;
 import 'main.dart' show speicher;
 import 'server/immich.dart';
 import 'stapeln/stapeln.dart';
@@ -80,6 +81,91 @@ class Profilbild extends StatelessWidget {
   }
 }
 
+/// „17.400" statt „17400".
+String _zahl(int n) =>
+    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
+
+String _dauer(Duration d) => d.inMinutes < 1
+    ? 'einer Minute'
+    : d.inMinutes < 60
+    ? '${d.inMinutes + 1} Minuten'
+    : '${d.inHours} Std. ${d.inMinutes % 60} Min.';
+
+/// Balken und Stand des Bildabgleichs; nichts, wenn keiner läuft.
+class AbgleichAnzeige extends StatelessWidget {
+  const AbgleichAnzeige({super.key});
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+    valueListenable: abgleichStand,
+    builder: (context, s, _) {
+      if (s == null) return const SizedBox();
+      final vergangen = DateTime.now().difference(s.beginn);
+      // Restzeit nach dem bisherigen Tempo; erst, wenn es eines gibt.
+      final rest = s.fertig == 0 || vergangen.inSeconds < 3
+          ? null
+          : vergangen * ((s.gesamt - s.fertig) / s.fertig);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 12,
+        children: [
+          LinearProgressIndicator(
+            minHeight: 10,
+            value: s.gesamt == 0 ? null : s.fertig / s.gesamt,
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+          ),
+          Text(
+            '${_zahl(s.fertig)} von ${_zahl(s.gesamt)} Fotos'
+            '${rest == null ? '' : ' · fertig in etwa ${_dauer(rest)}'}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      );
+    },
+  );
+}
+
+/// Erklärt den ersten Bildabgleich (einmal je Installation); schließt man das Fenster, läuft er
+/// weiter und zeigt sich am Profilbild und im Konto-Fenster. Geht zu, sobald er fertig ist.
+Future<void> abgleichErklaeren(BuildContext context) => showDialog<void>(
+  context: context,
+  builder: (c) => ValueListenableBuilder(
+    valueListenable: abgleichStand,
+    builder: (c, s, _) {
+      if (s == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (c.mounted) Navigator.of(c).maybePop();
+        });
+      }
+      return AlertDialog(
+        title: const Text('Bildabgleich'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 16,
+          children: [
+            Text(
+              'Die App rechnet einmal für jedes Foto auf diesem Gerät eine '
+              'Prüfsumme. Daran erkennt sie, welche Fotos schon in Immich liegen '
+              '— das zeigen die Wolken in der Zeitleiste.\n\n'
+              'Das passiert nur beim ersten Mal, danach nur für neue Fotos. '
+              'Hochgeladen wird dabei nichts; an den Server gehen nur die '
+              'Prüfsummen.',
+            ),
+            AbgleichAnzeige(),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: const Text('Im Hintergrund'),
+          ),
+        ],
+      );
+    },
+  ),
+);
+
 /// Oben rechts in der Galerie: das Profilbild; antippen öffnet das Konto-Fenster.
 class KontoKnopf extends StatefulWidget {
   const KontoKnopf({
@@ -109,9 +195,30 @@ class _KontoKnopfState extends State<KontoKnopf> {
       final konto = s.data;
       return IconButton(
         tooltip: 'Konto und Einstellungen',
-        icon: konto == null
-            ? const Icon(Icons.account_circle)
-            : Profilbild(immich: widget.immich, konto: konto, groesse: 32),
+        // Läuft der Bildabgleich, ein Ring ums Profilbild wie Immichs Backup-Anzeige.
+        icon: ValueListenableBuilder(
+          valueListenable: abgleichStand,
+          builder: (context, stand, bild) => stand == null
+              ? bild!
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox.square(
+                      dimension: 40,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        value: stand.gesamt == 0
+                            ? null
+                            : stand.fertig / stand.gesamt,
+                      ),
+                    ),
+                    bild!,
+                  ],
+                ),
+          child: konto == null
+              ? const Icon(Icons.account_circle)
+              : Profilbild(immich: widget.immich, konto: konto, groesse: 32),
+        ),
         onPressed: konto == null
             ? null
             : () => showDialog<void>(
@@ -322,6 +429,37 @@ class _KontoFensterState extends State<_KontoFenster> {
                           );
                         },
                       ),
+                    ),
+                    ValueListenableBuilder(
+                      valueListenable: abgleichStand,
+                      builder: (context, stand, _) => stand == null
+                          ? const SizedBox()
+                          : Column(
+                              children: [
+                                Divider(
+                                  thickness: 4,
+                                  color: farben.surfaceContainer,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    spacing: 12,
+                                    children: [
+                                      Text(
+                                        'Bildabgleich',
+                                        style: text.labelLarge,
+                                      ),
+                                      const AbgleichAnzeige(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                     Divider(thickness: 4, color: farben.surfaceContainer),
                     Padding(

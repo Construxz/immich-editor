@@ -3,7 +3,7 @@
 **Diese Datei wird überschrieben, nicht fortgeschrieben.** Warum etwas so ist, steht in
 [DECISIONS.md](DECISIONS.md), was noch fehlt, in [ROADMAP.md](ROADMAP.md).
 
-Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
+Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
 
 ## Was es gibt
 
@@ -13,7 +13,8 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Immich-Hauptversion nicht 3 ist.
   - Aussehen der Immich-App (Farben, Google Sans, D-35), Bedienung nach Google Fotos.
   - Galerie wie die Immich-App (D-36): „Fotos" ist eine Zeitleiste über Gerät und Server,
-    über die Prüfsumme zusammengeführt (einmal gerechnet, zwischengespeichert), mit Wolke unten
+    über die Prüfsumme zusammengeführt (einmal gerechnet, zwischengespeichert; der erste Lauf
+    erklärt sich in einem Fenster, danach Ring ums Profilbild und Stand im Konto-Fenster, D-39), mit Wolke unten
     rechts (nur Gerät / nur Server / beides); „Bibliothek" mit allen Geräteordnern. Getrennte
     Reiter per Einstellung „Ansicht". Fotos aus Ordnern, die Immich nicht sichert: nach dem
     Speichern auf Wunsch archiviert hochladen, Album „Editor for Immich", in Immich öffnen.
@@ -48,7 +49,7 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Erneut bearbeiten: Öffnet man eine Kopie, öffnet der Editor das Original mit deren Rezept;
     beim Speichern „Kopie ersetzen" (die alte in den Papierkorb) oder „Als weitere Kopie
     speichern" — alle Kopien bleiben in einem Stapel (D-31).
-  - **Noch nicht:** eine Zeitleiste über Gerät und Server, Presets, Filter,
+  - **Noch nicht:** Presets, Filter,
     Perspektive — siehe ROADMAP.
 - Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung),
   `lib/gallery/` (mit `geraet.dart` über `photo_manager`), `lib/stapeln/` (Stapeln, auch

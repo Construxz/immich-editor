@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import '../editor/vorschau.dart' show rendererKanal;
 import 'geraet.dart';
 
@@ -52,17 +54,23 @@ Future<void> _schreiben(
   }),
 );
 
+/// Stand des Bildabgleichs, solange Prüfsummen gerechnet werden, sonst null — für Fenster,
+/// Profilbild und Konto-Fenster zugleich.
+typedef AbgleichStand = ({int fertig, int gesamt, DateTime beginn});
+
+final abgleichStand = ValueNotifier<AbgleichStand?>(null);
+
 Future<Map<String, String>>? _laeuft;
 
-/// ID → Prüfsumme aller Fotos auf dem Gerät. [fortschritt] meldet (fertig, gesamt), solange
-/// gerechnet wird. Läuft höchstens einmal gleichzeitig.
-Future<Map<String, String>> geraetPruefsummen({
-  void Function(int fertig, int gesamt)? fortschritt,
-}) => _laeuft ??= _rechnen(fortschritt).whenComplete(() => _laeuft = null);
+/// ID → Prüfsumme aller Fotos auf dem Gerät; den Fortschritt zeigt [abgleichStand]. Läuft
+/// höchstens einmal gleichzeitig.
+Future<Map<String, String>> geraetPruefsummen() =>
+    _laeuft ??= _rechnen().whenComplete(() {
+      _laeuft = null;
+      abgleichStand.value = null;
+    });
 
-Future<Map<String, String>> _rechnen(
-  void Function(int fertig, int gesamt)? fortschritt,
-) async {
+Future<Map<String, String>> _rechnen() async {
   final anzahl = await geraetAnzahl();
   final fotos = {
     for (final a in anzahl == 0 ? const [] : await geraetFotos(0, anzahl))
@@ -70,6 +78,10 @@ Future<Map<String, String>> _rechnen(
   };
   final (:gueltig, :offen) = abgleichen(fotos, await _lesen());
   const buendel = 40;
+  final beginn = DateTime.now();
+  if (offen.isNotEmpty) {
+    abgleichStand.value = (fertig: 0, gesamt: offen.length, beginn: beginn);
+  }
   for (var i = 0; i < offen.length; i += buendel) {
     final ids = offen.sublist(i, (i + buendel).clamp(0, offen.length));
     final summen = await rendererKanal.invokeMapMethod<String, String>(
@@ -77,7 +89,11 @@ Future<Map<String, String>> _rechnen(
       {'ids': ids},
     );
     gueltig.addAll(summen!);
-    fortschritt?.call(i + ids.length, offen.length);
+    abgleichStand.value = (
+      fertig: i + ids.length,
+      gesamt: offen.length,
+      beginn: beginn,
+    );
     // Zwischendurch sichern: bricht die App ab, beginnt sie nicht von vorn.
     if ((i ~/ buendel) % 25 == 24) await _schreiben(fotos, gueltig);
   }

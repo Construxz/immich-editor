@@ -11,6 +11,7 @@ import 'betrachter.dart';
 import 'bibliothek.dart';
 import 'geraet.dart';
 import 'kacheln.dart';
+import 'pruefsummen.dart' show abgleichStand;
 
 const _monatsnamen = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', //
@@ -64,7 +65,6 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   var _reiter = 0;
   var _getrennt = false;
   Abgleich _stand = leererAbgleich;
-  (int, int)? _fortschritt; // Prüfsummen: fertig, gesamt
   late Future<int?> _geraet = _geraetZaehlen();
   final _geraetSeiten = <int, Future<List<AssetEntity>>>{};
 
@@ -72,6 +72,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   void initState() {
     super.initState();
     _einstellungenLesen();
+    abgleichStand.addListener(_erklaeren);
     _abgleichen();
     _stapeln();
   }
@@ -86,24 +87,34 @@ class _GalerieSeiteState extends State<GalerieSeite> {
     }
   }
 
+  @override
+  void dispose() {
+    abgleichStand.removeListener(_erklaeren);
+    super.dispose();
+  }
+
+  /// Beginnt der Bildabgleich, erklärt ihn ein Fenster — einmal je Installation.
+  Future<void> _erklaeren() async {
+    if (abgleichStand.value == null) return;
+    abgleichStand.removeListener(_erklaeren);
+    if (await speicher.read(key: 'abgleichErklaert') == 'ja' || !mounted) {
+      return;
+    }
+    await speicher.write(key: 'abgleichErklaert', value: 'ja');
+    if (mounted) await abgleichErklaeren(context);
+  }
+
   /// Welche Gerätefotos schon gesichert sind; das erste Mal rechnet es alle Prüfsummen.
   Future<void> _abgleichen() async {
     try {
-      final stand = await abgleich(
-        widget.immich,
-        fortschritt: (f, g) {
-          if (mounted) setState(() => _fortschritt = (f, g));
-        },
-      );
+      final stand = await abgleich(widget.immich);
       if (!mounted) return;
       setState(() {
         _stand = stand;
-        _fortschritt = null;
         _zGeladen.clear();
       });
     } catch (e) {
       debugPrint('Abgleich später: $e'); // etwa ohne Netz
-      if (mounted) setState(() => _fortschritt = null);
     }
   }
 
@@ -209,33 +220,12 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   Widget _bibliothek() => Bibliothek(immich: widget.immich, stand: _stand);
 
   AppBar _leiste() {
-    final f = _fortschritt;
     return AppBar(
       centerTitle:
           false, // wie Immichs Zeitleiste: Name links, Profilbild rechts
       title: const Text('Editor for Immich'),
       actions: [
-        // Wie Immichs Sync-Anzeige: solange Prüfsummen gerechnet werden
-        if (f != null)
-          Tooltip(
-            message: 'Gerätefotos werden abgeglichen',
-            child: Row(
-              children: [
-                SizedBox.square(
-                  dimension: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    value: f.$2 == 0 ? null : f.$1 / f.$2,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '${f.$1}/${f.$2}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
+        // Den Bildabgleich zeigen Profilbild (Ring) und Konto-Fenster.
         KontoKnopf(
           immich: widget.immich,
           onAbmelden: widget.onAbmelden,

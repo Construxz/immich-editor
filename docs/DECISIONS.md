@@ -7,6 +7,54 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-39: Der erste Bildabgleich erklärt sich
+
+Befund des Besitzers auf dem Pixel: Beim ersten Öffnen stand oben nur „6000/17400" neben dem
+Profilbild — niemand weiß, was da läuft. Gewünscht und gebaut:
+- Beginnt der Abgleich (D-36) zum ersten Mal, erklärt ein **Fenster „Bildabgleich"**: einmal je
+  Foto eine Prüfsumme, um zu erkennen, was schon in Immich liegt (Wolken); nur beim ersten Mal,
+  danach nur neue Fotos; hochgeladen wird nichts, an den Server gehen nur Prüfsummen. Darunter
+  Balken, „200 von 1.211 Fotos" und die Restzeit nach dem bisherigen Tempo. Einmal je
+  Installation (`speicher`-Schlüssel `abgleichErklaert`); das Fenster schließt sich, wenn der
+  Abgleich fertig ist.
+- **„Im Hintergrund"** minimiert es ins Profil: ein Fortschrittsring ums Profilbild wie Immichs
+  Backup-Anzeige, im Konto-Fenster ein Abschnitt „Bildabgleich" mit Balken und Stand. Die Zahl in
+  der Leiste entfällt.
+- Ein Stand für alle drei: `abgleichStand` (`ValueNotifier`) in `pruefsummen.dart` statt des
+  bisherigen Rückrufs.
+
+**Geprüft** 23.09.2026 im Emulator: `pruefsummen.json` gelöscht, 400 bzw. 1.200 Kopien eines
+Testfotos in `DCIM/Abgleichtest`. Erstes Öffnen → Fenster mit Erklärung und „0 von 411 Fotos",
+nach dem Lauf von selbst zu. Zweiter Lauf (1.211 Fotos, kein Fenster mehr) → Ring ums Profilbild
+wächst; Konto-Fenster „200 von 1.211 Fotos · fertig in etwa 2 Minuten"; nach dem Lauf sind Ring
+und Abschnitt weg, `pruefsummen.json` hat 1.211 Einträge. Testfotos danach gelöscht.
+
+---
+
+## 2026-09-23 · D-38: Neben der Immich-App, ohne Verwechslungen; Immich als Quelle
+
+Leitlinien des Besitzers:
+
+1. **Zusammenarbeit mit der Immich-App.** Die App verändert keine vorhandenen Dateien auf dem
+   Gerät, nur eigene Kopien (neue Dateien; gelöscht werden nur eigene Kopien, mit Rückfrage von
+   Android). Mit der Immich-App teilt sie nichts außer dem Server; jede App führt ihre eigenen
+   Prüfsummen (unsere in `pruefsummen.json` im App-Ordner). Weil Originale unverändert bleiben,
+   muss keine App wegen der anderen neu einlesen — die Immich-App liest die Kopie wie ein neues
+   Kamerafoto. Die Prüfsummen stimmen überein, weil beide die unveränderte Datei mit Ort lesen
+   (`ACCESS_MEDIA_LOCATION`, D-26). Auf dem Server ändert die App Assets der Immich-App nicht,
+   außer sie zu stapeln und in Alben zu legen.
+2. **Immich als Informationsquelle**, so weit es keine Komplikationen macht: die öffentliche
+   Server-API (Timeline, Stapel, EXIF und Ortsnamen, Speicherplatz, Nutzer,
+   `bulk-upload-check`). Die Datenbank der Immich-App auf dem Handy ist nicht erreichbar
+   (Android-Sandbox, kein ContentProvider) — deshalb eigene Prüfsummen (D-36; die Geräte-ID als
+   Abkürzung hat der Besitzer verworfen: zu unsicher). Keine eigenen Kopien von Serverdaten, die
+   Immich schon liefert.
+
+**Anwenden:** Bevor die App etwas selbst rechnet oder speichert, in der API-Beschreibung
+(`open-api/immich-openapi-specs.json`, Tag `v3.2.2`) nachsehen, ob Immich es liefert.
+
+---
+
 ## 2026-09-23 · D-37: Alles wird hier bearbeitet — Immich ist Galerie und Backup
 
 Vorschlag (Agent): reine Geometrie-Änderungen (Zuschneiden, 90° drehen, Spiegeln) über Immichs

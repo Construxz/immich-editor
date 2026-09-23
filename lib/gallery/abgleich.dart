@@ -31,14 +31,11 @@ Future<bool> ordnerGesichert(Immich immich, String ordner) async {
   return da.isNotEmpty;
 }
 
-/// Gleicht die Gerätefotos über ihre Prüfsummen mit dem Server ab; [fortschritt] meldet das
-/// Rechnen neuer Prüfsummen. Ohne Berechtigung für Gerätefotos: leer.
-Future<Abgleich> abgleich(
-  Immich immich, {
-  void Function(int fertig, int gesamt)? fortschritt,
-}) async {
+/// Gleicht die Gerätefotos über ihre Prüfsummen mit dem Server ab; das Rechnen neuer
+/// Prüfsummen zeigt [abgleichStand]. Ohne Berechtigung für Gerätefotos: leer.
+Future<Abgleich> abgleich(Immich immich) async {
   if (!await geraetErlaubt()) return leererAbgleich;
-  final summen = await geraetPruefsummen(fortschritt: fortschritt);
+  final summen = await geraetPruefsummen();
   final da = await immich.vorhanden(summen); // Geräte-ID → Server-ID
   final anzahl = await geraetAnzahl();
   final alle = anzahl == 0 ? <AssetEntity>[] : await geraetFotos(0, anzahl);
