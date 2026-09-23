@@ -10,12 +10,8 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** 🔶
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über Gerät und Server,
-Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App (D-17 bis D-43). Offen, in dieser
+Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen (D-17 bis D-44). Offen, in dieser
 Reihenfolge:
-- ⬜ **Kopie schneller öffnen:** Eine ältere Kopie aus dem Betrachter zu öffnen dauert im Emulator
-  etwa 8 s — nacheinander Details und Anfang der Kopie, Original per Prüfsumme suchen, dessen
-  Details und Vorschaubild. Anfragen bündeln oder parallel stellen. *Abnahme:* Editor mit Bild in
-  unter 3 s im Emulator, gemessen wie in D-29.
 - 🔶 **Gerätefotos, Rest:** ein Serverfoto, das auch auf dem Gerät liegt, lokal bearbeiten
   (D-24); im Hintergrund stapeln, ohne dass man die App öffnet; Vorgemerktes, das nie auf dem
   Server ankommt (Foto gelöscht, Backup aus), verwerfen oder anzeigen; „In Immich öffnen" auf dem

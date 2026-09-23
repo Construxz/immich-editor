@@ -12,36 +12,82 @@ import 'presets.dart';
 import 'recipe.dart';
 import 'preview.dart' show sha1;
 
-/// A photo ready for editing: for device photos [bytes] is the original, for server photos
-/// only the head (EXIF, XMP) — whoever needs the original (megabytes) loads it.
-/// If [id] was a copy made by this app, [photo] is its original, [start] its recipe and
-/// [oldCopy] the copy itself (spec, *Speicherweg* 5).
-typedef Loaded = ({Photo photo, Uint8List bytes, Photo? oldCopy, Recipe start});
+/// A photo ready for editing: [original] holds a device photo's bytes (null for server
+/// photos — whoever needs the original, megabytes, loads it), [preview] with `preview: true`
+/// Immich's preview image of a server photo. If [id] was a copy made by this app, [photo] is its
+/// original, [start] its recipe and [oldCopy] the copy itself (spec, *Speicherweg* 5).
+typedef Loaded = ({
+  Photo photo,
+  Uint8List? original,
+  Uint8List? preview,
+  Photo? oldCopy,
+  Recipe start,
+});
 
 Future<Loaded> loadPhoto(
   Immich immich,
   String id, {
   required bool onDevice,
+  bool preview = false,
 }) async {
-  Future<(Photo, Uint8List)> load(String id) async => onDevice
-      ? await deviceOriginal(id)
-      : (await immich.photo(id), await immich.head(id));
-  var (photo, bytes) = await load(id);
-  final from = recipeFrom(bytes);
+  if (onDevice) {
+    var (photo, bytes) = await deviceOriginal(id);
+    final from = recipeFrom(bytes);
+    final originalId = from == null
+        ? null
+        : await deviceByChecksum(from.originalSha1, photo.takenAt);
+    if (from == null || originalId == null) {
+      return (
+        photo: photo,
+        original: bytes,
+        preview: null,
+        oldCopy: null,
+        start: const Recipe(),
+      );
+    }
+    final copy = photo;
+    (photo, bytes) = await deviceOriginal(originalId);
+    return (
+      photo: photo,
+      original: bytes,
+      preview: null,
+      oldCopy: copy,
+      start: Recipe.fromJson(from.recipe),
+    );
+  }
+  // Server: details and head (EXIF, XMP) at once. The preview (the slow part, ~1 s) loads
+  // alongside unless the name says copy — only a guess for prefetching, the XMP decides.
+  Future<Uint8List?> shown(String id) async =>
+      preview ? await immich.preview(id) : null;
+  // Started together, awaited one by one: an error surfaces as itself, not as a
+  // ParallelWaitError, and ignore() keeps the others from being reported unhandled.
+  final details = immich.photo(id);
+  final early = details.then(
+    (p) => p.fileName.contains('.edit') ? null : shown(id),
+  )..ignore();
+  final headStarted = immich.head(id)..ignore();
+  final photo = await details;
+  final head = await headStarted;
+  final from = recipeFrom(head);
   final originalId = from == null
       ? null
-      : onDevice
-      ? await deviceByChecksum(from.originalSha1, photo.takenAt)
       : await immich.byChecksum(from.originalSha1);
   if (from == null || originalId == null) {
-    return (photo: photo, bytes: bytes, oldCopy: null, start: const Recipe());
+    return (
+      photo: photo,
+      original: null,
+      preview: await early ?? await shown(id),
+      oldCopy: null,
+      start: const Recipe(),
+    );
   }
-  final copy = photo;
-  (photo, bytes) = await load(originalId);
+  final originalImage = shown(originalId)..ignore();
+  final original = await immich.photo(originalId);
   return (
-    photo: photo,
-    bytes: bytes,
-    oldCopy: copy,
+    photo: original,
+    original: null,
+    preview: await originalImage,
+    oldCopy: photo,
     start: Recipe.fromJson(from.recipe),
   );
 }
@@ -121,7 +167,7 @@ Future<List<Object>> applyPreset(
       await saveCopy(
         immich,
         photo: l.photo,
-        original: e.onDevice ? l.bytes : await immich.original(l.photo.id),
+        original: l.original ?? await immich.original(l.photo.id),
         recipe: withPreset(l.start, preset),
         hdr: hdr,
         toDevice: e.onDevice || online,

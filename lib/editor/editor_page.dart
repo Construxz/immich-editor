@@ -77,29 +77,39 @@ class _EditorPageState extends State<EditorPage> {
   @override
   void initState() {
     super.initState();
+    final clock = Stopwatch()..start(); // measured as in D-29
     () async {
       try {
-        final hdr = await storage.read(key: 'hdr') != 'aus';
-        // Online photos per setting, default device (D-25).
-        final toDevice =
-            widget.onDevice || await storage.read(key: 'online') != 'server';
         final immich = widget.immich;
-        // From the server first details and head — the original loads in the background, the
-        // editor starts with Immich's preview image (D-29). A copy opens its original with its recipe.
-        final (:photo, :bytes, :oldCopy, :start) = await loadPhoto(
+        // From the server details, head and Immich's preview image — the original loads in the
+        // background (D-29). A copy opens its original with its recipe. Settings meanwhile.
+        // Settings and presets load meanwhile; small, local, they never fail.
+        final settings = Future.wait([
+          for (final k in ['hdr', 'online', 'mobil']) storage.read(key: k),
+        ]);
+        final presetsRead = readPresets();
+        final (:photo, :original, :preview, :oldCopy, :start) = await loadPhoto(
           immich,
           widget.id,
           onDevice: widget.onDevice,
+          preview: true,
         );
-        final presets = await readPresets();
-        final original = widget.onDevice ? bytes : null;
-        final wifiOnly = await storage.read(key: 'mobil') == 'aus';
+        final [hdrSetting, online, mobile] = await settings;
+        final presets = await presetsRead;
+        // persisted: do not rename
+        final hdr = hdrSetting != 'aus';
+        // Online photos per setting, default device (D-25).
+        final toDevice = widget.onDevice || online != 'server';
+        final wifiOnly = mobile == 'aus';
         final loaded = await loadOriginal(
-          original ?? await immich.preview(photo.id),
+          original ?? preview!,
           hdr: hdr,
           recipe: start,
         );
         if (!mounted) return;
+        if (kDebugMode) {
+          debugPrint('editor: image after ${clock.elapsedMilliseconds} ms');
+        }
         setState(() {
           _photo = photo;
           _oldCopy = oldCopy;

@@ -7,6 +7,34 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-44: Eine Kopie öffnet in 2 s
+
+ROADMAP: Eine ältere Kopie aus dem Betrachter zu öffnen dauerte „etwa 8 s". **Gemessen**
+23.09.2026 im Emulator (Debug-Build, vom Tippen auf „Bearbeiten" bis zum Bild im Editor, von
+außen über `adb`; dazu die Zeitmarke `editor: image after … ms` im Debug-Log): vorher
+**2,5–2,9 s** (vordere Kopien 2,5 und 2,7 s, ältere Kopie V1 2,9 s) — die 8 s stammten aus einem
+älteren Stand. Schritte einzeln gemessen: Details und Anfang je 0,1–0,5 s, Suche nach dem Original
+0,1 s, **Immichs Vorschaubild etwa 1,1 s** — der größte Posten.
+
+Gebaut (`loadPhoto` in `lib/editor/save.dart`):
+- Details und Anfang der Datei gleichzeitig; bei einer Kopie Details und Vorschaubild des
+  Originals gleichzeitig. Den Anfang des Originals lädt der Editor nicht mehr — er wurde nie
+  gebraucht. Einstellungen und Presets lesen nebenher.
+- Das Vorschaubild lädt gleich mit, sobald die Details sagen, dass der Name nicht nach Kopie
+  aussieht (`.edit`). Nur eine Vermutung fürs Vorladen; ob es eine Kopie ist, entscheidet weiter
+  das Rezept im XMP.
+- Verworfen: das Vorschaubild immer vorab laden — der Download der Kopie verdrängte die übrigen
+  Anfragen, Kopien brauchten dann 3,0–3,3 s. Ebenso ohne Wirkung: ruhende Verbindungen länger
+  halten (Darts Vorgabe 15 s).
+- Parallele Anfragen werden gestartet und einzeln abgewartet, damit ein Netzfehler als er selbst
+  ankommt und nicht als `ParallelWaitError`.
+
+**Ergebnis**, zwei Durchgänge: vordere Kopien **2,0–2,3 s**, ältere Kopie V1 **1,9–2,0 s**,
+Original 1,8–2,0 s — Abnahme (< 3 s) erfüllt. Eine geöffnete Kopie wird weiter als Kopie erkannt
+(⋮ „Zur gespeicherten Bearbeitung").
+
+---
+
 ## 2026-09-23 · D-43: Anzeigesprache Deutsch und Englisch
 
 Wunsch des Besitzers: die App international verständlich — Anzeigesprache nach dem Gerät,
