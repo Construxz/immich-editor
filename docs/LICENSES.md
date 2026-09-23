@@ -20,6 +20,8 @@ Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storag
 | [Google Sans](https://github.com/googlefonts/googlesans) | Schrift wie in der Immich-App; Dateien aus deren Repo, `fonts/GoogleSans/OFL.txt` | SIL OFL 1.1 | ja — darf mit Software gebündelt werden |
 | [http](https://github.com/dart-lang/http) | Immich-API | BSD-3-Clause | ja |
 | [flutter_localizations](https://github.com/flutter/flutter/tree/master/packages/flutter_localizations) | Anzeigesprache Deutsch/Englisch; Teil des Flutter-SDK | BSD-3-Clause | ja |
+| [workmanager](https://github.com/fluttercommunity/flutter_workmanager) | im Hintergrund stapeln (D-46) | MIT | ja |
+| [AndroidX WorkManager](https://developer.android.com/jetpack/androidx/releases/work) | in `workmanager`; plant Aufgaben über Androids JobScheduler, ohne Play-Dienste | Apache-2.0 | ja |
 | [intl](https://github.com/dart-lang/i18n/tree/main/pkgs/intl) | Übersetzungen, Datums- und Zahlenformate | BSD-3-Clause | ja |
 | [flutter_secure_storage](https://github.com/juliansteenbakker/flutter_secure_storage) | Anmeldedaten | BSD-3-Clause | ja |
 | [Tink](https://github.com/tink-crypto/tink-java) (`tink-android`) | Verschlüsselung in `flutter_secure_storage`; Google-Bibliothek, lokal, ohne Play-Dienste | Apache-2.0 | ja |

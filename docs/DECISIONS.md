@@ -7,6 +7,45 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-47: Im Betrachter über Monatsgrenzen wischen
+
+Bisher endete das Wischen am Rand des Monats, aus dem man ein Server-Foto öffnete. Jetzt lädt der
+Betrachter am Rand den Nachbarmonat nach (`more` in `ViewerPage`, `_openAcross` in der Galerie):
+ältere Monate werden angehängt, neuere vorangestellt und die Seite um ihre Anzahl verschoben;
+ein Monat nur mit Videos wird übersprungen. Zeitleiste und getrennte Server-Ansicht; die
+Gerätefotos-Ansicht war schon durchgehend.
+
+**Geprüft** 23.09.2026 im Emulator: erstes Foto im Oktober 2022 geöffnet, zeigt „30. Okt. 2022";
+nach rechts → „3. Mai 2026", zurück → „30. Okt. 2022".
+
+---
+
+## 2026-09-23 · D-46: Stapeln im Hintergrund
+
+ROADMAP: stapeln, ohne dass man die App öffnet. Über Androids **WorkManager** (Plugin
+`workmanager`, MIT; AndroidX WorkManager, Apache-2.0; ohne Play-Dienste — [LICENSES.md](LICENSES.md)):
+
+- Eine periodische Aufgabe (Androids Minimum 15 Minuten, nur mit Netz) ruft `stackPending` in
+  einer Flutter-Engine ohne Activity. Eingeplant, sobald etwas in die Warteschlange kommt oder nach
+  einem Lauf noch etwas wartet; abbestellt, wenn sie leer ist — ohne Wartendes läuft nichts.
+- Ohne Activity gibt es keinen Renderer-Kanal (Prüfsummen) und keinen Löschdialog: Der
+  Hintergrund stapelt nur. Lokale Kopien, die danach das Gerät verlassen sollen (D-28), merkt er
+  sich (`deviceTrashLater`); beim nächsten Start fragt Android einmal für alle. Unerreichbares
+  verwirft nur der Vordergrund (D-45).
+- Vordergrund und Hintergrund können sich überschneiden (zwei Isolates); doppelt stapeln ist
+  harmlos.
+
+**Geprüft** 23.09.2026 im Emulator: App auf dem Home-Bildschirm, Backup der Kopie
+`preset-11.edit (1).jpg` nachgestellt. Erzwingen (`cmd jobscheduler run -f -n
+androidx.work.systemjobscheduler …`) lehnt WorkManager für periodische Arbeit ab („executed before
+schedule"); der reguläre Lauf kam 14 Minuten nach dem Einplanen: `Worker result SUCCESS` nach
+2,4 s, per API die Kopie vorn im Stapel mit `preset-11.jpg`, die ersetzte Kopie weg. Beim
+nächsten Öffnen der App fragte Android, die lokale Kopie in den Papierkorb zu legen; danach war sie
+vom Gerät. Stolperstein: `am force-stop` löscht die eingeplanten Aufgaben der App bis zum
+nächsten Start (Wegwischen nicht).
+
+---
+
 ## 2026-09-23 · D-45: Server-Fotos mit lokalem Original lokal bearbeiten; Unerreichbares verwerfen
 
 Nach D-24 („Original liegt auf dem Gerät: die App bearbeitet die lokale Datei und fragt den

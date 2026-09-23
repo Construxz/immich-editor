@@ -161,8 +161,9 @@ class _GalleryPageState extends State<GalleryPage> {
   Future<void> _open(
     int count,
     Future<Entry> Function(int) entryAt,
-    int start,
-  ) async {
+    int start, {
+    Future<int> Function(bool older)? more,
+  }) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ViewerPage(
@@ -170,10 +171,42 @@ class _GalleryPageState extends State<GalleryPage> {
           count: count,
           entryAt: entryAt,
           start: start,
+          more: more,
         ),
       ),
     );
     await _reload();
+  }
+
+  /// Opens the viewer at [start] in [first], the photos of month [month] of [months] (newest
+  /// first); swiping past an end loads the neighbouring month through [monthAt].
+  Future<void> _openAcross(
+    List<Entry> first,
+    int start,
+    int month,
+    int months,
+    Future<List<Entry>> Function(int month) monthAt,
+  ) {
+    final all = [...first];
+    var newest = month, oldest = month;
+    Future<int> more(bool older) async {
+      while (true) {
+        final next = older ? oldest + 1 : newest - 1;
+        if (next < 0 || next >= months) return 0;
+        final got = await monthAt(next);
+        if (older) {
+          oldest = next;
+          all.addAll(got);
+        } else {
+          newest = next;
+          all.insertAll(0, got);
+        }
+        // A month of only videos: on to the next.
+        if (got.isNotEmpty) return got.length;
+      }
+    }
+
+    return _open(all.length, (j) async => all[j], start, more: more);
   }
 
   void _toggle(Entry e) => setState(
@@ -445,7 +478,7 @@ class _GalleryPageState extends State<GalleryPage> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            for (final m in months) ...[
+            for (final (k, m) in months.indexed) ...[
               _monthHeader(DateTime.parse('${m.key}-01')),
               SliverGrid.builder(
                 gridDelegate: tileGrid,
@@ -477,7 +510,16 @@ class _GalleryPageState extends State<GalleryPage> {
                       selected: _selection.contains(z.e),
                       selecting: _selection.isNotEmpty,
                       onTap: () => _selection.isEmpty
-                          ? _open(items.length, (j) async => items[j].e, i)
+                          ? _openAcross(
+                              [for (final z in items) z.e],
+                              i,
+                              k,
+                              months.length,
+                              (n) async => [
+                                for (final z in await _mergedMonth(months[n]))
+                                  z.e,
+                              ],
+                            )
                           : _toggle(z.e),
                       onLongPress: () => _toggle(z.e),
                     );
@@ -577,7 +619,7 @@ class _GalleryPageState extends State<GalleryPage> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            for (final m in months) ...[
+            for (final (month, m) in months.indexed) ...[
               _monthHeader(DateTime.parse(m.start)),
               SliverGrid.builder(
                 gridDelegate: tileGrid,
@@ -610,10 +652,18 @@ class _GalleryPageState extends State<GalleryPage> {
                       )),
                       selecting: _selection.isNotEmpty,
                       onTap: () => _selection.isEmpty
-                          ? _open(
-                              tiles.length,
-                              (j) async => (id: tiles[j].id, onDevice: false),
+                          ? _openAcross(
+                              [
+                                for (final t in tiles)
+                                  (id: t.id, onDevice: false),
+                              ],
                               i,
+                              month,
+                              months.length,
+                              (n) async => [
+                                for (final t in await _month(months[n].start))
+                                  (id: t.id, onDevice: false),
+                              ],
                             )
                           : _toggle((id: k.id, onDevice: false)),
                       onLongPress: () => _toggle((id: k.id, onDevice: false)),

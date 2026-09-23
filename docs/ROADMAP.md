@@ -10,14 +10,12 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** 🔶
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über Gerät und Server,
-Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal (D-17 bis D-45). Offen, in dieser
+Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate (D-17 bis D-47). Offen, in dieser
 Reihenfolge:
-- 🔶 **Gerätefotos, Rest:** im Hintergrund stapeln, ohne dass man die App öffnet; Vorgemerktes,
-  dessen Backup ausbleibt, obwohl die Datei da ist (Backup aus, Ordner nicht gesichert), in den
+- 🔶 **Gerätefotos, Rest:** Vorgemerktes, dessen Backup ausbleibt, obwohl die Datei da ist (Backup aus, Ordner nicht gesichert), in den
   Einstellungen zeigen; „In Immich öffnen" auf dem Pixel prüfen (D-36); Prüfsummen einer großen
   Bibliothek messen (Dauer, Akku).
-- ⬜ **Betrachter, Rest:** über Monatsgrenzen wischen (Server-Fotos bisher nur im Monat); HDR im
-  Betrachter; Objektiv bei Gerätefotos (das Framework-`ExifInterface` liefert `LensModel` nicht).
+- ⬜ **Betrachter, Rest:** HDR im Betrachter; Objektiv bei Gerätefotos (das Framework-`ExifInterface` liefert `LensModel` nicht).
 - ⬜ **Noodle Gallery als Server** prüfen: gleiche API wie Immich 3.2.2, aber Hauptversion 5 —
   die App warnt dann beim Anmelden (`bekannteHauptversionen`). Gegen einen Noodle-Server testen
   und die Prüfung anpassen (D-27). Danach bei Noodle anfragen, ob ihr Editor das Rezept-Format

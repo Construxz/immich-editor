@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'gallery/gallery_page.dart';
 import 'l10n/app_localizations.dart';
 import 'language.dart';
+import 'stacking/background.dart';
 import 'server/immich.dart';
 import 'theme.dart';
 
@@ -12,6 +13,7 @@ const storage = FlutterSecureStorage();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await readLanguage();
+  await initBackground();
   runApp(const MainApp());
 }
 

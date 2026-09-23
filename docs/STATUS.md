@@ -23,7 +23,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden) und
     **Einstellungen** als Karten: Bearbeiten (HDR), Speichern (Online-Fotos übers Gerät), Netzwerk
     (mobile Daten, D-30), Stapeln („Jetzt stapeln") — D-32, D-35. Antippen öffnet den **Betrachter**
-    (D-33): wischen, zoomen, Stapel wie bei Google Fotos (Original, V1, V2; Hauptfoto festlegen,
+    (D-33): wischen, auch über Monatsgrenzen (D-47), zoomen, Stapel wie bei Google Fotos (Original, V1, V2; Hauptfoto festlegen,
     eines behalten und den Rest löschen, D-34), hochwischen für Infos, „Bearbeiten" → Editor →
     zurück zum Ergebnis. Zwei Reiter: „Gerät" (Fotos auf dem Gerät,
     neueste zuerst, D-26) und „Immich": Server-Fotos nach Monaten über Immichs Timeline,
@@ -46,7 +46,8 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     ebenso (Vorgabe) in den Kameraordner; nach dem Stapeln verlässt die Kopie das Gerät (D-28).
     Mit der Einstellung aus direkt auf den Server wie oben. Ein Server-Foto, dessen Original auch
     auf dem Gerät liegt, bearbeitet die App lokal (D-45). Was nie ankommen kann (Kopie oder
-    Original überall gelöscht), fällt aus der Warteschlange.
+    Original überall gelöscht), fällt aus der Warteschlange. Solange etwas wartet, stapelt
+    Androids WorkManager etwa alle 15 Minuten auch ohne geöffnete App (D-46).
   - Netzwerk: Zeitgrenzen (30 s, Originale und Upload 3 min) und verständliche Fehler.
   - Ultra HDR: Die Kopie behält die Gain-Map des Originals (D-16), Standardformat (D-19); die
     Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).

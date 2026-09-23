@@ -5,6 +5,7 @@ import '../gallery/checksums.dart' show deviceChecksums;
 import '../gallery/device.dart' show devicePermitted, deviceTrash;
 import '../main.dart' show storage;
 import '../server/immich.dart';
+import 'background.dart';
 
 /// Stacks the [copy] in front of the [original] and adds it to the original's albums. The
 /// previous primary joins the list: only then does Immich merge its stack with the new one,
@@ -75,8 +76,19 @@ Future<void> _write(List<Pending> queue) => storage.write(
 /// How many copies are still waiting for the backup.
 Future<int> pendingCount() async => (await _read()).length;
 
-Future<void> enqueue(Pending added) async =>
-    _write(enqueueIn(await _read(), added));
+Future<void> enqueue(Pending added) async {
+  await _write(enqueueIn(await _read(), added));
+  await scheduleBackgroundStacking();
+}
+
+/// Device copies stacked by a background run, to be removed at the next start in the foreground
+/// — only an activity can show Android's delete dialog.
+const _trashLaterKey = 'deviceTrashLater'; // persisted: do not rename
+
+Future<List<String>> _trashLater() async => [
+  for (final id in jsonDecode(await storage.read(key: _trashLaterKey) ?? '[]'))
+    id as String,
+];
 
 /// What can never be stacked: its copy or its original is neither on the server nor on the
 /// device any more (deleted, D-24). A copy that exists but isn't backed up keeps waiting.
@@ -96,13 +108,24 @@ List<Pending> unreachable(
 Future<void>? _running;
 
 /// Stacks what is pending and has meanwhile reached the server. Runs at most once at a time.
-Future<void> stackPending(Immich immich) =>
-    _running ??= _stackAll(immich).whenComplete(() => _running = null);
+/// With [background] (no activity, D-46): no checksum pass and no delete dialog — copies to
+/// remove from the device wait for the next foreground run.
+// ponytail: a foreground and a background run can overlap (two isolates); stacking twice is
+// harmless, a lock in storage if it ever isn't.
+Future<void> stackPending(Immich immich, {bool background = false}) =>
+    _running ??= _stackAll(
+      immich,
+      background,
+    ).whenComplete(() => _running = null);
 
-Future<void> _stackAll(Immich immich) async {
+Future<void> _stackAll(Immich immich, bool background) async {
   final done = <Pending>{};
   final queue = await _read();
-  if (queue.isEmpty) return;
+  if (queue.isEmpty) {
+    await cancelBackgroundStacking();
+    if (!background) await _trashNow(const []);
+    return;
+  }
   // One request for all: which checksums does the server know (archived too, D-36)?
   final found = await immich.existing({
     for (final p in queue)
@@ -123,18 +146,37 @@ Future<void> _stackAll(Immich immich) async {
   }
   // Drop what can never arrive. Only a checksum pass started after reading the queue counts —
   // an earlier one may miss a copy saved just before; without access to photos drop nothing.
-  if (await devicePermitted()) {
+  if (!background && await devicePermitted()) {
     await deviceChecksums();
     final onDevice = (await deviceChecksums()).values.toSet();
     done.addAll(unreachable(queue, found.keys.toSet(), onDevice));
   }
   // Read again: the editor may have enqueued something while we were stacking.
-  await _write([
+  final rest = [
     for (final p in await _read())
       if (!done.contains(p)) p,
-  ]);
-  await deviceTrash([
+  ];
+  await _write(rest);
+  await (rest.isEmpty
+      ? cancelBackgroundStacking()
+      : scheduleBackgroundStacking());
+  final remove = [
     for (final p in done)
       if (found.containsKey(p.copy)) ?p.removeLocal,
-  ]);
+  ];
+  if (background) {
+    await storage.write(
+      key: _trashLaterKey,
+      value: jsonEncode([...await _trashLater(), ...remove]),
+    );
+  } else {
+    await _trashNow(remove);
+  }
+}
+
+/// Removes [ids] and what background runs left from the device (one Android dialog).
+Future<void> _trashNow(List<String> ids) async {
+  final later = await _trashLater();
+  await deviceTrash([...ids, ...later]);
+  if (later.isNotEmpty) await storage.delete(key: _trashLaterKey);
 }

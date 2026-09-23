@@ -21,6 +21,7 @@ class ViewerPage extends StatefulWidget {
     required this.count,
     required this.entryAt,
     required this.start,
+    this.more,
   });
 
   final Immich immich;
@@ -28,14 +29,48 @@ class ViewerPage extends StatefulWidget {
   final Future<Entry> Function(int) entryAt;
   final int start;
 
+  /// Loads the next month when swiping past an end: older ones are appended, newer ones
+  /// prepended (then [entryAt] counts from the new first). Returns how many came, 0 at the end.
+  final Future<int> Function(bool older)? more;
+
   @override
   State<ViewerPage> createState() => _ViewerPageState();
 }
 
 class _ViewerPageState extends State<ViewerPage> {
   late final _pages = PageController(initialPage: widget.start);
-  final _entries = <int, Future<Entry>>{};
+  var _entries = <int, Future<Entry>>{};
   var _zoomed = false;
+  late var _count = widget.count;
+  var _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _nearEnd(widget.start));
+  }
+
+  /// Near an end, the neighbouring month comes in; newer ones shift the pages.
+  Future<void> _nearEnd(int i) async {
+    final more = widget.more;
+    final older = i >= _count - 2;
+    if (more == null || _loading || (!older && i > 1)) return;
+    _loading = true;
+    final n = await more(older);
+    _loading = false;
+    if (n == 0 || !mounted) return;
+    setState(() {
+      _count += n;
+      if (!older) {
+        _entries = {for (final e in _entries.entries) e.key + n: e.value};
+      }
+    });
+    if (!older) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _pages.jumpToPage(i + n),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -66,7 +101,8 @@ class _ViewerPageState extends State<ViewerPage> {
       body: PageView.builder(
         controller: _pages,
         physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
-        itemCount: widget.count,
+        itemCount: _count,
+        onPageChanged: _nearEnd,
         itemBuilder: (context, i) => FutureBuilder(
           future: _entries[i] ??= widget.entryAt(i),
           builder: (context, s) {
