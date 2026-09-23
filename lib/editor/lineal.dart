@@ -124,24 +124,13 @@ class _Striche extends CustomPainter {
   final double versatz, von, bis;
   final Color farbe, mitte;
 
+  /// Der Nullpunkt, auffällig und anders als die Mitte: man sieht, wohin er einrastet.
+  static const _null = Color(0xFFFFB300);
+
   @override
   void paint(Canvas canvas, Size size) {
     final m = size.width / 2;
-    final stift = Paint()..strokeWidth = 1.5;
-    for (var x = von; x <= bis + 0.01; x += Lineal._pixelProStrich) {
-      final px = m + x - versatz;
-      if (px < 0 || px > size.width) continue;
-      final lang = (x / Lineal._pixelProStrich).round() % 5 == 0;
-      stift.color = farbe.withValues(
-        alpha: x.abs() < 0.01 ? 1 : (lang ? 0.7 : 0.35),
-      );
-      final h = lang ? size.height * 0.7 : size.height * 0.4;
-      canvas.drawLine(
-        Offset(px, (size.height - h) / 2),
-        Offset(px, (size.height + h) / 2),
-        stift,
-      );
-    }
+    // Erst die Mitte: Steht der Regler auf 0, liegt die Null darüber und färbt sie.
     canvas.drawLine(
       Offset(m, 0),
       Offset(m, size.height),
@@ -149,6 +138,32 @@ class _Striche extends CustomPainter {
         ..color = mitte
         ..strokeWidth = 2.5,
     );
+    final stift = Paint()..strokeWidth = 1.5;
+    for (var x = von; x <= bis + 0.01; x += Lineal._pixelProStrich) {
+      final px = m + x - versatz;
+      if (px < 0 || px > size.width) continue;
+      if (x.abs() < 0.01) {
+        final null_ = Paint()
+          ..color = _null
+          ..strokeWidth = 3;
+        canvas
+          ..drawLine(
+            Offset(px, size.height * 0.08),
+            Offset(px, size.height),
+            null_,
+          )
+          ..drawCircle(Offset(px, size.height * 0.08), 3, null_);
+        continue;
+      }
+      final lang = (x / Lineal._pixelProStrich).round() % 5 == 0;
+      stift.color = farbe.withValues(alpha: lang ? 0.7 : 0.35);
+      final h = lang ? size.height * 0.7 : size.height * 0.4;
+      canvas.drawLine(
+        Offset(px, (size.height - h) / 2),
+        Offset(px, (size.height + h) / 2),
+        stift,
+      );
+    }
   }
 
   @override

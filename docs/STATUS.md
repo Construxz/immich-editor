@@ -34,7 +34,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal) und „Anpassen" (12 Regler als runde Knöpfe,
     Skalen-Lineal); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
     Renderer (AGSL, `Renderer.kt`); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
-    D-20). Das Lineal rastet nahe 0 ein. Server-Fotos öffnen mit Immichs Vorschaubild, das
+    D-20). Das Lineal rastet nahe 0 ein; die Null ist bernsteinfarben markiert (D-41). Server-Fotos öffnen mit Immichs Vorschaubild, das
     Original (und damit HDR) kommt im Hintergrund nach; Speichern wartet darauf (D-29).
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
     des Originals mit Orientierung 1, Rezept-XMP (Format in der Spec, *Aufbau*); hochladen,

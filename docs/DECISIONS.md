@@ -7,6 +7,18 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-41: Der Nullpunkt der Lineale ist zu sehen
+
+Wunsch des Besitzers: Die Null rastet mit kurzem Haptik-Feedback ein, war aber kaum zu sehen
+(nur ein hellerer Strich). Jetzt ist sie in allen Linealen (Regler, Winkel) ein dicker
+bernsteinfarbener Strich mit Punkt — anders als die blaue Mitte. Die Mitte wird zuerst
+gezeichnet; steht der Regler auf 0, liegt die Null darüber und die Mitte leuchtet bernstein.
+
+**Geprüft** 23.09.2026 im Emulator: Helligkeit 32 → Null links der Mitte sichtbar; auf 0
+gezogen → eingerastet, Mitte bernsteinfarben.
+
+---
+
 ## 2026-09-23 · D-40: Presets — im Editor sichern, auf eine Mehrfachauswahl anwenden
 
 Gebaut nach der Spec (*Presets*: ein Rezept ohne Geometrie und ohne Masken):
