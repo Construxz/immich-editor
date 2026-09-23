@@ -6,6 +6,7 @@ import 'package:photo_manager/photo_manager.dart';
 import '../editor/editor_seite.dart';
 import '../foto.dart';
 import '../server/immich.dart';
+import '../thema.dart';
 import 'geraet.dart';
 
 /// Ein Foto groß: wischen zum nächsten, zoomen, im Stapel wechseln, nach oben wischen für die
@@ -57,10 +58,7 @@ class _BetrachterSeiteState extends State<BetrachterSeite> {
 
   @override
   Widget build(BuildContext context) => Theme(
-    data: ThemeData(
-      colorSchemeSeed: Colors.indigo,
-      brightness: Brightness.dark,
-    ),
+    data: themaDunkel,
     child: Scaffold(
       backgroundColor: Colors.black,
       body: PageView.builder(

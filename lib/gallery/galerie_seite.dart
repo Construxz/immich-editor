@@ -216,6 +216,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   );
 
   AppBar _leiste() => AppBar(
+    centerTitle: false, // wie Immichs Zeitleiste: Name links, Profilbild rechts
     title: const Text('Editor for Immich'),
     actions: [
       KontoKnopf(immich: widget.immich, onAbmelden: widget.onAbmelden),

@@ -8,7 +8,7 @@ Lizenzen nachgesehen am 21.09.2026 über die GitHub-API bzw. die README des Proj
 
 ## Abhängigkeiten
 
-Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storage` (mit `tink-android`; über `path_provider_android` kommen `jni`, `jni_flutter`, `jni_util` vom Dart-Team, BSD-3-Clause), `photo_manager` (mit Glide und `androidx.exifinterface`; Dart-seitig nur `path`, BSD-3-Clause); der Rest ist geplant.
+Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storage` (mit `tink-android`; über `path_provider_android` kommen `jni`, `jni_flutter`, `jni_util` vom Dart-Team, BSD-3-Clause), `photo_manager` (mit Glide und `androidx.exifinterface`; Dart-seitig nur `path`, BSD-3-Clause) und die Schrift Google Sans; der Rest ist geplant.
 
 | Paket | Zweck | Lizenz | passt |
 |---|---|---|---|
@@ -17,6 +17,7 @@ Eingebunden sind bisher Flutter, `flutter_lints`, `http`, `flutter_secure_storag
 | [photo_manager](https://github.com/fluttercandies/flutter_photo_manager) | Gerätegalerie; auch in Immichs App | Apache-2.0 | ja |
 | [Glide](https://github.com/bumptech/glide) | Miniaturen in `photo_manager` | BSD, Teile MIT und Apache-2.0 | ja |
 | [AndroidX ExifInterface](https://developer.android.com/jetpack/androidx/releases/exifinterface) | EXIF in `photo_manager` | Apache-2.0 | ja |
+| [Google Sans](https://github.com/googlefonts/googlesans) | Schrift wie in der Immich-App; Dateien aus deren Repo, `fonts/GoogleSans/OFL.txt` | SIL OFL 1.1 | ja — darf mit Software gebündelt werden |
 | [http](https://github.com/dart-lang/http) | Immich-API | BSD-3-Clause | ja |
 | [flutter_secure_storage](https://github.com/juliansteenbakker/flutter_secure_storage) | Anmeldedaten | BSD-3-Clause | ja |
 | [Tink](https://github.com/tink-crypto/tink-java) (`tink-android`) | Verschlüsselung in `flutter_secure_storage`; Google-Bibliothek, lokal, ohne Play-Dienste | Apache-2.0 | ja |
@@ -45,7 +46,7 @@ Code- und Gewichtslizenz können abweichen — bei jedem Modell die **Gewichte**
 |---|---|---|---|
 | [T8RIN/ImageToolbox](https://github.com/T8RIN/ImageToolbox) | Algorithmen: GPU-Filter, Freistellen, Spot-Healing, Perspektive, Stapelverarbeitung. Seine Modelle einzeln prüfen (RMBG von BRIA vermutlich nicht frei) | Apache-2.0 | ja, mit `NOTICE` |
 | [burhanrashid52/PhotoEditor](https://github.com/burhanrashid52/PhotoEditor) | Zeichnen, Text, Rückgängig | MIT | ja, mit `NOTICE` |
-| [immich-app/immich](https://github.com/immich-app/immich) | API, Muster der Mobil-App | AGPL-3.0 | ja |
+| [immich-app/immich](https://github.com/immich-app/immich) | API; Design der Mobil-App übernommen (Theme, Konto-Fenster, Einstellungen — D-35) | AGPL-3.0 | ja |
 | [open-noodle/gallery](https://github.com/open-noodle/gallery) | Immich-Fork, Arbeitsweise mit Specs | AGPL-3.0 | ja |
 | [haavardnk/immich-edit](https://github.com/haavardnk/immich-edit) | RAW-Entwickler (Rust + `wgpu`), nur Lektüre | AGPL-3.0 | ja |
 | [dev-nick421/immich-swipe](https://github.com/dev-nick421/immich-swipe) | Bedienmuster | **keine** | **nein** — ohne Lizenz alle Rechte vorbehalten; nur lesen |

@@ -48,14 +48,31 @@ class Immich {
   }
 
   /// Hauptversion des Servers, etwa 3.
-  Future<int> hauptversion() async =>
-      _json(
-            await _warten(
-              _http.get(_uri('/server/version'), headers: kopf),
-              _kurz,
-            ),
-          )['major']
-          as int;
+  Future<int> hauptversion() async => (await version()).major;
+
+  /// Version des Servers, etwa 3.2.2.
+  Future<({int major, int minor, int patch})> version() async {
+    final v = _json(
+      await _warten(_http.get(_uri('/server/version'), headers: kopf), _kurz),
+    );
+    return (
+      major: v['major'] as int,
+      minor: v['minor'] as int,
+      patch: v['patch'] as int,
+    );
+  }
+
+  /// Belegter und verfügbarer Platz in Bytes: das Kontingent des Nutzers, sonst die Platte des
+  /// Servers — wie die Immich-App es zeigt.
+  Future<({int belegt, int gesamt})> speicherplatz(Konto k) async {
+    if (k.kontingent != null) {
+      return (belegt: k.belegt ?? 0, gesamt: k.kontingent!);
+    }
+    final s = _json(
+      await _warten(_http.get(_uri('/server/storage'), headers: kopf), _kurz),
+    );
+    return (belegt: s['diskUseRaw'] as int, gesamt: s['diskSizeRaw'] as int);
+  }
 
   /// Wer angemeldet ist.
   Future<Konto> ich() async {
@@ -68,6 +85,8 @@ class Immich {
       email: u['email'] as String,
       hatBild: (u['profileImagePath'] as String? ?? '').isNotEmpty,
       farbe: u['avatarColor'] as String? ?? 'primary',
+      kontingent: u['quotaSizeInBytes'] as int?,
+      belegt: u['quotaUsageInBytes'] as int?,
     );
   }
 

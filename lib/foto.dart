@@ -74,13 +74,16 @@ String? belichtungAus({num? blende, num? sekunden, num? iso, num? brennweite}) {
   return teile.isEmpty ? null : teile.join(' · ');
 }
 
-/// Der angemeldete Nutzer: [farbe] ist Immichs Avatarfarbe, [hatBild] ein eigenes Profilbild.
+/// Der angemeldete Nutzer: [farbe] ist Immichs Avatarfarbe, [hatBild] ein eigenes Profilbild,
+/// [kontingent] und [belegt] in Bytes (ohne Kontingent null).
 typedef Konto = ({
   String id,
   String name,
   String email,
   bool hatBild,
   String farbe,
+  int? kontingent,
+  int? belegt,
 });
 
 /// Ein Eintrag der Galerie, so knapp, wie die Timeline ihn liefert.

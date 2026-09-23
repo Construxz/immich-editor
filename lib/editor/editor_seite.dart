@@ -8,6 +8,7 @@ import '../gallery/geraet.dart';
 import '../main.dart' show speicher;
 import '../server/immich.dart';
 import '../stapeln/stapeln.dart';
+import '../thema.dart';
 import 'lineal.dart';
 import 'rezept.dart';
 import 'vorschau.dart';
@@ -374,11 +375,7 @@ class _EditorSeiteState extends State<EditorSeite> {
   @override
   Widget build(BuildContext context) {
     // Schwarz wie bei Google Fotos: bleibt auf OLED schwarz, auch wenn HDR das Panel aufdreht.
-    final dunkel = ThemeData(
-      colorSchemeSeed: Colors.indigo,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: Colors.black,
-    );
+    final dunkel = themaDunkel.copyWith(scaffoldBackgroundColor: Colors.black);
     return Theme(
       data: dunkel,
       child: PopScope(

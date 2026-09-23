@@ -7,6 +7,32 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-35: Aussehen der Immich-App, Bedienung aus Google Fotos
+
+Leitlinie des Besitzers: Die App folgt dem **Design der Immich-App** — Farben, Schrift, Konto-Fenster,
+Einstellungen —, übernimmt aber **Funktionen und entscheidende Bereiche aus Google Fotos**
+(Editor schwarz mit Werkzeugen unten, D-22; Betrachter und Stapel, D-33, D-34).
+
+Übernommen aus dem Quelltext der Immich-App (Tag `v3.2.2`, AGPL-3.0 wie diese App, D-3):
+- **Theme** (`lib/thema.dart`): Markenfarbe `#4150AF` / dunkel `#ACCBFA`, entfärbte Flächen,
+  Textgrößen, AppBar mit Titel in der Markenfarbe, Schrift **Google Sans** (SIL Open Font License
+  1.1, in `fonts/GoogleSans/` mit `OFL.txt`). Editor und Betrachter: dasselbe Theme dunkel, Editor
+  auf Schwarz.
+- **Konto-Fenster** wie `ImmichAppBarDialog`: oben Schließen und Name, in einer Karte Profil
+  (Avatar wie `UserCircleAvatar`, Immichs Avatarfarben), Speicherplatz (Kontingent des Nutzers,
+  sonst `GET /server/storage`), App-Version, Server-Version, Server-Adresse; darunter wartende
+  Bearbeitungen, Einstellungen, Abmelden (mit Rückfrage), unten Lizenzen. Nicht übernommen: Immichs
+  Logo (Marke, D-5), Profilbild hochladen, App-Protokoll, „Speicher freigeben".
+- **Einstellungen** wie `SettingsPage`: eine Karte je Bereich (Bearbeiten, Speichern, Netzwerk,
+  Stapeln), darin Schalter wie `SettingsSwitchListTile`.
+- App-Version über den Plattformkanal (`PackageManager`), keine neue Abhängigkeit.
+
+**Geprüft** 23.09.2026 im Emulator: Galerie mit Titel links in der Markenfarbe; Konto-Fenster mit
+„104,4 MiB von 10,0 GiB belegt", „0.0.1 build.1", „3.2.2", Server-Adresse, „6 Bearbeitungen warten
+auf das Backup"; Einstellungen als Karten, Bereich „Speichern" mit Schalter.
+
+---
+
 ## 2026-09-22 · D-34: Stapel im Betrachter wie Langzeitbelichtungen bei Google Fotos
 
 Wunsch des Besitzers (Bildschirmfoto von Google Fotos als Vorlage): Oben Datum und Uhrzeit

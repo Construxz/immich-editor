@@ -83,6 +83,10 @@ class MainActivity : FlutterActivity() {
                         if (e.getLatLong(ort)) { werte["lat"] = ort[0].toDouble(); werte["lon"] = ort[1].toDouble() }
                         result.success(werte)
                     }
+                    "appVersion" -> {
+                        val p = packageManager.getPackageInfo(packageName, 0)
+                        result.success("${p.versionName} build.${p.longVersionCode}")
+                    }
                     "getaktet" -> result.success(
                         getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered,
                     )

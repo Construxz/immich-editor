@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'gallery/galerie_seite.dart';
 import 'server/immich.dart';
+import 'thema.dart';
 
 const speicher = FlutterSecureStorage();
 
@@ -17,11 +18,8 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Editor for Immich',
-      theme: ThemeData(colorSchemeSeed: Colors.indigo),
-      darkTheme: ThemeData(
-        colorSchemeSeed: Colors.indigo,
-        brightness: Brightness.dark,
-      ),
+      theme: themaHell,
+      darkTheme: themaDunkel,
       home: const Start(),
     );
   }

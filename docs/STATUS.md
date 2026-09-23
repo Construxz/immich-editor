@@ -11,9 +11,11 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   Dart-Paket `immich_editor`, D-10), `minSdk 34` (D-18):
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
     Immich-Hauptversion nicht 3 ist.
-  - Galerie; oben rechts das Profilbild wie bei Immich → Konto, wartende Bearbeitungen,
-    Abmelden, **Einstellungen** (Seite nach Abschnitten: HDR; Online-Fotos übers Gerät, mobile
-    Daten (D-30); Stapeln mit „Jetzt stapeln"; Konto — D-32). Antippen öffnet den **Betrachter**
+  - Aussehen der Immich-App (Farben, Google Sans, D-35), Bedienung nach Google Fotos.
+  - Galerie; oben rechts das Profilbild → Konto-Fenster wie in der Immich-App (Profil,
+    Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden) und
+    **Einstellungen** als Karten: Bearbeiten (HDR), Speichern (Online-Fotos übers Gerät), Netzwerk
+    (mobile Daten, D-30), Stapeln („Jetzt stapeln") — D-32, D-35. Antippen öffnet den **Betrachter**
     (D-33): wischen, zoomen, Stapel wie bei Google Fotos (Original, V1, V2; Hauptfoto festlegen,
     eines behalten und den Rest löschen, D-34), hochwischen für Infos, „Bearbeiten" → Editor →
     zurück zum Ergebnis. Zwei Reiter: „Gerät" (Fotos auf dem Gerät,

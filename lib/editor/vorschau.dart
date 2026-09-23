@@ -49,6 +49,10 @@ Future<Map<String, Object?>> exifLesen(Uint8List bytes) async =>
       'bytes': bytes,
     }))!;
 
+/// Version dieser App, etwa „0.0.1 build.1".
+Future<String> appVersion() async =>
+    (await rendererKanal.invokeMethod<String>('appVersion'))!;
+
 /// Kostet die Verbindung gerade Datenvolumen (Mobilfunk, Hotspot)? Android entscheidet.
 Future<bool> getaktet() async =>
     (await rendererKanal.invokeMethod<bool>('getaktet'))!;
