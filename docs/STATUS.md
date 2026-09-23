@@ -56,7 +56,8 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/foto.dart`; nativ in
   `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometrie.kt`, `Vorschau.kt` (Sitzung, Ansicht),
   `MainActivity.kt` (Kanal `immich_editor/renderer`). Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (15 — JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Lineal, Warteschlange, Start),
+- Tests: `test/` (16 — JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Lineal, Warteschlange,
+  Prüfsummen-Abgleich, Start),
   `android/app/src/test/` (9 — Geometrie, JVM, auch in der CI) und `android/app/src/androidTest/`
   (11 — Renderer auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,

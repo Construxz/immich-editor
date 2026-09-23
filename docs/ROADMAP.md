@@ -9,15 +9,20 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** 🔶
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
-Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speichern in 4 s
-(D-17 bis D-23). Offen, in dieser Reihenfolge:
-- ⬜ **Betrachter, Rest:** über Monatsgrenzen wischen (Server-Fotos bisher nur im Monat); HDR im
-  Betrachter; Objektiv bei Gerätefotos (das Framework-`ExifInterface` liefert `LensModel` nicht).
+Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über Gerät und Server,
+Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App (D-17 bis D-37). Offen, in dieser
+Reihenfolge:
+- ⬜ **Presets:** Reiter „Presets" im Editor, speichern, auf eine Mehrfachauswahl anwenden.
+- ⬜ **Kopie schneller öffnen:** Eine ältere Kopie aus dem Betrachter zu öffnen dauert im Emulator
+  etwa 8 s — nacheinander Details und Anfang der Kopie, Original per Prüfsumme suchen, dessen
+  Details und Vorschaubild. Anfragen bündeln oder parallel stellen. *Abnahme:* Editor mit Bild in
+  unter 3 s im Emulator, gemessen wie in D-29.
 - 🔶 **Gerätefotos, Rest:** ein Serverfoto, das auch auf dem Gerät liegt, lokal bearbeiten
   (D-24); im Hintergrund stapeln, ohne dass man die App öffnet; Vorgemerktes, das nie auf dem
   Server ankommt (Foto gelöscht, Backup aus), verwerfen oder anzeigen; „In Immich öffnen" auf dem
   Pixel prüfen (D-36); Prüfsummen einer großen Bibliothek messen (Dauer, Akku).
-- ⬜ **Presets:** Reiter „Presets" im Editor, speichern, auf eine Mehrfachauswahl anwenden.
+- ⬜ **Betrachter, Rest:** über Monatsgrenzen wischen (Server-Fotos bisher nur im Monat); HDR im
+  Betrachter; Objektiv bei Gerätefotos (das Framework-`ExifInterface` liefert `LensModel` nicht).
 - ⬜ **Noodle Gallery als Server** prüfen: gleiche API wie Immich 3.2.2, aber Hauptversion 5 —
   die App warnt dann beim Anmelden (`bekannteHauptversionen`). Gegen einen Noodle-Server testen
   und die Prüfung anpassen (D-27). Danach bei Noodle anfragen, ob ihr Editor das Rezept-Format
@@ -32,7 +37,7 @@ Vorschau eines Ultra-HDR-Fotos HDR, auch nach Zuschneiden und Drehen, und die Ko
 HDR mit passender Gain-Map — libvips (`uhdrload`) erkennt sie (D-19); mit „HDR" aus entstehen
 SDR-Kopien.
 → erstes Release; Repo wird öffentlich (D-4), vorher Mail an Immich (D-5) und die Doku ins
-Englische übersetzt (D-15).
+Englische übersetzt (D-15) — dabei DECISIONS straffen (743 Zeilen, `doccheck`-Richtwert 600).
 
 **M3. Stufe 2 und Zeichnen.** ⬜
 Pop, Rauschen, bester Bildausschnitt, Hautton; Stift, Textmarker, Text.

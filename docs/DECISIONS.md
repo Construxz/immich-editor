@@ -7,6 +7,19 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-37: Alles wird hier bearbeitet — Immich ist Galerie und Backup
+
+Vorschlag (Agent): reine Geometrie-Änderungen (Zuschneiden, 90° drehen, Spiegeln) über Immichs
+`PUT /assets/{id}/edits` am Original speichern statt als Kopie — kein zweites Foto, wie Google
+Fotos es bei umkehrbaren Änderungen hält. Entscheidung des Besitzers: **nein.** Jede Bearbeitung,
+auch die Geometrie, entsteht in diesem Editor und wird wie alle anderen als Kopie mit Rezept
+gespeichert (D-2); Immich bleibt Galerie und Backup, niemand soll zwischen zwei Editoren wechseln.
+
+**Anwenden:** keine Wege über Immichs Bearbeitungsfunktionen vorschlagen; neue Werkzeuge gehören
+ins Rezept.
+
+---
+
 ## 2026-09-23 · D-36: Eine Zeitleiste über Gerät und Server; Ordner, die Immich nicht sichert
 
 Entscheidungen des Besitzers (23.09.2026): Die Galerie zeigt wie die Immich-App **eine Zeitleiste**

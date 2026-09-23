@@ -44,6 +44,8 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
 - Stolpersteine im Emulator: `gradlew connectedDebugAndroidTest` deinstalliert die App danach
   (Anmeldung weg); hängt die Texteingabe, `adb shell ime reset`; `adb`-Wischer über die
   Werkzeugleiste verstellen leicht das Lineal. Nach dem Speichern die Kopie über ihre ID
-  prüfen, nie über „den ersten Suchtreffer" (D-23).
+  prüfen, nie über „den ersten Suchtreffer" (D-23). Friert das Emulator-Fenster ein, obwohl
+  `adb` antwortet (Screenshot zeigt Neues, das Fenster nicht): `adb emu rotate` zweimal. Nicht per
+  `adb` testen, während der Besitzer den Emulator bedient — installieren und Tippen stören ihn.
 - Werkzeuge: siehe README, *Development*. Installationen, die Administratorrechte, Käufe oder
   Konten brauchen, übernimmt der Besitzer — vorher fragen, nicht selbst anstoßen.
