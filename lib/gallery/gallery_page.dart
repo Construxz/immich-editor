@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../editor/presets.dart';
 import '../editor/preview.dart' show isMetered;
 import '../editor/save.dart' show applyPreset;
+import '../l10n/app_localizations.dart';
 import '../main.dart' show storage;
 import '../photo.dart';
 import '../server/immich.dart';
@@ -15,11 +17,6 @@ import 'device.dart';
 import 'library_view.dart';
 import 'tiles.dart';
 import 'viewer.dart';
-
-const _monthNames = [
-  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', //
-  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
-];
 
 /// A month of the merged timeline: [key] "2026-05", [start] the server month (null if nothing
 /// is there), [count] estimated (the server counts videos too), [local] the photos that live
@@ -187,16 +184,11 @@ class _GalleryPageState extends State<GalleryPage> {
   /// (spec, *Presets*).
   Future<void> _applyPreset() async {
     final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context);
     final presets = await readPresets();
     if (!mounted) return;
     if (presets.isEmpty) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Noch keine Presets — im Editor unter „Presets" sichern',
-          ),
-        ),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l.galleryNoPresets)));
       return;
     }
     final preset = await showModalBottomSheet<Preset>(
@@ -207,7 +199,7 @@ class _GalleryPageState extends State<GalleryPage> {
           children: [
             ListTile(
               title: Text(
-                'Preset auf ${_selection.length} Fotos anwenden',
+                l.galleryApplyPresetTo(_selection.length),
                 style: Theme.of(c).textTheme.titleMedium,
               ),
             ),
@@ -230,19 +222,16 @@ class _GalleryPageState extends State<GalleryPage> {
       final proceed = await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Mobile Daten verwenden?'),
-          content: const Text(
-            'Die Originale der Online-Fotos werden geladen — laut Einstellung '
-            'nur im WLAN.',
-          ),
+          title: Text(l.useMobileDataTitle),
+          content: Text(l.galleryMobileDataOriginals),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(c, false),
-              child: const Text('Abbrechen'),
+              child: Text(l.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(c, true),
-              child: const Text('Trotzdem'),
+              child: Text(l.anyway),
             ),
           ],
         ),
@@ -258,7 +247,7 @@ class _GalleryPageState extends State<GalleryPage> {
       builder: (c) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: Text('„${preset.name}" wird angewendet'),
+          title: Text(l.galleryApplyingPreset(preset.name)),
           content: ValueListenableBuilder(
             valueListenable: progress,
             builder: (c, n, _) => Column(
@@ -267,7 +256,7 @@ class _GalleryPageState extends State<GalleryPage> {
               spacing: 12,
               children: [
                 LinearProgressIndicator(value: n / photos.length),
-                Text('$n von ${photos.length} Fotos'),
+                Text(l.galleryProgress(n, photos.length)),
               ],
             ),
           ),
@@ -288,8 +277,12 @@ class _GalleryPageState extends State<GalleryPage> {
       SnackBar(
         content: Text(
           errors.isEmpty
-              ? '$ok Kopien gespeichert'
-              : '$ok Kopien gespeichert, ${errors.length} fehlgeschlagen: ${errors.first}',
+              ? l.galleryCopiesSaved(ok)
+              : l.galleryCopiesSavedFailed(
+                  ok,
+                  errors.length,
+                  '${errors.first}',
+                ),
         ),
       ),
     );
@@ -299,15 +292,16 @@ class _GalleryPageState extends State<GalleryPage> {
   @override
   Widget build(BuildContext context) {
     final selecting = _selection.isNotEmpty;
+    final l = AppLocalizations.of(context);
     final tabs = _separate
         ? [
-            (Icons.phone_android, 'Gerät', _deviceView),
+            (Icons.phone_android, l.galleryTabDevice, _deviceView),
             (Icons.cloud_outlined, 'Immich', _serverView),
-            (Icons.photo_library_outlined, 'Bibliothek', _library),
+            (Icons.photo_library_outlined, l.galleryTabLibrary, _library),
           ]
         : [
-            (Icons.photo_outlined, 'Fotos', _mergedView),
-            (Icons.photo_library_outlined, 'Bibliothek', _library),
+            (Icons.photo_outlined, l.galleryTabPhotos, _mergedView),
+            (Icons.photo_library_outlined, l.galleryTabLibrary, _library),
           ];
     final active = _tab.clamp(0, tabs.length - 1);
     return PopScope(
@@ -348,27 +342,30 @@ class _GalleryPageState extends State<GalleryPage> {
     );
   }
 
-  AppBar _selectionBar() => AppBar(
-    leading: IconButton(
-      icon: const Icon(Icons.close),
-      tooltip: 'Auswahl beenden',
-      onPressed: () => setState(_selection.clear),
-    ),
-    title: Text('${_selection.length} ausgewählt'),
-    actions: [
-      IconButton(
-        icon: const Icon(Icons.auto_awesome),
-        tooltip: 'Preset anwenden',
-        onPressed: _applyPreset,
+  AppBar _selectionBar() {
+    final l = AppLocalizations.of(context);
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        tooltip: l.galleryEndSelection,
+        onPressed: () => setState(_selection.clear),
       ),
-    ],
-  );
+      title: Text(l.gallerySelected(_selection.length)),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.auto_awesome),
+          tooltip: l.galleryApplyPreset,
+          onPressed: _applyPreset,
+        ),
+      ],
+    );
+  }
 
   Widget _monthHeader(DateTime date) => SliverToBoxAdapter(
     child: Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
       child: Text(
-        '${_monthNames[date.month - 1]} ${date.year}',
+        DateFormat.yMMMM(AppLocalizations.of(context).localeName).format(date),
         style: Theme.of(context).textTheme.titleSmall,
       ),
     ),
@@ -439,7 +436,9 @@ class _GalleryPageState extends State<GalleryPage> {
       }
       final months = _mergedMonths(server);
       if (months.isEmpty) {
-        return const Center(child: Text('Noch keine Fotos.'));
+        return Center(
+          child: Text(AppLocalizations.of(context).galleryNoPhotos),
+        );
       }
       return RefreshIndicator(
         onRefresh: _reload,
@@ -504,7 +503,7 @@ class _GalleryPageState extends State<GalleryPage> {
       final count = s.data;
       if (count == null) {
         return _ErrorView(
-          'Die App darf die Fotos auf dem Gerät nicht sehen.',
+          AppLocalizations.of(context).galleryNoDevicePermission,
           () async {
             await PhotoManager.openSetting();
             await _reload();
@@ -512,7 +511,9 @@ class _GalleryPageState extends State<GalleryPage> {
         );
       }
       if (count == 0) {
-        return const Center(child: Text('Keine Fotos auf dem Gerät.'));
+        return Center(
+          child: Text(AppLocalizations.of(context).galleryNoDevicePhotos),
+        );
       }
       return RefreshIndicator(
         onRefresh: _reload,
@@ -567,7 +568,9 @@ class _GalleryPageState extends State<GalleryPage> {
         return const Center(child: CircularProgressIndicator());
       }
       if (months.isEmpty) {
-        return const Center(child: Text('Noch keine Fotos auf dem Server.'));
+        return Center(
+          child: Text(AppLocalizations.of(context).galleryNoServerPhotos),
+        );
       }
       return RefreshIndicator(
         onRefresh: _reload,
@@ -641,7 +644,10 @@ class _ErrorView extends StatelessWidget {
         children: [
           Text(text, textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          FilledButton(onPressed: onRetry, child: const Text('Nochmal')),
+          FilledButton(
+            onPressed: onRetry,
+            child: Text(AppLocalizations.of(context).galleryRetry),
+          ),
         ],
       ),
     ),

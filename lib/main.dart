@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'gallery/gallery_page.dart';
+import 'l10n/app_localizations.dart';
+import 'language.dart';
 import 'server/immich.dart';
 import 'theme.dart';
 
 const storage = FlutterSecureStorage();
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await readLanguage();
   runApp(const MainApp());
 }
 
@@ -16,11 +20,18 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Editor for Immich',
-      theme: lightTheme,
-      darkTheme: darkTheme,
-      home: const Start(),
+    return ValueListenableBuilder(
+      valueListenable: appLocale,
+      builder: (context, locale, _) => MaterialApp(
+        title: 'Editor for Immich',
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeResolutionCallback: (device, _) => resolveLocale(device),
+        home: const Start(),
+      ),
     );
   }
 }
@@ -53,6 +64,7 @@ class _StartState extends State<Start> {
 
   Future<void> _logout() async {
     await storage.deleteAll();
+    await setLanguage(appLocale.value); // the language outlives the session
     setState(() => _immich = null);
   }
 
@@ -85,6 +97,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _login() async {
     setState(() => _busy = true);
     final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context);
     try {
       final immich = await Immich.login(
         _server.text.trim(),
@@ -94,27 +107,21 @@ class _LoginPageState extends State<LoginPage> {
       final version = await immich.majorVersion();
       if (!Immich.knownMajorVersions.contains(version)) {
         messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              'Immich $version.x ist nicht geprüft — '
-              'die App kann sich unerwartet verhalten.',
-            ),
-          ),
+          SnackBar(content: Text(l.loginUntestedVersion(version))),
         );
       }
       await storage.write(key: 'server', value: immich.baseUrl);
       await storage.write(key: 'token', value: immich.token);
       widget.onLoggedIn(immich);
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Anmeldung fehlgeschlagen: $e')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l.loginFailed('$e'))));
       setState(() => _busy = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Editor for Immich')),
       body: ListView(
@@ -131,20 +138,20 @@ class _LoginPageState extends State<LoginPage> {
           ),
           TextField(
             controller: _email,
-            decoration: const InputDecoration(labelText: 'E-Mail'),
+            decoration: InputDecoration(labelText: l.loginEmail),
             keyboardType: TextInputType.emailAddress,
             autocorrect: false,
           ),
           TextField(
             controller: _password,
-            decoration: const InputDecoration(labelText: 'Passwort'),
+            decoration: InputDecoration(labelText: l.loginPassword),
             obscureText: true,
             onSubmitted: (_) => _login(),
           ),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _busy ? null : _login,
-            child: const Text('Anmelden'),
+            child: Text(l.loginButton),
           ),
         ],
       ),

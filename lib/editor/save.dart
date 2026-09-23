@@ -4,6 +4,7 @@ import '../export/export.dart';
 import '../export/jpeg.dart' show recipeFrom;
 import '../photo.dart';
 import '../gallery/device.dart';
+import '../language.dart';
 import '../main.dart' show storage;
 import '../server/immich.dart';
 import '../stacking/stacking.dart';
@@ -61,7 +62,7 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
   bool replace = false,
   void Function(String)? onStep,
 }) async {
-  onStep?.call('Wird gerendert …');
+  onStep?.call(l10n.stepRendering);
   final copy = await exportJpeg(recipe, original, photo.checksum, hdr: hdr);
   if (toDevice) {
     final local = await saveToDevice(copy, photo);
@@ -78,7 +79,7 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
     }
     return (entry: (id: local, onDevice: true), copy: copy);
   }
-  onStep?.call('Wird hochgeladen …');
+  onStep?.call(l10n.stepUploading);
   final id = await immich.upload(
     copy,
     photo.fileName.replaceFirst(RegExp(r'(\.[^.]*)?$'), '.edit.jpg'),
@@ -86,11 +87,11 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
   );
   // Stack only once the server has exactly the bytes we sent:
   // Immich computes the SHA-1 on receipt — it must equal ours.
-  onStep?.call('Wird geprüft …');
+  onStep?.call(l10n.stepChecking);
   if ((await immich.photo(id)).checksum != await sha1(copy)) {
-    throw Exception('Kopie auf dem Server weicht ab ($id)');
+    throw Exception(l10n.saveCopyMismatch(id));
   }
-  onStep?.call('Wird gestapelt …');
+  onStep?.call(l10n.stepStacking);
   await stackOnOriginal(
     immich,
     id,

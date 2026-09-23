@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
+import '../language.dart';
 import '../photo.dart';
 
 /// Thin Immich client. Immich types (JSON) do not leave this file.
@@ -246,6 +247,7 @@ class Immich {
             : num.tryParse(fraction[0]),
         iso: e['iso'],
         focalLength: e['focalLength'],
+        locale: l10n.localeName,
       ),
       width: e['exifImageWidth'] as int?,
       height: e['exifImageHeight'] as int?,
@@ -418,19 +420,17 @@ class Immich {
     try {
       return await request.timeout(limit);
     } on TimeoutException {
-      throw const ImmichError(
-        'Der Server antwortet nicht (Zeitüberschreitung).',
-      );
+      throw ImmichError(l10n.serverTimeout);
     } on SocketException catch (e) {
-      throw ImmichError('Server nicht erreichbar: ${e.message}');
+      throw ImmichError(l10n.serverUnreachable(e.message));
     } on http.ClientException catch (e) {
-      throw ImmichError('Verbindung abgebrochen: ${e.message}');
+      throw ImmichError(l10n.serverConnectionLost(e.message));
     }
   }
 
   static http.Response _ok(http.Response r) {
     if (r.statusCode == 401) {
-      throw const ImmichError('Anmeldung abgelaufen — bitte neu anmelden.');
+      throw ImmichError(l10n.serverSessionExpired);
     }
     if (r.statusCode >= 300) {
       throw ImmichError(

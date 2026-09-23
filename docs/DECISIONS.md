@@ -7,6 +7,30 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-43: Anzeigesprache Deutsch und Englisch
+
+Wunsch des Besitzers: die App international verständlich — Anzeigesprache nach dem Gerät,
+zunächst Deutsch und Englisch, in den Einstellungen umstellbar.
+
+- Flutters eigener Weg: `flutter_localizations` (SDK) und `intl`, beide BSD-3-Clause
+  ([LICENSES.md](LICENSES.md)); Texte in `lib/l10n/app_en.arb` (Vorlage) und `app_de.arb`,
+  147 Schlüssel, Mehrzahl als ICU-Plural; `flutter gen-l10n` erzeugt `AppLocalizations`.
+- Einstellungen → **Sprache**: „Sprache des Geräts" (Vorgabe), Deutsch, English; gespeichert
+  unter `language`, bleibt beim Abmelden erhalten. Andere Gerätesprachen bekommen Englisch.
+- Widgets holen Texte über `AppLocalizations.of(context)` und bauen sich beim Umschalten neu auf;
+  Code ohne Kontext (Fehlermeldungen, Speicherschritte) über `l10n` aus `lib/language.dart`.
+- Datum, Monate, Wochentage und Zahlen über `intl` statt eigener deutscher Listen („Mi.,
+  23. Sept. 2026 · 12:00", „f/1,9" bzw. „f/1.9").
+- Im Emulator steht die App auf Deutsch (Einstellung), weil `tool/emu.sh` deutsche Texte sucht.
+
+**Geprüft** 23.09.2026: Widget-Test — Testgerät englisch → „Log in", auf Deutsch gestellt →
+„Anmelden" ohne Neustart; `fr` → Englisch. Im Emulator (Gerät Englisch): Galerie und
+Konto-Fenster englisch („8 edits are waiting for the backup"); Einstellungen → Language → Deutsch
+→ sofort deutsch, auch die Seite darunter; nach Neustart weiter deutsch; Betrachter-Infos mit
+deutschem Datum und Dezimalkomma.
+
+---
+
 ## 2026-09-23 · D-42: Code auf Englisch
 
 Wunsch des Besitzers, damit die App international verständlich ist: alle Dateinamen,

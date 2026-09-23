@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../l10n/app_localizations.dart';
 import '../photo.dart' show Presence;
 
 /// Thumbnail of a server photo. A freshly uploaded copy has none yet — Immich computes it only
@@ -113,13 +114,14 @@ class PhotoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
     return Semantics(
       label: [
-        stackSize > 1 ? 'Foto, Stapel mit $stackSize' : 'Foto',
+        stackSize > 1 ? l.tilePhotoStack(stackSize) : l.tilePhoto,
         switch (presence) {
-          Presence.device => 'nur auf dem Gerät',
-          Presence.server => 'nur auf dem Server',
-          Presence.both => 'gesichert',
+          Presence.device => l.tileDeviceOnly,
+          Presence.server => l.tileServerOnly,
+          Presence.both => l.tileBackedUp,
           null => null,
         },
       ].nonNulls.join(', '),

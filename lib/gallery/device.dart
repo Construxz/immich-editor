@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../editor/preview.dart' show readExif, sha1;
+import '../language.dart';
 import '../photo.dart';
 
 /// Photos on the device (`photo_manager`), newest capture first.
@@ -41,7 +42,7 @@ Future<(Photo, Uint8List)> deviceOriginal(String id) async {
   final a = await AssetEntity.fromId(id);
   final bytes = await a?.originBytes;
   if (a == null || bytes == null) {
-    throw Exception('Foto nicht mehr auf dem Gerät');
+    throw Exception(l10n.photoGoneFromDevice);
   }
   final photo = Photo(
     id: a.id,
@@ -101,7 +102,7 @@ Future<PhotoInfo> deviceInfo(
   final a = await AssetEntity.fromId(id);
   final bytes = await a?.originBytes;
   if (a == null || bytes == null) {
-    throw Exception('Foto nicht mehr auf dem Gerät');
+    throw Exception(l10n.photoGoneFromDevice);
   }
   final e = await readExif(
     Uint8List.sublistView(bytes, 0, bytes.length.clamp(0, 256 * 1024)),
@@ -124,6 +125,7 @@ Future<PhotoInfo> deviceInfo(
       seconds: number('ExposureTime'),
       iso: number('PhotographicSensitivity'),
       focalLength: number('FocalLength'),
+      locale: l10n.localeName,
     ),
     width: a.orientatedWidth,
     height: a.orientatedHeight,

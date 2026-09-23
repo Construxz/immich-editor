@@ -1,0 +1,387 @@
+{
+  "@@locale": "en",
+  "languageSystem": "Device language",
+  "languageTitle": "Language",
+  "cancel": "Cancel",
+  "close": "Close",
+  "save": "Save",
+  "settings": "Settings",
+  "anyway": "Anyway",
+  "original": "Original",
+  "useMobileDataTitle": "Use mobile data?",
+  "stepRendering": "Rendering …",
+  "stepUploading": "Uploading …",
+  "stepChecking": "Checking …",
+  "stepStacking": "Stacking …",
+  "photoGoneFromDevice": "Photo is no longer on the device",
+  "toolBrightness": "Brightness",
+  "toolContrast": "Contrast",
+  "toolWhitePoint": "White point",
+  "toolHighlights": "Highlights",
+  "toolShadows": "Shadows",
+  "toolBlackPoint": "Black point",
+  "toolSaturation": "Saturation",
+  "toolWarmth": "Warmth",
+  "toolTint": "Tint",
+  "toolBlueTones": "Blue tone",
+  "toolVignette": "Vignette",
+  "toolSharpness": "Sharpen",
+  "editorDiscardTitle": "Discard changes?",
+  "editorDiscard": "Discard",
+  "editorLoadingOriginal": "Loading original …",
+  "editorUndo": "Undo",
+  "editorRedo": "Redo",
+  "editorHdrOn": "HDR on",
+  "editorHdrOff": "HDR off",
+  "editorMore": "More",
+  "editorResetAll": "Reset all",
+  "editorBackToSaved": "Back to saved edit",
+  "editorAspectRatio": "Aspect ratio",
+  "editorRatioFree": "Free",
+  "editorRatioSquare": "Square",
+  "editorFlip": "Flip",
+  "editorRotate": "Rotate",
+  "editorTabPresets": "Presets",
+  "editorTabCrop": "Crop",
+  "editorTabAdjust": "Adjust",
+  "presetSaveTitle": "Save as preset",
+  "presetName": "Name",
+  "presetSave": "Save",
+  "presetDeleteTitle": "Delete preset “{name}”?",
+  "@presetDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "presetDelete": "Delete",
+  "saveReplaceCopy": "Replace copy",
+  "saveReplaceCopyHint": "The previous edit moves to the trash",
+  "saveAsAnotherCopy": "Save as another copy",
+  "saveAsAnotherCopyHint": "Both edits stay in the stack",
+  "saveMobileDataBody": "Saving needs to download the original or upload the copy — which your settings allow only on Wi-Fi.",
+  "saveDoneChecked": "Saved and verified",
+  "saveDoneOnDevice": "Saved on the device — stacked after the backup",
+  "saveFailed": "Saving failed: {error}",
+  "@saveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "saveCopyMismatch": "Copy on the server differs ({id})",
+  "@saveCopyMismatch": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "saveOpenInImmichTitle": "Open edit in Immich?",
+  "saveOpenInImmichBody": "The folder “{folder}” is not backed up to Immich. Upload the edit archived — not in the timeline —, add it to the album “{album}” and open it in the Immich app? There you can move it to another album.",
+  "@saveOpenInImmichBody": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "saveDeviceOnly": "Device only",
+  "saveOpenInImmich": "Open in Immich",
+  "saveArchived": "Archived in Immich, album “{album}”",
+  "@saveArchived": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "saveArchivedNoApp": "Archived in Immich, album “{album}” — the Immich app is missing",
+  "@saveArchivedNoApp": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "galleryNoPresets": "No presets yet — save one in the editor under \"Presets\"",
+  "galleryApplyPresetTo": "{count, plural, =1{Apply preset to 1 photo} other{Apply preset to {count} photos}}",
+  "@galleryApplyPresetTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "galleryMobileDataOriginals": "The originals of the online photos will be downloaded — your settings allow that only on Wi-Fi.",
+  "galleryApplyingPreset": "Applying \"{name}\"",
+  "@galleryApplyingPreset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "galleryProgress": "{done} of {total} photos",
+  "@galleryProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "galleryCopiesSaved": "{count, plural, =1{1 copy saved} other{{count} copies saved}}",
+  "@galleryCopiesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "galleryCopiesSavedFailed": "{count, plural, =1{1 copy} other{{count} copies}} saved, {failed} failed: {error}",
+  "@galleryCopiesSavedFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "galleryTabDevice": "Device",
+  "galleryTabLibrary": "Library",
+  "galleryTabPhotos": "Photos",
+  "galleryEndSelection": "Clear selection",
+  "gallerySelected": "{count} selected",
+  "@gallerySelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "galleryApplyPreset": "Apply preset",
+  "galleryNoPhotos": "No photos yet.",
+  "galleryNoDevicePermission": "The app is not allowed to see the photos on this device.",
+  "galleryNoDevicePhotos": "No photos on this device.",
+  "galleryNoServerPhotos": "No photos on the server yet.",
+  "galleryRetry": "Try again",
+  "libraryOnDevice": "On this device",
+  "libraryNotInImmich": "{count, plural, =1{1 photo · not in Immich} other{{count} photos · not in Immich}}",
+  "@libraryNotInImmich": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryBackedUp": "{count, plural, =1{1 photo · backed up} other{{count} photos · backed up}}",
+  "@libraryBackedUp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryPartlyBackedUp": "{count} photos · {backedUp} backed up",
+  "@libraryPartlyBackedUp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "backedUp": {
+        "type": "int"
+      }
+    }
+  },
+  "tilePhoto": "Photo",
+  "tilePhotoStack": "Photo, stack of {count}",
+  "@tilePhotoStack": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tileDeviceOnly": "only on this device",
+  "tileServerOnly": "only on the server",
+  "tileBackedUp": "backed up",
+  "viewerKeepTitle": "Keep {name}?",
+  "@viewerKeepTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "viewerKeepText": "{count, plural, =1{The other photo of the stack goes to the Immich trash — you can restore it there.} other{The other {count} photos of the stack go to the Immich trash — you can restore them there.}}",
+  "@viewerKeepText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "viewerDeleteRest": "Delete the rest",
+  "viewerInfo": "Info",
+  "viewerEdit": "Edit",
+  "viewerStack": "Stack",
+  "viewerSetPrimary": "Set as primary photo",
+  "viewerKeepThis": "Keep this photo, delete the rest",
+  "serverTimeout": "The server is not responding (timeout).",
+  "serverUnreachable": "Server unreachable: {message}",
+  "@serverUnreachable": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "serverConnectionLost": "Connection lost: {message}",
+  "@serverConnectionLost": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "serverSessionExpired": "Session expired — please log in again.",
+  "checksumsTitle": "Photo matching",
+  "checksumsExplanation": "Once, the app computes a checksum for every photo on this device. That is how it knows which photos are already in Immich — shown by the clouds in the timeline.\n\nThis happens only the first time, afterwards only for new photos. Nothing is uploaded; only the checksums go to the server.",
+  "checksumsInBackground": "Run in background",
+  "checksumsProgress": "{done} of {total} photos",
+  "@checksumsProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "checksumsProgressRemaining": "{done} of {total} photos · done in about {duration}",
+  "@checksumsProgressRemaining": {
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "checksumsOneMinute": "a minute",
+  "checksumsMinutes": "{minutes} minutes",
+  "@checksumsMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "checksumsHoursMinutes": "{hours} h {minutes} min",
+  "@checksumsHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "accountTooltip": "Account and settings",
+  "accountStorageTitle": "Server storage",
+  "accountStorageUsed": "{used} of {total} used",
+  "@accountStorageUsed": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "accountAppVersion": "App version",
+  "accountServerVersion": "Server version",
+  "accountServerAddress": "Server address",
+  "accountLogout": "Log out",
+  "accountLogoutQuestion": "Are you sure you want to log out?",
+  "accountLogoutConfirm": "Yes",
+  "accountLicenses": "Licenses",
+  "settingsPendingEdits": "{count, plural, =0{Nothing is waiting for the backup} =1{1 edit is waiting for the backup} other{{count} edits are waiting for the backup}}",
+  "@settingsPendingEdits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLanguageText": "German, English or like the device",
+  "settingsViewTitle": "View",
+  "settingsViewText": "One timeline across device and server",
+  "settingsEditTitle": "Editing",
+  "settingsEditText": "HDR in preview and copy",
+  "settingsSaveTitle": "Saving",
+  "settingsSaveText": "Where edits of online photos go",
+  "settingsNetworkTitle": "Networking",
+  "settingsNetworkText": "Mobile data for originals and uploads",
+  "settingsStackingTitle": "Stacking",
+  "settingsStackingText": "Edits waiting for the backup",
+  "settingsTogetherTitle": "Device and server together",
+  "settingsTogetherText": "One timeline like in the Immich app; the cloud at the bottom right shows whether a photo is only on the device, only on the server or on both. Off: two tabs, “Device” and “Immich”.",
+  "settingsHdrText": "Show Ultra HDR photos in HDR and save as Ultra HDR",
+  "settingsOnlineTitle": "Back up online photos via the device",
+  "settingsOnlineText": "The copy of a photo that is only on the server goes into the camera album; the Immich app backs it up, then it leaves the device. Off: straight to the server.",
+  "settingsMobileDataTitle": "Mobile data",
+  "settingsMobileDataText": "Download originals and upload copies without Wi-Fi too. Off: only after asking.",
+  "settingsStackingExplanation": "The app stacks copies saved on the device as soon as the Immich app has backed up the original and the copy — for that, it has to be logged in as {email}.",
+  "@settingsStackingExplanation": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsStackNow": "Stack now",
+  "loginUntestedVersion": "Immich {version}.x is not tested — the app may behave unexpectedly.",
+  "@loginUntestedVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "loginFailed": "Login failed: {error}",
+  "@loginFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loginEmail": "Email",
+  "loginPassword": "Password",
+  "loginButton": "Log in"
+}

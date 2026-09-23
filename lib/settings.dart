@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'editor/preview.dart' show appVersion;
 import 'photo.dart';
 import 'gallery/checksums.dart' show checksumProgress;
+import 'l10n/app_localizations.dart';
+import 'language.dart';
 import 'main.dart' show storage;
 import 'server/immich.dart';
 import 'stacking/stacking.dart';
@@ -83,15 +86,11 @@ class Avatar extends StatelessWidget {
   }
 }
 
-/// "17.400" instead of "17400".
-String _number(int n) =>
-    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
-
-String _duration(Duration d) => d.inMinutes < 1
-    ? 'einer Minute'
+String _duration(AppLocalizations l, Duration d) => d.inMinutes < 1
+    ? l.checksumsOneMinute
     : d.inMinutes < 60
-    ? '${d.inMinutes + 1} Minuten'
-    : '${d.inHours} Std. ${d.inMinutes % 60} Min.';
+    ? l.checksumsMinutes(d.inMinutes + 1)
+    : l.checksumsHoursMinutes(d.inHours, d.inMinutes % 60);
 
 /// Bar and progress of the checksum run; nothing when none is running.
 class ChecksumProgressView extends StatelessWidget {
@@ -102,6 +101,7 @@ class ChecksumProgressView extends StatelessWidget {
     valueListenable: checksumProgress,
     builder: (context, s, _) {
       if (s == null) return const SizedBox();
+      final l = AppLocalizations.of(context);
       final elapsed = DateTime.now().difference(s.start);
       // Remaining time at the pace so far; only once there is one.
       final remaining = s.done == 0 || elapsed.inSeconds < 3
@@ -117,8 +117,13 @@ class ChecksumProgressView extends StatelessWidget {
             borderRadius: const BorderRadius.all(Radius.circular(10)),
           ),
           Text(
-            '${_number(s.done)} von ${_number(s.total)} Fotos'
-            '${remaining == null ? '' : ' · fertig in etwa ${_duration(remaining)}'}',
+            remaining == null
+                ? l.checksumsProgress(s.done, s.total)
+                : l.checksumsProgressRemaining(
+                    s.done,
+                    s.total,
+                    _duration(l, remaining),
+                  ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -139,28 +144,22 @@ Future<void> explainChecksums(BuildContext context) => showDialog<void>(
           if (c.mounted) Navigator.of(c).maybePop();
         });
       }
+      final l = AppLocalizations.of(c);
       return AlertDialog(
-        title: const Text('Bildabgleich'),
-        content: const Column(
+        title: Text(l.checksumsTitle),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 16,
           children: [
-            Text(
-              'Die App rechnet einmal für jedes Foto auf diesem Gerät eine '
-              'Prüfsumme. Daran erkennt sie, welche Fotos schon in Immich liegen '
-              '— das zeigen die Wolken in der Zeitleiste.\n\n'
-              'Das passiert nur beim ersten Mal, danach nur für neue Fotos. '
-              'Hochgeladen wird dabei nichts; an den Server gehen nur die '
-              'Prüfsummen.',
-            ),
-            ChecksumProgressView(),
+            Text(l.checksumsExplanation),
+            const ChecksumProgressView(),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c),
-            child: const Text('Im Hintergrund'),
+            child: Text(l.checksumsInBackground),
           ),
         ],
       );
@@ -196,7 +195,7 @@ class _AccountButtonState extends State<AccountButton> {
     builder: (context, s) {
       final account = s.data;
       return IconButton(
-        tooltip: 'Konto und Einstellungen',
+        tooltip: AppLocalizations.of(context).accountTooltip,
         // While checksums run, a ring around the avatar like Immich's backup indicator.
         icon: ValueListenableBuilder(
           valueListenable: checksumProgress,
@@ -237,7 +236,7 @@ class _AccountButtonState extends State<AccountButton> {
   );
 }
 
-String _bytes(int b) {
+String _bytes(int b, String locale) {
   const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
   var x = b.toDouble();
   var i = 0;
@@ -245,7 +244,7 @@ String _bytes(int b) {
     x /= 1024;
     i++;
   }
-  return '${x.toStringAsFixed(i == 0 ? 0 : 1).replaceAll('.', ',')} ${units[i]}';
+  return '${NumberFormat(i == 0 ? '0' : '0.0', locale).format(x)} ${units[i]}';
 }
 
 /// The Immich app's account dialog: close and name on top, profile, storage and server in the
@@ -277,6 +276,7 @@ class _AccountDialogState extends State<_AccountDialog> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final text = theme.textTheme;
+    final l = AppLocalizations.of(context);
 
     ListTile button(IconData icon, String title, VoidCallback onTap) =>
         ListTile(
@@ -346,7 +346,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                     alignment: Alignment.centerLeft,
                     children: [
                       IconButton(
-                        tooltip: 'Schließen',
+                        tooltip: l.close,
                         onPressed: () => Navigator.pop(context),
                         icon: Icon(
                           Icons.close,
@@ -410,7 +410,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                             spacing: 12,
                             children: [
                               Text(
-                                'Speicherplatz auf dem Server',
+                                l.accountStorageTitle,
                                 style: text.labelLarge,
                               ),
                               LinearProgressIndicator(
@@ -425,7 +425,10 @@ class _AccountDialogState extends State<_AccountDialog> {
                               Text(
                                 p == null
                                     ? '--'
-                                    : '${_bytes(p.used)} von ${_bytes(p.total)} belegt',
+                                    : l.accountStorageUsed(
+                                        _bytes(p.used, l.localeName),
+                                        _bytes(p.total, l.localeName),
+                                      ),
                                 style: text.bodySmall,
                               ),
                             ],
@@ -454,7 +457,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                                     spacing: 12,
                                     children: [
                                       Text(
-                                        'Bildabgleich',
+                                        l.checksumsTitle,
                                         style: text.labelLarge,
                                       ),
                                       const ChecksumProgressView(),
@@ -472,17 +475,17 @@ class _AccountDialogState extends State<_AccountDialog> {
                       ),
                       child: Column(
                         children: [
-                          row('App-Version', _app),
+                          row(l.accountAppVersion, _app),
                           const Divider(thickness: 1),
                           row(
-                            'Server-Version',
+                            l.accountServerVersion,
                             _server.then(
                               (v) => '${v.major}.${v.minor}.${v.patch}',
                             ),
                           ),
                           const Divider(thickness: 1),
                           row(
-                            'Server-Adresse',
+                            l.accountServerAddress,
                             Future.value(widget.immich.baseUrl),
                           ),
                         ],
@@ -497,18 +500,16 @@ class _AccountDialogState extends State<_AccountDialog> {
                     ? const SizedBox()
                     : button(
                         Icons.hourglass_top,
-                        s.data == 1
-                            ? '1 Bearbeitung wartet auf das Backup'
-                            : '${s.data} Bearbeitungen warten auf das Backup',
+                        l.settingsPendingEdits(s.data!),
                         () => _openSettings(context, _Section.stacking),
                       ),
               ),
               button(
                 Icons.settings_outlined,
-                'Einstellungen',
+                l.settings,
                 () => _openSettings(context, null),
               ),
-              button(Icons.logout_rounded, 'Abmelden', _logout),
+              button(Icons.logout_rounded, l.accountLogout, _logout),
               Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 20),
                 child: InkWell(
@@ -521,7 +522,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                       applicationVersion: version,
                     );
                   },
-                  child: Text('Lizenzen', style: text.bodySmall),
+                  child: Text(l.accountLicenses, style: text.bodySmall),
                 ),
               ),
             ],
@@ -549,19 +550,20 @@ class _AccountDialogState extends State<_AccountDialog> {
   }
 
   Future<void> _logout() async {
+    final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Abmelden'),
-        content: const Text('Wirklich abmelden?'),
+        title: Text(l.accountLogout),
+        content: Text(l.accountLogoutQuestion),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c, false),
-            child: const Text('Abbrechen'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('Ja'),
+            child: Text(l.accountLogoutConfirm),
           ),
         ],
       ),
@@ -574,29 +576,34 @@ class _AccountDialogState extends State<_AccountDialog> {
 
 /// The settings sections, like Immich's `SettingSection`.
 enum _Section {
-  view(
-    Icons.auto_awesome_mosaic_outlined,
-    'Ansicht',
-    'Eine Zeitleiste über Gerät und Server',
-  ),
-  edit(Icons.tune, 'Bearbeiten', 'HDR in Vorschau und Kopie'),
-  save(
-    Icons.cloud_upload_outlined,
-    'Speichern',
-    'Wohin Bearbeitungen von Online-Fotos gehen',
-  ),
-  network(Icons.wifi, 'Netzwerk', 'Mobile Daten für Originale und Uploads'),
-  stacking(
-    Icons.filter_none,
-    'Stapeln',
-    'Bearbeitungen, die auf das Backup warten',
-  );
+  language(Icons.language),
+  view(Icons.auto_awesome_mosaic_outlined),
+  edit(Icons.tune),
+  save(Icons.cloud_upload_outlined),
+  network(Icons.wifi),
+  stacking(Icons.filter_none);
 
-  const _Section(this.icon, this.title, this.text);
+  const _Section(this.icon);
 
   final IconData icon;
-  final String title;
-  final String text;
+
+  String title(AppLocalizations l) => switch (this) {
+    language => l.languageTitle,
+    view => l.settingsViewTitle,
+    edit => l.settingsEditTitle,
+    save => l.settingsSaveTitle,
+    network => l.settingsNetworkTitle,
+    stacking => l.settingsStackingTitle,
+  };
+
+  String text(AppLocalizations l) => switch (this) {
+    language => l.settingsLanguageText,
+    view => l.settingsViewText,
+    edit => l.settingsEditText,
+    save => l.settingsSaveText,
+    network => l.settingsNetworkText,
+    stacking => l.settingsStackingText,
+  };
 }
 
 /// The settings page: one card per section (`SettingsCard`).
@@ -610,8 +617,9 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
+    final l = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(centerTitle: false, title: const Text('Einstellungen')),
+      appBar: AppBar(centerTitle: false, title: Text(l.settings)),
       body: ListView(
         padding: const EdgeInsets.only(top: 10, bottom: 60),
         children: [
@@ -639,10 +647,10 @@ class SettingsPage extends StatelessWidget {
                     child: Icon(b.icon, color: colors.primary),
                   ),
                   title: Text(
-                    b.title,
+                    b.title(l),
                     style: text.titleMedium!.copyWith(color: colors.primary),
                   ),
-                  subtitle: Text(b.text, style: text.bodyMedium),
+                  subtitle: Text(b.text(l), style: text.bodyMedium),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => _SectionPage(
@@ -753,60 +761,60 @@ class _SectionPageState extends State<_SectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final items = switch (widget.section) {
+      _Section.language => [
+        for (final (locale, name) in [
+          (null, l.languageSystem),
+          (const Locale('de'), 'Deutsch'),
+          (const Locale('en'), 'English'),
+        ])
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            title: Text(name),
+            trailing: appLocale.value == locale
+                ? Icon(
+                    Icons.check,
+                    color: Theme.of(context).colorScheme.primary,
+                  )
+                : null,
+            onTap: () async {
+              await setLanguage(locale);
+              if (mounted) setState(() {});
+            },
+          ),
+      ],
       _Section.view => [
         _toggle(
           'zusammen',
           Icons.auto_awesome_mosaic_outlined,
-          'Gerät und Server zusammen',
-          'Eine Zeitleiste wie in der Immich-App; die Wolke unten rechts zeigt, '
-              'ob ein Foto nur auf dem Gerät, nur auf dem Server oder auf beiden '
-              'liegt. Aus: zwei Reiter „Gerät" und „Immich".',
+          l.settingsTogetherTitle,
+          l.settingsTogetherText,
         ),
       ],
-      _Section.edit => [
-        _toggle(
-          'hdr',
-          Icons.hdr_on,
-          'HDR',
-          'Ultra-HDR-Fotos in HDR zeigen und als Ultra HDR speichern',
-        ),
-      ],
+      _Section.edit => [_toggle('hdr', Icons.hdr_on, 'HDR', l.settingsHdrText)],
       _Section.save => [
         _toggle(
           'online',
           Icons.phone_android,
-          'Online-Fotos übers Gerät sichern',
-          'Die Kopie eines Fotos, das nur auf dem Server liegt, kommt ins '
-              'Kamera-Album; die Immich-App sichert sie, danach verlässt sie '
-              'das Gerät. Aus: direkt auf den Server.',
+          l.settingsOnlineTitle,
+          l.settingsOnlineText,
         ),
       ],
       _Section.network => [
         _toggle(
           'mobil',
           Icons.signal_cellular_alt,
-          'Mobile Daten',
-          'Originale laden und Kopien hochladen auch ohne WLAN. Aus: nur '
-              'nach Rückfrage.',
+          l.settingsMobileDataTitle,
+          l.settingsMobileDataText,
         ),
       ],
       _Section.stacking => [
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 20),
           leading: const Icon(Icons.hourglass_top),
-          title: Text(
-            _pending == 0
-                ? 'Nichts wartet auf das Backup'
-                : _pending == 1
-                ? '1 Bearbeitung wartet auf das Backup'
-                : '$_pending Bearbeitungen warten auf das Backup',
-          ),
-          subtitle: Text(
-            'Auf dem Gerät gespeicherte Kopien stapelt die App, sobald die '
-            'Immich-App Original und Kopie gesichert hat — dafür muss sie mit '
-            '${widget.account.email} angemeldet sein.',
-          ),
+          title: Text(l.settingsPendingEdits(_pending)),
+          subtitle: Text(l.settingsStackingExplanation(widget.account.email)),
         ),
         if (_pending > 0)
           Padding(
@@ -815,14 +823,14 @@ class _SectionPageState extends State<_SectionPage> {
               alignment: Alignment.centerLeft,
               child: ElevatedButton(
                 onPressed: _stacking ? null : _stackNow,
-                child: const Text('Jetzt stapeln'),
+                child: Text(l.settingsStackNow),
               ),
             ),
           ),
       ],
     };
     return Scaffold(
-      appBar: AppBar(centerTitle: false, title: Text(widget.section.title)),
+      appBar: AppBar(centerTitle: false, title: Text(widget.section.title(l))),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 16),
         itemCount: items.length,

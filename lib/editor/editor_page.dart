@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../photo.dart';
 import '../gallery/backup_state.dart' show folderBackedUp;
+import '../l10n/app_localizations.dart';
 import '../main.dart' show storage;
 import '../server/immich.dart';
 import '../theme.dart';
@@ -202,18 +203,19 @@ class _EditorPageState extends State<EditorPage> {
 
   Future<void> _close() async {
     if (!_changed || _saving) return Navigator.of(context).pop();
+    final l = AppLocalizations.of(context);
     final discard = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Änderungen verwerfen?'),
+        title: Text(l.editorDiscardTitle),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c, false),
-            child: const Text('Abbrechen'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('Verwerfen'),
+            child: Text(l.editorDiscard),
           ),
         ],
       ),
@@ -225,30 +227,29 @@ class _EditorPageState extends State<EditorPage> {
   /// put it in the device gallery and queue it for stacking (D-24, D-25).
   /// Capture time and place travel along in the carried-over EXIF.
   Future<void> _save() async {
+    final l = AppLocalizations.of(context);
     // Editing a copy: replace it (the old one goes to the trash) or put the new one beside it.
     var replace = false;
     if (_oldCopy != null) {
       final choice = await showDialog<bool>(
         context: context,
         builder: (c) => SimpleDialog(
-          title: const Text('Speichern'),
+          title: Text(l.save),
           children: [
             SimpleDialogOption(
               onPressed: () => Navigator.pop(c, true),
-              child: const ListTile(
-                leading: Icon(Icons.save),
-                title: Text('Kopie ersetzen'),
-                subtitle: Text(
-                  'Die bisherige Bearbeitung geht in den Papierkorb',
-                ),
+              child: ListTile(
+                leading: const Icon(Icons.save),
+                title: Text(l.saveReplaceCopy),
+                subtitle: Text(l.saveReplaceCopyHint),
               ),
             ),
             SimpleDialogOption(
               onPressed: () => Navigator.pop(c, false),
-              child: const ListTile(
-                leading: Icon(Icons.library_add),
-                title: Text('Als weitere Kopie speichern'),
-                subtitle: Text('Beide Bearbeitungen liegen im Stapel'),
+              child: ListTile(
+                leading: const Icon(Icons.library_add),
+                title: Text(l.saveAsAnotherCopy),
+                subtitle: Text(l.saveAsAnotherCopyHint),
               ),
             ),
           ],
@@ -264,19 +265,16 @@ class _EditorPageState extends State<EditorPage> {
       final anyway = await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Mobile Daten verwenden?'),
-          content: const Text(
-            'Zum Speichern muss das Original geladen oder die Kopie hochgeladen '
-            'werden — laut Einstellung nur im WLAN.',
-          ),
+          title: Text(l.useMobileDataTitle),
+          content: Text(l.saveMobileDataBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(c, false),
-              child: const Text('Abbrechen'),
+              child: Text(l.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(c, true),
-              child: const Text('Trotzdem'),
+              child: Text(l.anyway),
             ),
           ],
         ),
@@ -287,7 +285,7 @@ class _EditorPageState extends State<EditorPage> {
     _originalReady ??= _fetchOriginal(_photo!.id);
     setState(() {
       _saving = true;
-      _step = 'Wird gerendert …';
+      _step = l.stepRendering;
     });
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -295,7 +293,7 @@ class _EditorPageState extends State<EditorPage> {
     final photo = _photo!;
     try {
       if (_original == null) {
-        setState(() => _step = 'Original wird geladen …');
+        setState(() => _step = l.editorLoadingOriginal);
       }
       final (:entry, :copy) = await saveCopy(
         immich,
@@ -310,38 +308,28 @@ class _EditorPageState extends State<EditorPage> {
         onStep: (s) => setState(() => _step = s),
       );
       if (!entry.onDevice) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Gespeichert und geprüft')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l.saveDoneChecked)));
         navigator.pop(entry);
         return;
       }
       // A folder the Immich app does not back up: on request upload archived and open in
       // the Immich app (D-36).
       if (widget.onDevice && photo.folder != null) {
-        setState(() => _step = 'Wird geprüft …');
+        setState(() => _step = l.stepChecking);
         final backedUp = await folderBackedUp(
           immich,
           photo.folder!,
         ).catchError((_) => true); // don't ask without network
         if (!backedUp && mounted && await _askOpenInImmich(photo.folder!)) {
-          await _openInImmich(copy, photo, messenger);
+          await _openInImmich(copy, photo, messenger, l);
           navigator.pop(entry);
           return;
         }
       }
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Auf dem Gerät gespeichert — gestapelt wird nach dem Backup',
-          ),
-        ),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l.saveDoneOnDevice)));
       navigator.pop(entry);
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Speichern fehlgeschlagen: $e')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l.saveFailed('$e'))));
       setState(() => _saving = false);
     }
   }
@@ -353,21 +341,21 @@ class _EditorPageState extends State<EditorPage> {
       await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Bearbeitung in Immich öffnen?'),
+          title: Text(AppLocalizations.of(c).saveOpenInImmichTitle),
           content: Text(
-            'Der Ordner „${folder.replaceAll(RegExp(r'/$'), '')}" wird nicht in Immich '
-            'gesichert. Die Bearbeitung archiviert hochladen — nicht in der '
-            'Zeitleiste —, ins Album „$_album" legen und in der Immich-App öffnen? '
-            'Dort kannst du sie in ein anderes Album legen.',
+            AppLocalizations.of(c).saveOpenInImmichBody(
+              folder.replaceAll(RegExp(r'/$'), ''),
+              _album,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(c, false),
-              child: const Text('Nur auf dem Gerät'),
+              child: Text(AppLocalizations.of(c).saveDeviceOnly),
             ),
             TextButton(
               onPressed: () => Navigator.pop(c, true),
-              child: const Text('In Immich öffnen'),
+              child: Text(AppLocalizations.of(c).saveOpenInImmich),
             ),
           ],
         ),
@@ -378,9 +366,10 @@ class _EditorPageState extends State<EditorPage> {
     Uint8List copy,
     Photo photo,
     ScaffoldMessengerState messenger,
+    AppLocalizations l,
   ) async {
     final immich = widget.immich;
-    setState(() => _step = 'Wird hochgeladen …');
+    setState(() => _step = l.stepUploading);
     final id = await immich.upload(
       copy,
       photo.fileName.replaceFirst(RegExp(r'(\.[^.]*)?$'), '.edit.jpg'),
@@ -388,16 +377,14 @@ class _EditorPageState extends State<EditorPage> {
       archived: true,
     );
     if ((await immich.photo(id)).checksum != await sha1(copy)) {
-      throw Exception('Kopie auf dem Server weicht ab ($id)');
+      throw Exception(l.saveCopyMismatch(id));
     }
     await immich.addToAlbum(await immich.album(_album), [id]);
     final opened = await openUrl('immich://asset?id=$id');
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          opened
-              ? 'Archiviert in Immich, Album „$_album"'
-              : 'Archiviert in Immich, Album „$_album" — die Immich-App fehlt',
+          opened ? l.saveArchived(_album) : l.saveArchivedNoApp(_album),
         ),
       ),
     );
@@ -406,6 +393,7 @@ class _EditorPageState extends State<EditorPage> {
   @override
   Widget build(BuildContext context) {
     // Black as in Google Photos: stays black on OLED, even when HDR turns the panel up.
+    final l = AppLocalizations.of(context);
     final dark = darkTheme.copyWith(scaffoldBackgroundColor: Colors.black);
     return Theme(
       data: dark,
@@ -422,11 +410,11 @@ class _EditorPageState extends State<EditorPage> {
                 ? const Center(child: CircularProgressIndicator())
                 : Column(
                     children: [
-                      _topBar(),
-                      if (_section == _Section.crop) _cropButtons(),
+                      _topBar(l),
+                      if (_section == _Section.crop) _cropButtons(l),
                       Expanded(child: _imageArea()),
-                      _tools(),
-                      _tabs(),
+                      _tools(l),
+                      _tabs(l),
                     ],
                   ),
           ),
@@ -435,25 +423,25 @@ class _EditorPageState extends State<EditorPage> {
     );
   }
 
-  Widget _topBar() => Padding(
+  Widget _topBar(AppLocalizations l) => Padding(
     padding: const EdgeInsets.fromLTRB(4, 4, 8, 4),
     child: Row(
       children: [
         IconButton(
           icon: const Icon(Icons.close),
-          tooltip: 'Schließen',
+          tooltip: l.close,
           onPressed: _saving ? null : _close,
         ),
         IconButton(
           icon: const Icon(Icons.undo),
-          tooltip: 'Rückgängig',
+          tooltip: l.editorUndo,
           onPressed: _position > 0 && !_saving
               ? () => _jump(_position - 1)
               : null,
         ),
         IconButton(
           icon: const Icon(Icons.redo),
-          tooltip: 'Wiederholen',
+          tooltip: l.editorRedo,
           onPressed: _position < _history.length - 1 && !_saving
               ? () => _jump(_position + 1)
               : null,
@@ -462,15 +450,15 @@ class _EditorPageState extends State<EditorPage> {
         if (_hasGainmap)
           IconButton(
             icon: Icon(_hdr ? Icons.hdr_on : Icons.hdr_off),
-            tooltip: _hdr ? 'HDR an' : 'HDR aus',
+            tooltip: _hdr ? l.editorHdrOn : l.editorHdrOff,
             onPressed: _saving ? null : _toggleHdr,
           ),
         FilledButton(
           onPressed: _saving || !_changed || _recipe.isNeutral ? null : _save,
-          child: const Text('Speichern'),
+          child: Text(l.save),
         ),
         PopupMenuButton<String>(
-          tooltip: 'Mehr',
+          tooltip: l.editorMore,
           enabled: !_saving,
           onSelected: (v) {
             if (v == 'hdr') _toggleHdr();
@@ -487,15 +475,9 @@ class _EditorPageState extends State<EditorPage> {
                 checked: _hdr,
                 child: const Text('HDR'),
               ),
-            const PopupMenuItem(
-              value: 'reset',
-              child: Text('Alles zurücksetzen'),
-            ),
+            PopupMenuItem(value: 'reset', child: Text(l.editorResetAll)),
             if (_oldCopy != null)
-              const PopupMenuItem(
-                value: 'saved',
-                child: Text('Zur gespeicherten Bearbeitung'),
-              ),
+              PopupMenuItem(value: 'saved', child: Text(l.editorBackToSaved)),
           ],
         ),
       ],
@@ -540,21 +522,21 @@ class _EditorPageState extends State<EditorPage> {
     ],
   );
 
-  Widget _cropButtons() => Row(
+  Widget _cropButtons(AppLocalizations l) => Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
       PopupMenuButton<double>(
         icon: const Icon(Icons.aspect_ratio),
-        tooltip: 'Seitenverhältnis',
+        tooltip: l.editorAspectRatio,
         onSelected: (v) {
           _ratio = v == 0 ? null : v;
           _change(_recipe.copyWith(crop: _crop(_ratio, _recipe.quarterTurns)));
         },
         itemBuilder: (_) => [
           for (final (name, v) in [
-            ('Frei', 0.0),
-            ('Original', _frame),
-            ('Quadrat', 1.0),
+            (l.editorRatioFree, 0.0),
+            (l.original, _frame),
+            (l.editorRatioSquare, 1.0),
             ('5:4', 5 / 4),
             ('4:3', 4 / 3),
             ('3:2', 3 / 2),
@@ -569,12 +551,12 @@ class _EditorPageState extends State<EditorPage> {
       ),
       IconButton(
         icon: const Icon(Icons.flip),
-        tooltip: 'Spiegeln',
+        tooltip: l.editorFlip,
         onPressed: () => _change(_recipe.copyWith(flip: !_recipe.flip)),
       ),
       IconButton(
         icon: const Icon(Icons.rotate_90_degrees_ccw),
-        tooltip: 'Drehen',
+        tooltip: l.editorRotate,
         onPressed: () {
           // Google rotates counterclockwise; the aspect ratio rotates along.
           final q = (_recipe.quarterTurns + 3) % 4;
@@ -589,24 +571,22 @@ class _EditorPageState extends State<EditorPage> {
   /// Save the adjustments as a preset, under a name the user enters.
   Future<void> _savePreset() async {
     final field = TextEditingController();
+    final l = AppLocalizations.of(context);
     final name = await showDialog<String>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Als Preset sichern'),
+        title: Text(l.presetSaveTitle),
         content: TextField(
           controller: field,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Name'),
+          decoration: InputDecoration(labelText: l.presetName),
           onSubmitted: (t) => Navigator.pop(c, t),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Abbrechen'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(c, field.text),
-            child: const Text('Sichern'),
+            child: Text(l.presetSave),
           ),
         ],
       ),
@@ -622,18 +602,19 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   Future<void> _deletePreset(Preset preset) async {
+    final l = AppLocalizations.of(context);
     final yes = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('Preset „${preset.name}" löschen?'),
+        title: Text(l.presetDeleteTitle(preset.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c, false),
-            child: const Text('Abbrechen'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('Löschen'),
+            child: Text(l.presetDelete),
           ),
         ],
       ),
@@ -647,7 +628,7 @@ class _EditorPageState extends State<EditorPage> {
     if (mounted) setState(() => _presets = presets);
   }
 
-  Widget _tools() {
+  Widget _tools(AppLocalizations l) {
     if (_section == _Section.presets) {
       // ponytail: names instead of thumbnails (spec); the renderer computes those only one at a time.
       final own = presetFrom('', _recipe).adjustments;
@@ -658,14 +639,16 @@ class _EditorPageState extends State<EditorPage> {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           children: [
             _ToolButton(
-              tool: (key: '', name: 'Sichern', icon: Icons.add),
+              label: l.presetSave,
+              icon: Icons.add,
               selected: false,
               changed: false,
               onTap: own.isEmpty ? null : _savePreset,
             ),
             for (final p in _presets)
               _ToolButton(
-                tool: (key: p.name, name: p.name, icon: Icons.auto_awesome),
+                label: p.name,
+                icon: Icons.auto_awesome,
                 selected: mapEquals(p.adjustments, own),
                 changed: false,
                 onTap: () => _change(withPreset(_recipe, p)),
@@ -716,7 +699,8 @@ class _EditorPageState extends State<EditorPage> {
             children: [
               for (final t in tools)
                 _ToolButton(
-                  tool: t,
+                  label: toolName(l, t.key),
+                  icon: t.icon,
                   selected: t.key == active,
                   changed: _recipe.value(t.key) != 0,
                   onTap: () =>
@@ -729,15 +713,15 @@ class _EditorPageState extends State<EditorPage> {
     );
   }
 
-  Widget _tabs() => Padding(
+  Widget _tabs(AppLocalizations l) => Padding(
     padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         for (final (s, name) in [
-          (_Section.presets, 'Presets'),
-          (_Section.crop, 'Zuschneiden'),
-          (_Section.adjust, 'Anpassen'),
+          (_Section.presets, l.editorTabPresets),
+          (_Section.crop, l.editorTabCrop),
+          (_Section.adjust, l.editorTabAdjust),
         ])
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -757,14 +741,16 @@ class _EditorPageState extends State<EditorPage> {
 /// Round labeled button as in Google Photos; a dot marks a changed adjustment.
 class _ToolButton extends StatelessWidget {
   const _ToolButton({
-    required this.tool,
+    required this.label,
+    required this.icon,
     required this.selected,
     required this.changed,
     required this.onTap,
     this.onLongPress,
   });
 
-  final Tool tool;
+  final String label;
+  final IconData icon;
   final bool selected, changed;
   final VoidCallback? onTap, onLongPress;
 
@@ -791,7 +777,7 @@ class _ToolButton extends StatelessWidget {
                   foregroundColor: selected
                       ? colors.onPrimary
                       : colors.onSurface,
-                  child: Icon(tool.icon),
+                  child: Icon(icon),
                 ),
                 if (changed)
                   Positioned(
@@ -806,7 +792,7 @@ class _ToolButton extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              tool.name,
+              label,
               style: Theme.of(context).textTheme.labelSmall,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

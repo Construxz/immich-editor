@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../l10n/app_localizations.dart';
 import '../photo.dart' show Presence;
 import '../server/immich.dart';
 import 'backup_state.dart';
@@ -46,7 +47,7 @@ class _LibraryViewState extends State<LibraryView> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-                'Auf diesem Gerät',
+                AppLocalizations.of(context).libraryOnDevice,
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ),
@@ -120,10 +121,13 @@ class _FolderRowState extends State<_FolderRow> {
             ? null
             : Text(
                 backedUp == 0
-                    ? '${photos.length} Fotos · nicht in Immich'
+                    ? AppLocalizations.of(context)
+                          .libraryNotInImmich(photos.length)
                     : backedUp == photos.length
-                    ? '${photos.length} Fotos · gesichert'
-                    : '${photos.length} Fotos · $backedUp gesichert',
+                    ? AppLocalizations.of(context)
+                          .libraryBackedUp(photos.length)
+                    : AppLocalizations.of(context)
+                          .libraryPartlyBackedUp(photos.length, backedUp),
               ),
         trailing: Icon(
           backedUp == 0 ? Icons.cloud_off_outlined : Icons.cloud_done_outlined,

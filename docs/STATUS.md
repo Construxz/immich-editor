@@ -18,6 +18,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     rechts (nur Gerät / nur Server / beides); „Bibliothek" mit allen Geräteordnern. Getrennte
     Reiter per Einstellung „Ansicht". Fotos aus Ordnern, die Immich nicht sichert: nach dem
     Speichern auf Wunsch archiviert hochladen, Album „Editor for Immich", in Immich öffnen.
+  - Anzeigesprache wie das Gerät (Deutsch, sonst Englisch) oder fest gewählt (D-43).
   - Oben rechts das Profilbild → Konto-Fenster wie in der Immich-App (Profil,
     Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden) und
     **Einstellungen** als Karten: Bearbeiten (HDR), Speichern (Online-Fotos übers Gerät), Netzwerk
@@ -59,8 +60,9 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/photo.dart`; nativ in
   `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometry.kt`, `Preview.kt` (Sitzung, Ansicht),
   `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
-  Englisch** (D-42); Anzeigetexte noch Deutsch. Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (18 — JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
+  Englisch** (D-42). Anzeigesprache Deutsch oder Englisch nach dem Gerät, in den Einstellungen
+  umstellbar (D-43); Texte in `lib/l10n/app_{de,en}.arb`. Keine Google-Play-Dienste, kein Firebase.
+- Tests: `test/` (19 — Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
   Prüfsummen-Abgleich, Start),
   `android/app/src/test/` (9 — Geometrie, JVM, auch in der CI) und `android/app/src/androidTest/`
   (11 — Renderer auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).

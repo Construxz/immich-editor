@@ -9,8 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_secure_storage: ^11.2.0
   http: ^1.6.0
+  intl: any
   photo_manager: ^3.12.0
 
 dev_dependencies:
@@ -19,6 +22,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 flutter:
   uses-material-design: true
+  generate: true
   # Schrift der Immich-App, SIL Open Font License 1.1 (fonts/GoogleSans/OFL.txt)
   fonts:
     - family: GoogleSans

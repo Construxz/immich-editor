@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../editor/editor_page.dart';
+import '../l10n/app_localizations.dart';
 import '../photo.dart';
 import '../server/immich.dart';
 import '../theme.dart';
@@ -165,7 +167,7 @@ class _PageState extends State<_Page> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(c, false),
-              child: const Text('Abbrechen'),
+              child: Text(AppLocalizations.of(context).cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(c, true),
@@ -178,6 +180,7 @@ class _PageState extends State<_Page> {
 
   Future<void> _act(PhotoStack s, String action, String name) async {
     final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context);
     try {
       if (action == 'primary') {
         await widget.immich.setPrimary(s.id!, _shown);
@@ -187,10 +190,9 @@ class _PageState extends State<_Page> {
             if (f.id != _shown) f.id,
         ];
         if (!await _confirm(
-          '$name behalten?',
-          'Die anderen ${rest.length} Fotos des Stapels gehen in Immichs '
-              'Papierkorb — dort lassen sie sich wiederherstellen.',
-          'Rest löschen',
+          l.viewerKeepTitle(name),
+          l.viewerKeepText(rest.length),
+          l.viewerDeleteRest,
         )) {
           return;
         }
@@ -208,6 +210,7 @@ class _PageState extends State<_Page> {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final l = AppLocalizations.of(context);
     final image = widget.entry.onDevice
         ? FutureBuilder(
             future: _deviceImage,
@@ -228,7 +231,7 @@ class _PageState extends State<_Page> {
         final stack = s.data;
         final photos = stack == null
             ? const <(Photo, String)>[]
-            : _versions(stack);
+            : _versions(stack, l.original);
         final shown = photos.where((f) => f.$1.id == _shown).firstOrNull;
         final time = widget.entry.onDevice
             ? _deviceAsset?.createDateTime
@@ -244,8 +247,14 @@ class _PageState extends State<_Page> {
                     child: Column(
                       children: [
                         if (time != null) ...[
-                          Text(_day(time), style: text.titleMedium),
-                          Text(_clock(time), style: text.bodySmall),
+                          Text(
+                            DateFormat.yMMMd(l.localeName).format(time),
+                            style: text.titleMedium,
+                          ),
+                          Text(
+                            DateFormat.jm(l.localeName).format(time),
+                            style: text.bodySmall,
+                          ),
                         ],
                       ],
                     ),
@@ -289,13 +298,13 @@ class _PageState extends State<_Page> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.info_outline),
-                      tooltip: 'Infos',
+                      tooltip: l.viewerInfo,
                       onPressed: _info,
                     ),
                     const Spacer(),
                     FilledButton.icon(
                       icon: const Icon(Icons.tune),
-                      label: const Text('Bearbeiten'),
+                      label: Text(l.viewerEdit),
                       onPressed: () => widget.onEdit(_entry),
                     ),
                   ],
@@ -309,94 +318,97 @@ class _PageState extends State<_Page> {
   }
 
   /// The stack's thumbnails; the selected one carries ⋮ with the stack actions.
-  Widget _thumbnails(
-    PhotoStack stack,
-    List<(Photo, String)> photos,
-  ) => SizedBox(
-    height: 76,
-    child: Center(
-      child: ListView(
-        shrinkWrap: true,
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        children: [
-          for (final (f, name) in photos)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Semantics(
-                label: name,
-                selected: f.id == _shown,
-                button: true,
-                child: GestureDetector(
-                  onTap: () => setState(() => _shown = f.id),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: f.id == _shown ? 96 : 64,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: f.id == _shown
-                            ? Colors.white
-                            : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          widget.immich.thumbnailUri(f.id).toString(),
-                          headers: widget.immich.headers,
-                          fit: BoxFit.cover,
-                          excludeFromSemantics: true,
+  Widget _thumbnails(PhotoStack stack, List<(Photo, String)> photos) =>
+      SizedBox(
+        height: 76,
+        child: Center(
+          child: ListView(
+            shrinkWrap: true,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            children: [
+              for (final (f, name) in photos)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Semantics(
+                    label: name,
+                    selected: f.id == _shown,
+                    button: true,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _shown = f.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: f.id == _shown ? 96 : 64,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: f.id == _shown
+                                ? Colors.white
+                                : Colors.transparent,
+                            width: 2,
+                          ),
                         ),
-                        if (f.id == stack.primary)
-                          const Positioned(
-                            left: 4,
-                            top: 4,
-                            child: Icon(Icons.star, size: 16),
-                          ),
-                        if (f.id == _shown)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            bottom: 0,
-                            child: PopupMenuButton<String>(
-                              tooltip: 'Stapel',
-                              icon: const Icon(Icons.more_vert, size: 20),
-                              onSelected: (w) => _act(stack, w, name),
-                              itemBuilder: (_) => [
-                                if (f.id != stack.primary)
-                                  const PopupMenuItem(
-                                    value: 'primary',
-                                    child: Text('Als Hauptfoto festlegen'),
-                                  ),
-                                const PopupMenuItem(
-                                  value: 'keep',
-                                  child: Text(
-                                    'Dieses Foto behalten, den Rest löschen',
-                                  ),
-                                ),
-                              ],
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.network(
+                              widget.immich.thumbnailUri(f.id).toString(),
+                              headers: widget.immich.headers,
+                              fit: BoxFit.cover,
+                              excludeFromSemantics: true,
                             ),
-                          ),
-                      ],
+                            if (f.id == stack.primary)
+                              const Positioned(
+                                left: 4,
+                                top: 4,
+                                child: Icon(Icons.star, size: 16),
+                              ),
+                            if (f.id == _shown)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: PopupMenuButton<String>(
+                                  tooltip: AppLocalizations.of(context)
+                                      .viewerStack,
+                                  icon: const Icon(Icons.more_vert, size: 20),
+                                  onSelected: (w) => _act(stack, w, name),
+                                  itemBuilder: (_) => [
+                                    if (f.id != stack.primary)
+                                      PopupMenuItem(
+                                        value: 'primary',
+                                        child: Text(
+                                          AppLocalizations.of(context)
+                                              .viewerSetPrimary,
+                                        ),
+                                      ),
+                                    PopupMenuItem(
+                                      value: 'keep',
+                                      child: Text(
+                                        AppLocalizations.of(context)
+                                            .viewerKeepThis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-        ],
-      ),
-    ),
-  );
+            ],
+          ),
+        ),
+      );
 }
 
 /// The stack in fixed order: the original, then the copies in order of creation as V1, V2 …
 /// Copies from this app are recognized by name (`.edit`, see spec, *Speicherweg*).
 // ponytail: recognized by name; the recipe XMP would be safer but costs one request per member.
-List<(Photo, String)> _versions(PhotoStack stack) {
+List<(Photo, String)> _versions(PhotoStack stack, String original) {
   final originals = [
     for (final f in stack.photos)
       if (!f.fileName.contains('.edit')) f,
@@ -406,27 +418,17 @@ List<(Photo, String)> _versions(PhotoStack stack) {
       if (f.fileName.contains('.edit')) f,
   ]..sort((a, b) => (a.createdAt ?? '').compareTo(b.createdAt ?? ''));
   return [
-    for (final f in originals) (f, 'Original'),
+    for (final f in originals) (f, original),
     for (final (i, f) in copies.indexed) (f, 'V${i + 1}'),
   ];
 }
 
-const _weekdays = ['Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.', 'So.'];
-const _months = [
-  'Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', //
-  'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.',
-];
+/// "Mo., 5. Mai 2026 · 14:03" in German.
+String _date(DateTime d, String locale) =>
+    '${DateFormat.yMMMEd(locale).format(d)} · ${DateFormat.jm(locale).format(d)}';
 
-String _day(DateTime d) => '${d.day}. ${_months[d.month - 1]} ${d.year}';
-
-String _clock(DateTime d) =>
-    '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-
-String _date(DateTime d) =>
-    '${_weekdays[d.weekday - 1]} ${_day(d)} · ${_clock(d)}';
-
-String _size(int bytes) => bytes >= 1 << 20
-    ? '${(bytes / (1 << 20)).toStringAsFixed(1).replaceAll('.', ',')} MB'
+String _size(int bytes, String locale) => bytes >= 1 << 20
+    ? '${NumberFormat('0.0', locale).format(bytes / (1 << 20))} MB'
     : '${(bytes / 1024).round()} KB';
 
 /// The photo's info, as Google Photos shows it when swiping up — without a map.
@@ -452,11 +454,15 @@ class _Info extends StatelessWidget {
           child: Center(child: CircularProgressIndicator()),
         );
       }
+      final locale = AppLocalizations.of(context).localeName;
       final mp = i.width == null || i.height == null
           ? null
-          : '${(i.width! * i.height! / 1e6).toStringAsFixed(1).replaceAll('.', ',')} MP'
+          : '${NumberFormat('0.0', locale).format(i.width! * i.height! / 1e6)} MP'
                 ' · ${i.width} × ${i.height}';
-      final details = [?mp, if (i.bytes != null) _size(i.bytes!)].join(' · ');
+      final details = [
+        ?mp,
+        if (i.bytes != null) _size(i.bytes!, locale),
+      ].join(' · ');
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -466,7 +472,7 @@ class _Info extends StatelessWidget {
               if (i.takenAt != null)
                 ListTile(
                   leading: const Icon(Icons.calendar_today),
-                  title: Text(_date(i.takenAt!)),
+                  title: Text(_date(i.takenAt!, locale)),
                 ),
               ListTile(
                 leading: const Icon(Icons.image_outlined),

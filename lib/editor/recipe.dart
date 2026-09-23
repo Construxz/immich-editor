@@ -3,24 +3,43 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-/// An adjustment in "Anpassen": JSON key (as in the renderer), name, icon.
-typedef Tool = ({String key, String name, IconData icon});
+import '../l10n/app_localizations.dart';
+
+/// An adjustment in "Anpassen": JSON key (as in the renderer), icon; name via [toolName].
+typedef Tool = ({String key, IconData icon});
 
 /// The level-1 adjustments, in toolbar order (spec, *Bedienung*).
 const tools = <Tool>[
-  (key: 'brightness', name: 'Helligkeit', icon: Icons.brightness_6),
-  (key: 'contrast', name: 'Kontrast', icon: Icons.contrast),
-  (key: 'whitePoint', name: 'Weißpunkt', icon: Icons.circle),
-  (key: 'highlights', name: 'Spitzlichter', icon: Icons.wb_sunny),
-  (key: 'shadows', name: 'Schatten', icon: Icons.nights_stay),
-  (key: 'blackPoint', name: 'Schwarzpunkt', icon: Icons.circle_outlined),
-  (key: 'saturation', name: 'Sättigung', icon: Icons.water_drop),
-  (key: 'warmth', name: 'Wärme', icon: Icons.thermostat),
-  (key: 'tint', name: 'Färbung', icon: Icons.colorize),
-  (key: 'blueTones', name: 'Blautöne', icon: Icons.water),
-  (key: 'vignette', name: 'Vignette', icon: Icons.vignette),
-  (key: 'sharpness', name: 'Schärfe', icon: Icons.details),
+  (key: 'brightness', icon: Icons.brightness_6),
+  (key: 'contrast', icon: Icons.contrast),
+  (key: 'whitePoint', icon: Icons.circle),
+  (key: 'highlights', icon: Icons.wb_sunny),
+  (key: 'shadows', icon: Icons.nights_stay),
+  (key: 'blackPoint', icon: Icons.circle_outlined),
+  (key: 'saturation', icon: Icons.water_drop),
+  (key: 'warmth', icon: Icons.thermostat),
+  (key: 'tint', icon: Icons.colorize),
+  (key: 'blueTones', icon: Icons.water),
+  (key: 'vignette', icon: Icons.vignette),
+  (key: 'sharpness', icon: Icons.details),
 ];
+
+/// Display name of the adjustment [key].
+String toolName(AppLocalizations l, String key) => switch (key) {
+  'brightness' => l.toolBrightness,
+  'contrast' => l.toolContrast,
+  'whitePoint' => l.toolWhitePoint,
+  'highlights' => l.toolHighlights,
+  'shadows' => l.toolShadows,
+  'blackPoint' => l.toolBlackPoint,
+  'saturation' => l.toolSaturation,
+  'warmth' => l.toolWarmth,
+  'tint' => l.toolTint,
+  'blueTones' => l.toolBlueTones,
+  'vignette' => l.toolVignette,
+  'sharpness' => l.toolSharpness,
+  _ => key,
+};
 
 /// The settings of an edit. Stored as JSON in the copy's XMP and handed to the
 /// native renderer; from the first release on, later versions read older ones.

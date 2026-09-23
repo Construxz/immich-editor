@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 /// A photo as gallery and editor see it — independent of the backend.
 class Photo {
   const Photo({
@@ -59,16 +61,15 @@ String? cameraFrom(String? make, String? model) {
   return '$make $model';
 }
 
-/// "f/1,9 · 1/120 s · ISO 50 · 6,8 mm" — only what is known.
+/// "f/1,9 · 1/120 s · ISO 50 · 6,8 mm" (German [locale]) — only what is known.
 String? exposureFrom({
   num? aperture,
   num? seconds,
   num? iso,
   num? focalLength,
+  String? locale,
 }) {
-  String number(num x) =>
-      (x == x.roundToDouble() ? x.round().toString() : x.toStringAsFixed(1))
-          .replaceAll('.', ',');
+  final number = NumberFormat('0.#', locale).format;
   final parts = [
     if (aperture != null && aperture > 0) 'f/${number(aperture)}',
     if (seconds != null && seconds > 0)
