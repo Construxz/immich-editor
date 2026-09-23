@@ -13,12 +13,10 @@ Editor nach Google Fotos, Server-Galerie nach Monaten, erneut bearbeiten, Speich
 (D-17 bis D-23). Offen, in dieser Reihenfolge:
 - ⬜ **Betrachter, Rest:** über Monatsgrenzen wischen (Server-Fotos bisher nur im Monat); HDR im
   Betrachter; Objektiv bei Gerätefotos (das Framework-`ExifInterface` liefert `LensModel` nicht).
-- 🔶 **Gerätefotos:** bearbeiten, Kopie in die Gerätegalerie, nach dem Backup stapeln — gebaut
-  (D-26). Offen: eine Zeitleiste über Gerät und Server, über die Prüfsumme zusammengeführt
-  (`POST /assets/bulk-upload-check`, Prüfsummen zwischengespeichert), mit Kennzeichen „gesichert";
-  ein Serverfoto, das auch auf dem Gerät liegt, lokal bearbeiten (D-24); im Hintergrund stapeln,
-  ohne dass man die App öffnet; Vorgemerktes, das nie
-  auf dem Server ankommt (Foto gelöscht, Backup aus), irgendwann verwerfen oder anzeigen.
+- 🔶 **Gerätefotos, Rest:** ein Serverfoto, das auch auf dem Gerät liegt, lokal bearbeiten
+  (D-24); im Hintergrund stapeln, ohne dass man die App öffnet; Vorgemerktes, das nie auf dem
+  Server ankommt (Foto gelöscht, Backup aus), verwerfen oder anzeigen; „In Immich öffnen" auf dem
+  Pixel prüfen (D-36); Prüfsummen einer großen Bibliothek messen (Dauer, Akku).
 - ⬜ **Presets:** Reiter „Presets" im Editor, speichern, auf eine Mehrfachauswahl anwenden.
 - ⬜ **Noodle Gallery als Server** prüfen: gleiche API wie Immich 3.2.2, aber Hauptversion 5 —
   die App warnt dann beim Anmelden (`bekannteHauptversionen`). Gegen einen Noodle-Server testen

@@ -7,6 +7,44 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-36: Eine Zeitleiste über Gerät und Server; Ordner, die Immich nicht sichert
+
+Entscheidungen des Besitzers (23.09.2026): Die Galerie zeigt wie die Immich-App **eine Zeitleiste**
+mit Wolken für den Stand; getrennt nur per Einstellung. Gerätefotos gelten als gesichert, wenn der
+Server ihre **Prüfsumme** kennt — wie in der Immich-App, nicht über die Geräte-ID. Fotos aus
+Ordnern, die die Immich-App nicht sichert, lassen sich bearbeiten; danach **fragt** die App und
+lädt auf Wunsch **archiviert** hoch, ins Album „Editor for Immich", und öffnet die Kopie in der
+Immich-App. Die Ordner liegen im Reiter **„Bibliothek"**.
+
+Gebaut:
+- **Prüfsummen** nativ (`MainActivity`, eigener Faden, aus der Datei gestreamt, mit
+  `setRequireOriginal`), zwischengespeichert in `pruefsummen.json` im App-Ordner mit dem
+  Änderungszeitpunkt je Foto; neu gerechnet wird nur, was neu ist oder sich geändert hat
+  (`abgleichen`, getestet). Abgleich mit dem Server über `POST /assets/bulk-upload-check` in Bündeln
+  zu 1000 — liefert die Server-ID auch archivierter Fotos, nicht solcher im Papierkorb. Auch das
+  Stapeln (D-26) gleicht jetzt so ab: eine Anfrage statt drei je Kopie.
+- **Zeitleiste** „Fotos": die Monate des Servers plus die Fotos, die nur auf dem Gerät liegen, nach
+  Aufnahmezeit gemischt (`fileCreatedAt` aus der Timeline). Wolke unten rechts wie Immichs
+  `thumbnail_tile`: `cloud_off` nur Gerät, `cloud` nur Server, `cloud_done` beides. Solange
+  Prüfsummen gerechnet werden, zeigt die Leiste den Fortschritt. Einstellungen → Ansicht: „Gerät und
+  Server zusammen" aus → Reiter „Gerät", „Immich", „Bibliothek" wie vorher.
+- **Bibliothek**: „Auf diesem Gerät", jeder Ordner mit Anzahl und wie viel gesichert ist; Ordner
+  öffnen, Foto ansehen, bearbeiten.
+- **Nicht gesichert** heißt: Weder das Original noch ein anderes Foto des Ordners (bis 200) liegt
+  auf dem Server. Dann nach dem Speichern die Frage „Bearbeitung in Immich öffnen?"; bei Ja
+  `POST /assets` mit `visibility: archive`, gegenprüfen, Album „Editor for Immich" (angelegt, wenn
+  es fehlt), `immich://asset?id=…` — die Immich-App versteht den Link (`deep_link.service.dart`).
+- Grenze: Archivierte Kopien stehen nicht in der Zeitleiste (wie in der Immich-App), nur im Album
+  und im Ordner.
+
+**Geprüft** 23.09.2026 im Emulator: Zeitleiste mit Server-Stapeln (Wolke), Gerätefotos (Wolke
+durchgestrichen), dem gesicherten Testfoto-B-Stapel (Haken) und ohne Doppelte; Bibliothek „Camera ·
+9 Fotos · 2 gesichert". Ordner `Pictures/Privat` angelegt, Foto bearbeitet → Frage → Kopie im
+Ordner und auf dem Server archiviert (gleiche SHA-1), Album „Editor for Immich" mit 1 Foto; der
+Sprung in die Immich-App ist nur auf dem Pixel prüfbar (Emulator ohne Immich-App → Meldung).
+
+---
+
 ## 2026-09-23 · D-35: Aussehen der Immich-App, Bedienung aus Google Fotos
 
 Leitlinie des Besitzers: Die App folgt dem **Design der Immich-App** — Farben, Schrift, Konto-Fenster,

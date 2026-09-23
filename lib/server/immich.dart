@@ -329,15 +329,18 @@ class Immich {
   ).bodyBytes;
 
   /// Lädt ein neues Asset hoch und gibt seine ID zurück.
+  /// Mit [archiviert] erscheint es nicht in der Zeitleiste, nur in Alben und im Archiv.
   Future<String> hochladen(
     Uint8List bytes,
     String dateiname,
-    String aufgenommen,
-  ) async {
+    String aufgenommen, {
+    bool archiviert = false,
+  }) async {
     final req = http.MultipartRequest('POST', _uri('/assets'))
       ..headers.addAll(kopf)
       ..fields['fileCreatedAt'] = aufgenommen
       ..fields['fileModifiedAt'] = DateTime.now().toUtc().toIso8601String()
+      ..fields['visibility'] = archiviert ? 'archive' : 'timeline'
       ..files.add(
         http.MultipartFile.fromBytes('assetData', bytes, filename: dateiname),
       );
@@ -357,6 +360,26 @@ class Immich {
       _kurz,
     ),
   );
+
+  /// Das Album [name] (angelegt, wenn es fehlt).
+  Future<String> album(String name) async {
+    final alle = jsonDecode(
+      _ok(await _warten(_http.get(_uri('/albums'), headers: kopf), _kurz)).body,
+    ) as List;
+    for (final a in alle) {
+      if (a['albumName'] == name) return a['id'] as String;
+    }
+    return _json(
+      await _warten(
+        _http.post(
+          _uri('/albums'),
+          headers: {...kopf, 'Content-Type': 'application/json'},
+          body: jsonEncode({'albumName': name}),
+        ),
+        _kurz,
+      ),
+    )['id'];
+  }
 
   Future<List<String>> albenVon(String id) async {
     final r = await _warten(

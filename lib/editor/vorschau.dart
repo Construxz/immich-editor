@@ -53,6 +53,10 @@ Future<Map<String, Object?>> exifLesen(Uint8List bytes) async =>
 Future<String> appVersion() async =>
     (await rendererKanal.invokeMethod<String>('appVersion'))!;
 
+/// Öffnet [url] in der App, die sie versteht; false, wenn keine da ist.
+Future<bool> oeffnen(String url) async =>
+    (await rendererKanal.invokeMethod<bool>('oeffnen', {'url': url}))!;
+
 /// Kostet die Verbindung gerade Datenvolumen (Mobilfunk, Hotspot)? Android entscheidet.
 Future<bool> getaktet() async =>
     (await rendererKanal.invokeMethod<bool>('getaktet'))!;

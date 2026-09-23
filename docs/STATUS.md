@@ -12,7 +12,12 @@ Stand: 21.09.2026 spät, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
     Immich-Hauptversion nicht 3 ist.
   - Aussehen der Immich-App (Farben, Google Sans, D-35), Bedienung nach Google Fotos.
-  - Galerie; oben rechts das Profilbild → Konto-Fenster wie in der Immich-App (Profil,
+  - Galerie wie die Immich-App (D-36): „Fotos" ist eine Zeitleiste über Gerät und Server,
+    über die Prüfsumme zusammengeführt (einmal gerechnet, zwischengespeichert), mit Wolke unten
+    rechts (nur Gerät / nur Server / beides); „Bibliothek" mit allen Geräteordnern. Getrennte
+    Reiter per Einstellung „Ansicht". Fotos aus Ordnern, die Immich nicht sichert: nach dem
+    Speichern auf Wunsch archiviert hochladen, Album „Editor for Immich", in Immich öffnen.
+  - Oben rechts das Profilbild → Konto-Fenster wie in der Immich-App (Profil,
     Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden) und
     **Einstellungen** als Karten: Bearbeiten (HDR), Speichern (Online-Fotos übers Gerät), Netzwerk
     (mobile Daten, D-30), Stapeln („Jetzt stapeln") — D-32, D-35. Antippen öffnet den **Betrachter**

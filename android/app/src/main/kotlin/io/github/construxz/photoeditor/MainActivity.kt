@@ -1,6 +1,9 @@
 package io.github.construxz.photoeditor
 
+import android.content.ActivityNotFoundException
 import android.content.ContentUris
+import android.content.Intent
+import android.net.Uri
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -123,6 +126,12 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                     "dateien" -> result.success(filesDir.path)
+                    "oeffnen" -> try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(call.argument<String>("url")!!)))
+                        result.success(true)
+                    } catch (_: ActivityNotFoundException) {
+                        result.success(false) // keine App dafür, etwa ohne Immich-App
+                    }
                     "getaktet" -> result.success(
                         getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered,
                     )

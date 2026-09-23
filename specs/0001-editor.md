@@ -171,7 +171,8 @@ einmal** — gehört in den ersten Wurf.
 
 **Die Endpunkte** (geprüft gegen die OpenAPI-Spezifikation 3.2.2): `POST /auth/login`,
 `GET`, `PUT` und `DELETE /stacks/{id}` (Mitglieder, Hauptfoto, auflösen — im Betrachter), `GET /map/reverse-geocode` (Ort eines
-Gerätefotos), `GET /server/storage` (Speicherplatz ohne Kontingent), `GET /users/me` und `GET /users/{id}/profile-image` (Profilbild wie in der Immich-App),
+Gerätefotos), `POST /assets/bulk-upload-check` (was vom Gerät schon gesichert ist, D-36), `POST /albums`
+(Album „Editor for Immich"), `GET /server/storage` (Speicherplatz ohne Kontingent), `GET /users/me` und `GET /users/{id}/profile-image` (Profilbild wie in der Immich-App),
 `GET /server/version`, `GET /timeline/buckets` und `GET /timeline/bucket` (Galerie, mit
 `withStacked` — ein Stapel zählt einmal), `GET /assets/{id}` (Details, Prüfsumme, Stapel),
 `GET /assets/{id}/thumbnail` (auch `size=preview` als erstes Bild im Editor), `GET /assets/{id}/original` (auch als Teilabruf), `POST /assets`

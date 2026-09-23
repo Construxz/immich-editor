@@ -19,6 +19,18 @@ const Abgleich leererAbgleich = (
   serverAufGeraet: {},
 );
 
+/// Ob Immich den Geräteordner [ordner] (`relative_path`, etwa „DCIM/Camera/") sichert — geraten:
+/// ja, sobald eines seiner Fotos auf dem Server liegt (D-36).
+Future<bool> ordnerGesichert(Immich immich, String ordner) async {
+  final ids = await geraetIdsIn(ordner);
+  final summen = await geraetPruefsummen();
+  final da = await immich.vorhanden({
+    for (final id in ids)
+      if (summen[id] != null) id: summen[id]!,
+  });
+  return da.isNotEmpty;
+}
+
 /// Gleicht die Gerätefotos über ihre Prüfsummen mit dem Server ab; [fortschritt] meldet das
 /// Rechnen neuer Prüfsummen. Ohne Berechtigung für Gerätefotos: leer.
 Future<Abgleich> abgleich(

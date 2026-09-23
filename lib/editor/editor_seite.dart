@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../export/export.dart';
 import '../export/jpeg.dart' show rezeptAus;
 import '../foto.dart';
+import '../gallery/abgleich.dart' show ordnerGesichert;
 import '../gallery/geraet.dart';
 import '../main.dart' show speicher;
 import '../server/immich.dart';
@@ -329,6 +330,20 @@ class _EditorSeiteState extends State<EditorSeite> {
         if (alt != null && ersetzen && widget.geraet) {
           await geraetPapierkorb([alt.id]);
         }
+        // Ein Ordner, den die Immich-App nicht sichert: auf Wunsch archiviert hochladen und in
+        // der Immich-App öffnen (D-36).
+        if (widget.geraet && foto.ordner != null) {
+          setState(() => _schritt = 'Wird geprüft …');
+          final gesichert = await ordnerGesichert(
+            immich,
+            foto.ordner!,
+          ).catchError((_) => true); // ohne Netz nicht fragen
+          if (!gesichert && mounted && await _inImmichFragen(foto.ordner!)) {
+            await _inImmichOeffnen(kopie, foto, meldung);
+            navigator.pop((id: lokal, geraet: true));
+            return;
+          }
+        }
         meldung.showSnackBar(
           const SnackBar(
             content: Text(
@@ -370,6 +385,63 @@ class _EditorSeiteState extends State<EditorSeite> {
       );
       setState(() => _speichert = false);
     }
+  }
+
+  /// Name des Albums, in das Bearbeitungen aus nicht gesicherten Ordnern kommen.
+  static const _album = 'Editor for Immich';
+
+  Future<bool> _inImmichFragen(String ordner) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Bearbeitung in Immich öffnen?'),
+          content: Text(
+            'Der Ordner „${ordner.replaceAll(RegExp(r'/$'), '')}" wird nicht in Immich '
+            'gesichert. Die Bearbeitung archiviert hochladen — nicht in der '
+            'Zeitleiste —, ins Album „$_album" legen und in der Immich-App öffnen? '
+            'Dort kannst du sie in ein anderes Album legen.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: const Text('Nur auf dem Gerät'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: const Text('In Immich öffnen'),
+            ),
+          ],
+        ),
+      ) ==
+      true;
+
+  Future<void> _inImmichOeffnen(
+    Uint8List kopie,
+    Foto foto,
+    ScaffoldMessengerState meldung,
+  ) async {
+    final immich = widget.immich;
+    setState(() => _schritt = 'Wird hochgeladen …');
+    final id = await immich.hochladen(
+      kopie,
+      foto.dateiname.replaceFirst(RegExp(r'(\.[^.]*)?$'), '.edit.jpg'),
+      foto.aufgenommen,
+      archiviert: true,
+    );
+    if ((await immich.foto(id)).pruefsumme != await sha1(kopie)) {
+      throw Exception('Kopie auf dem Server weicht ab ($id)');
+    }
+    await immich.insAlbum(await immich.album(_album), [id]);
+    final offen = await oeffnen('immich://asset?id=$id');
+    meldung.showSnackBar(
+      SnackBar(
+        content: Text(
+          offen
+              ? 'Archiviert in Immich, Album „$_album"'
+              : 'Archiviert in Immich, Album „$_album" — die Immich-App fehlt',
+        ),
+      ),
+    );
   }
 
   @override
