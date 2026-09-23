@@ -82,10 +82,18 @@ class Profilbild extends StatelessWidget {
 
 /// Oben rechts in der Galerie: das Profilbild; antippen öffnet das Konto-Fenster.
 class KontoKnopf extends StatefulWidget {
-  const KontoKnopf({super.key, required this.immich, required this.onAbmelden});
+  const KontoKnopf({
+    super.key,
+    required this.immich,
+    required this.onAbmelden,
+    required this.onEinstellungen,
+  });
 
   final Immich immich;
   final VoidCallback onAbmelden;
+
+  /// Nach dem Verlassen der Einstellungen — die Galerie liest sie neu.
+  final VoidCallback onEinstellungen;
 
   @override
   State<KontoKnopf> createState() => _KontoKnopfState();
@@ -112,6 +120,7 @@ class _KontoKnopfState extends State<KontoKnopf> {
                   immich: widget.immich,
                   konto: konto,
                   onAbmelden: widget.onAbmelden,
+                  onEinstellungen: widget.onEinstellungen,
                 ),
               ),
       );
@@ -137,11 +146,12 @@ class _KontoFenster extends StatefulWidget {
     required this.immich,
     required this.konto,
     required this.onAbmelden,
+    required this.onEinstellungen,
   });
 
   final Immich immich;
   final Konto konto;
-  final VoidCallback onAbmelden;
+  final VoidCallback onAbmelden, onEinstellungen;
 
   @override
   State<_KontoFenster> createState() => _KontoFensterState();
@@ -380,9 +390,10 @@ class _KontoFensterState extends State<_KontoFenster> {
     );
   }
 
-  void _einstellungen(BuildContext context, _Bereich? bereich) {
+  Future<void> _einstellungen(BuildContext context, _Bereich? bereich) async {
     final navigator = Navigator.of(context)..pop();
-    navigator.push(
+    final zurueck = widget.onEinstellungen;
+    await navigator.push(
       MaterialPageRoute(
         builder: (_) => bereich == null
             ? EinstellungenSeite(immich: widget.immich, konto: widget.konto)
@@ -393,6 +404,7 @@ class _KontoFensterState extends State<_KontoFenster> {
               ),
       ),
     );
+    zurueck();
   }
 
   Future<void> _abmelden() async {
@@ -421,6 +433,11 @@ class _KontoFensterState extends State<_KontoFenster> {
 
 /// Die Bereiche der Einstellungen, wie Immichs `SettingSection`.
 enum _Bereich {
+  ansicht(
+    Icons.auto_awesome_mosaic_outlined,
+    'Ansicht',
+    'Eine Zeitleiste über Gerät und Server',
+  ),
   bearbeiten(Icons.tune, 'Bearbeiten', 'HDR in Vorschau und Kopie'),
   speichern(
     Icons.cloud_upload_outlined,
@@ -525,8 +542,18 @@ class _BereichSeite extends StatefulWidget {
 
 class _BereichSeiteState extends State<_BereichSeite> {
   // Schlüssel → Wert, der „aus" bedeutet; alles andere (auch nichts) heißt „an".
-  static const _aus = {'hdr': 'aus', 'online': 'server', 'mobil': 'aus'};
-  static const _an = {'hdr': 'an', 'online': 'geraet', 'mobil': 'an'};
+  static const _aus = {
+    'hdr': 'aus',
+    'online': 'server',
+    'mobil': 'aus',
+    'zusammen': 'getrennt',
+  };
+  static const _an = {
+    'hdr': 'an',
+    'online': 'geraet',
+    'mobil': 'an',
+    'zusammen': 'zusammen',
+  };
   final _werte = <String, bool>{};
   var _wartend = 0;
   var _stapelt = false;
@@ -590,6 +617,16 @@ class _BereichSeiteState extends State<_BereichSeite> {
   @override
   Widget build(BuildContext context) {
     final einstellungen = switch (widget.bereich) {
+      _Bereich.ansicht => [
+        _schalter(
+          'zusammen',
+          Icons.auto_awesome_mosaic_outlined,
+          'Gerät und Server zusammen',
+          'Eine Zeitleiste wie in der Immich-App; die Wolke unten rechts zeigt, '
+              'ob ein Foto nur auf dem Gerät, nur auf dem Server oder auf beiden '
+              'liegt. Aus: zwei Reiter „Gerät" und „Immich".',
+        ),
+      ],
       _Bereich.bearbeiten => [
         _schalter(
           'hdr',

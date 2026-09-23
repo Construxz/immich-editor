@@ -126,6 +126,7 @@ class Immich {
     final d = _json(r);
     final ids = d['id'] as List, bild = d['isImage'] as List;
     final verhaeltnis = d['ratio'] as List, stapel = d['stack'] as List;
+    final zeit = d['fileCreatedAt'] as List;
     return [
       for (var i = 0; i < ids.length; i++)
         if (bild[i] == true)
@@ -133,6 +134,7 @@ class Immich {
             id: ids[i] as String,
             seitenverhaeltnis: (verhaeltnis[i] as num).toDouble(),
             stapel: stapel[i] == null ? 1 : int.parse('${stapel[i][1]}'),
+            zeit: DateTime.parse(zeit[i] as String),
           ),
     ];
   }
@@ -265,6 +267,36 @@ class Immich {
     );
     final items = _json(r)['assets']['items'] as List;
     return items.isEmpty ? null : items.first['id'] as String;
+  }
+
+  /// Welche der [pruefsummen] (Schlüssel → SHA-1) der Server schon hat: Schlüssel → Asset-ID.
+  /// Auch archivierte; nicht, was im Papierkorb liegt.
+  Future<Map<String, String>> vorhanden(Map<String, String> pruefsummen) async {
+    final ergebnis = <String, String>{};
+    final alle = pruefsummen.entries.toList();
+    for (var i = 0; i < alle.length; i += 1000) {
+      final r = _json(
+        await _warten(
+          _http.post(
+            _uri('/assets/bulk-upload-check'),
+            headers: {...kopf, 'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'assets': [
+                for (final e in alle.skip(i).take(1000))
+                  {'id': e.key, 'checksum': e.value},
+              ],
+            }),
+          ),
+          _kurz,
+        ),
+      );
+      for (final x in r['results'] as List) {
+        if (x['assetId'] != null && x['isTrashed'] != true) {
+          ergebnis[x['id'] as String] = x['assetId'] as String;
+        }
+      }
+    }
+    return ergebnis;
   }
 
   /// In den Papierkorb — dort bleibt es wiederherstellbar.

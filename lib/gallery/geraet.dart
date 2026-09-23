@@ -133,3 +133,10 @@ Future<void> geraetPapierkorb(List<String> ids) async {
   final fotos = [for (final id in ids) ?await AssetEntity.fromId(id)];
   if (fotos.isNotEmpty) await PhotoManager.editor.android.moveToTrash(fotos);
 }
+
+/// Die Ordner auf dem Gerät (ohne „Alle"), mit Fotos.
+Future<List<AssetPathEntity>> geraetOrdner() => PhotoManager.getAssetPathList(
+  type: RequestType.image,
+  hasAll: false,
+  filterOption: _neuesteZuerst,
+);

@@ -1,10 +1,14 @@
 package io.github.construxz.photoeditor
 
+import android.content.ContentUris
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ExifInterface
 import android.net.ConnectivityManager
+import android.os.Handler
+import android.os.HandlerThread
+import android.provider.MediaStore
 import java.io.ByteArrayInputStream
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -15,6 +19,9 @@ import java.security.MessageDigest
 import java.io.ByteArrayOutputStream
 
 class MainActivity : FlutterActivity() {
+    /** Eigener Faden für Prüfsummen, damit der Renderer nicht wartet. */
+    private val pruefFaden = Handler(HandlerThread("pruefsummen").apply { start() }.looper)
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         flutterEngine.platformViewsController.registry
@@ -87,6 +94,35 @@ class MainActivity : FlutterActivity() {
                         val p = packageManager.getPackageInfo(packageName, 0)
                         result.success("${p.versionName} build.${p.longVersionCode}")
                     }
+                    "pruefsummen" -> {
+                        // SHA-1 der Gerätefotos, direkt aus der Datei gelesen (unverändert, mit Ort —
+                        // ACCESS_MEDIA_LOCATION), wie Immich sie als checksum führt (D-36).
+                        val ids = call.argument<List<String>>("ids")!!
+                        pruefFaden.post {
+                            val summen = mutableMapOf<String, String>()
+                            for (id in ids) {
+                                try {
+                                    val uri = MediaStore.setRequireOriginal(
+                                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toLong()),
+                                    )
+                                    val sha = MessageDigest.getInstance("SHA-1")
+                                    contentResolver.openInputStream(uri)?.use { ein ->
+                                        val puffer = ByteArray(1 shl 16)
+                                        while (true) {
+                                            val n = ein.read(puffer)
+                                            if (n < 0) break
+                                            sha.update(puffer, 0, n)
+                                        }
+                                        summen[id] = Base64.encodeToString(sha.digest(), Base64.NO_WRAP)
+                                    }
+                                } catch (_: Exception) {
+                                    // gelöscht oder nicht lesbar: fehlt in der Antwort
+                                }
+                            }
+                            runOnUiThread { result.success(summen) }
+                        }
+                    }
+                    "dateien" -> result.success(filesDir.path)
                     "getaktet" -> result.success(
                         getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered,
                     )

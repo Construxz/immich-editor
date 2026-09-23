@@ -86,8 +86,16 @@ typedef Konto = ({
   int? belegt,
 });
 
-/// Ein Eintrag der Galerie, so knapp, wie die Timeline ihn liefert.
-typedef Kachel = ({String id, double seitenverhaeltnis, int stapel});
+/// Ein Eintrag der Galerie, so knapp, wie die Timeline ihn liefert; [zeit] ist die Aufnahme.
+typedef Kachel = ({
+  String id,
+  double seitenverhaeltnis,
+  int stapel,
+  DateTime zeit,
+});
+
+/// Wo ein Foto liegt — die Wolken der Immich-App: nur Gerät, nur Server, beides (D-36).
+enum Ablage { geraet, server, beide }
 
 /// Ein Monat der Galerie: Beginn (ISO-Datum) und Anzahl der Einträge.
 typedef Monat = ({String beginn, int anzahl});

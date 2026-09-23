@@ -1,23 +1,47 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../einstellungen.dart';
 import '../foto.dart';
+import '../main.dart' show speicher;
 import '../server/immich.dart';
 import '../stapeln/stapeln.dart';
+import 'abgleich.dart';
 import 'betrachter.dart';
+import 'bibliothek.dart';
 import 'geraet.dart';
+import 'kacheln.dart';
 
 const _monatsnamen = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', //
   'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
 ];
 
-/// Die Galerie: Gerätefotos, und Server-Fotos nach Monaten, ein Stapel zählt einmal (vorn liegt
-/// die Bearbeitung). Monate laden erst, wenn sie ins Bild kommen.
-// ponytail: Gerät und Server getrennt; eine Zeitleiste über beide (über die Prüfsumme) folgt.
+/// Ein Monat der gemeinsamen Zeitleiste: [schluessel] „2026-05", [beginn] der Server-Monat
+/// (null, wenn dort nichts liegt), [anzahl] geschätzt (der Server zählt Videos mit),
+/// [lokal] die Fotos, die nur auf dem Gerät liegen.
+typedef _Monat = ({
+  String schluessel,
+  String? beginn,
+  int anzahl,
+  List<AssetEntity> lokal,
+});
+
+/// Eine Kachel der gemeinsamen Zeitleiste.
+typedef _Eintrag = ({
+  Eintrag e,
+  DateTime zeit,
+  int stapel,
+  Ablage ablage,
+  AssetEntity? lokal,
+});
+
+String _schluessel(DateTime d) =>
+    '${d.year}-${d.month.toString().padLeft(2, '0')}';
+
+/// Die Galerie wie in der Immich-App (D-36): „Fotos" ist eine Zeitleiste über Gerät und Server,
+/// über die Prüfsumme zusammengeführt, mit Wolken für den Stand; „Bibliothek" zeigt die
+/// Geräteordner. In den Einstellungen lässt sich Gerät und Server getrennt zeigen.
 class GalerieSeite extends StatefulWidget {
   const GalerieSeite({
     super.key,
@@ -35,15 +59,52 @@ class GalerieSeite extends StatefulWidget {
 class _GalerieSeiteState extends State<GalerieSeite> {
   late Future<List<Monat>> _monate = widget.immich.monate();
   final _geladen = <String, Future<List<Kachel>>>{};
+  final _zGeladen = <String, Future<List<_Eintrag>>>{};
   final _auswahl = <String>{};
-  var _aufGeraet = true;
+  var _reiter = 0;
+  var _getrennt = false;
+  Abgleich _stand = leererAbgleich;
+  (int, int)? _fortschritt; // Prüfsummen: fertig, gesamt
   late Future<int?> _geraet = _geraetZaehlen();
   final _geraetSeiten = <int, Future<List<AssetEntity>>>{};
 
   @override
   void initState() {
     super.initState();
+    _einstellungenLesen();
+    _abgleichen();
     _stapeln();
+  }
+
+  Future<void> _einstellungenLesen() async {
+    final getrennt = await speicher.read(key: 'zusammen') == 'getrennt';
+    if (mounted && getrennt != _getrennt) {
+      setState(() {
+        _getrennt = getrennt;
+        _reiter = 0;
+      });
+    }
+  }
+
+  /// Welche Gerätefotos schon gesichert sind; das erste Mal rechnet es alle Prüfsummen.
+  Future<void> _abgleichen() async {
+    try {
+      final stand = await abgleich(
+        widget.immich,
+        fortschritt: (f, g) {
+          if (mounted) setState(() => _fortschritt = (f, g));
+        },
+      );
+      if (!mounted) return;
+      setState(() {
+        _stand = stand;
+        _fortschritt = null;
+        _zGeladen.clear();
+      });
+    } catch (e) {
+      debugPrint('Abgleich später: $e'); // etwa ohne Netz
+      if (mounted) setState(() => _fortschritt = null);
+    }
   }
 
   /// Auf dem Gerät gespeicherte Kopien stapeln, sobald die Immich-App sie gesichert hat.
@@ -51,7 +112,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
     try {
       await ausstehendeStapeln(widget.immich);
     } catch (e) {
-      debugPrint('Stapeln später: $e'); // etwa ohne Netz
+      debugPrint('Stapeln später: $e');
     }
   }
 
@@ -62,11 +123,18 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   Future<void> _neuLaden() async {
     setState(() {
       _geladen.clear();
+      _zGeladen.clear();
       _monate = widget.immich.monate();
       _geraetSeiten.clear();
       _geraet = _geraetZaehlen();
     });
-    await Future.wait([_monate, _geraet, _stapeln()]);
+    await Future.wait([
+      _monate,
+      _geraet,
+      _stapeln(),
+      _abgleichen(),
+      _einstellungenLesen(),
+    ]);
   }
 
   Future<List<Kachel>> _monat(String beginn) =>
@@ -107,6 +175,17 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   @override
   Widget build(BuildContext context) {
     final waehlt = _auswahl.isNotEmpty;
+    final reiter = _getrennt
+        ? [
+            (Icons.phone_android, 'Gerät', _geraetAnsicht),
+            (Icons.cloud_outlined, 'Immich', _serverAnsicht),
+            (Icons.photo_library_outlined, 'Bibliothek', _bibliothek),
+          ]
+        : [
+            (Icons.photo_outlined, 'Fotos', _zusammenAnsicht),
+            (Icons.photo_library_outlined, 'Bibliothek', _bibliothek),
+          ];
+    final aktiv = _reiter.clamp(0, reiter.length - 1);
     return PopScope(
       canPop: !waehlt,
       onPopInvokedWithResult: (gepoppt, _) {
@@ -115,20 +194,201 @@ class _GalerieSeiteState extends State<GalerieSeite> {
       child: Scaffold(
         appBar: waehlt ? _auswahlLeiste() : _leiste(),
         bottomNavigationBar: NavigationBar(
-          selectedIndex: _aufGeraet ? 0 : 1,
-          onDestinationSelected: (i) => setState(() => _aufGeraet = i == 0),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.phone_android),
-              label: 'Gerät',
-            ),
-            NavigationDestination(icon: Icon(Icons.cloud), label: 'Immich'),
+          selectedIndex: aktiv,
+          onDestinationSelected: (i) => setState(() => _reiter = i),
+          destinations: [
+            for (final (icon, name, _) in reiter)
+              NavigationDestination(icon: Icon(icon), label: name),
           ],
         ),
-        body: _aufGeraet ? _geraetAnsicht() : _serverAnsicht(),
+        body: reiter[aktiv].$3(),
       ),
     );
   }
+
+  Widget _bibliothek() => Bibliothek(immich: widget.immich, stand: _stand);
+
+  AppBar _leiste() {
+    final f = _fortschritt;
+    return AppBar(
+      centerTitle:
+          false, // wie Immichs Zeitleiste: Name links, Profilbild rechts
+      title: const Text('Editor for Immich'),
+      actions: [
+        // Wie Immichs Sync-Anzeige: solange Prüfsummen gerechnet werden
+        if (f != null)
+          Tooltip(
+            message: 'Gerätefotos werden abgeglichen',
+            child: Row(
+              children: [
+                SizedBox.square(
+                  dimension: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    value: f.$2 == 0 ? null : f.$1 / f.$2,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${f.$1}/${f.$2}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        KontoKnopf(
+          immich: widget.immich,
+          onAbmelden: widget.onAbmelden,
+          onEinstellungen: _neuLaden,
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
+
+  AppBar _auswahlLeiste() => AppBar(
+    leading: IconButton(
+      icon: const Icon(Icons.close),
+      tooltip: 'Auswahl beenden',
+      onPressed: () => setState(_auswahl.clear),
+    ),
+    title: Text('${_auswahl.length} ausgewählt'),
+  );
+
+  Widget _monatsKopf(DateTime datum) => SliverToBoxAdapter(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      child: Text(
+        '${_monatsnamen[datum.month - 1]} ${datum.year}',
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
+    ),
+  );
+
+  // — Gemeinsame Zeitleiste —
+
+  List<_Monat> _zusammenMonate(List<Monat> server) {
+    final lokal = <String, List<AssetEntity>>{};
+    for (final a in _stand.nurGeraet) {
+      (lokal[_schluessel(a.createDateTime)] ??= []).add(a);
+    }
+    final monate = <String, _Monat>{
+      for (final m in server)
+        m.beginn.substring(0, 7): (
+          schluessel: m.beginn.substring(0, 7),
+          beginn: m.beginn,
+          anzahl: m.anzahl,
+          lokal: const [],
+        ),
+    };
+    lokal.forEach((k, fotos) {
+      final m = monate[k];
+      monate[k] = (
+        schluessel: k,
+        beginn: m?.beginn,
+        anzahl: (m?.anzahl ?? 0) + fotos.length,
+        lokal: fotos,
+      );
+    });
+    return monate.values.toList()
+      ..sort((a, b) => b.schluessel.compareTo(a.schluessel));
+  }
+
+  Future<List<_Eintrag>> _zusammenMonat(_Monat m) =>
+      _zGeladen[m.schluessel] ??= () async {
+        final server = m.beginn == null
+            ? const <Kachel>[]
+            : await _monat(m.beginn!);
+        return <_Eintrag>[
+          for (final k in server)
+            (
+              e: (id: k.id, geraet: false),
+              zeit: k.zeit,
+              stapel: k.stapel,
+              ablage: _stand.serverAufGeraet.contains(k.id)
+                  ? Ablage.beide
+                  : Ablage.server,
+              lokal: null,
+            ),
+          for (final a in m.lokal)
+            (
+              e: (id: a.id, geraet: true),
+              zeit: a.createDateTime,
+              stapel: 1,
+              ablage: Ablage.geraet,
+              lokal: a,
+            ),
+        ]..sort((a, b) => b.zeit.compareTo(a.zeit));
+      }();
+
+  Widget _zusammenAnsicht() => FutureBuilder(
+    future: _monate,
+    builder: (context, s) {
+      if (s.hasError) return _Fehler('${s.error}', _neuLaden);
+      final server = s.data;
+      if (server == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final monate = _zusammenMonate(server);
+      if (monate.isEmpty) {
+        return const Center(child: Text('Noch keine Fotos.'));
+      }
+      return RefreshIndicator(
+        onRefresh: _neuLaden,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            for (final m in monate) ...[
+              _monatsKopf(DateTime.parse('${m.schluessel}-01')),
+              SliverGrid.builder(
+                gridDelegate: kachelRaster,
+                itemCount: m.anzahl,
+                itemBuilder: (context, i) => FutureBuilder(
+                  future: _zusammenMonat(m),
+                  builder: (context, s) {
+                    final eintraege = s.data;
+                    if (eintraege == null) {
+                      return ColoredBox(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                      );
+                    }
+                    // Videos zählt der Server im Monat mit, gezeigt werden sie nicht
+                    if (i >= eintraege.length) return const SizedBox();
+                    final z = eintraege[i];
+                    return FotoKachel(
+                      key: ValueKey(z.e),
+                      bild: z.lokal != null
+                          ? GeraetMiniatur(z.lokal!)
+                          : ServerMiniatur(
+                              widget.immich.miniatur(z.e.id).toString(),
+                              widget.immich.kopf,
+                            ),
+                      stapel: z.stapel,
+                      ablage: z.ablage,
+                      gewaehlt: _auswahl.contains(z.e.id),
+                      waehlt: _auswahl.isNotEmpty,
+                      onTap: () => _auswahl.isEmpty
+                          ? _oeffnen(
+                              eintraege.length,
+                              (j) async => eintraege[j].e,
+                              i,
+                            )
+                          : _waehlen(z.e.id),
+                      onLongPress: () => _waehlen(z.e.id),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    },
+  );
+
+  // — Getrennte Ansicht (Einstellung) —
 
   Widget _geraetAnsicht() => FutureBuilder(
     future: _geraet,
@@ -154,11 +414,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
         onRefresh: _neuLaden,
         child: GridView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            mainAxisSpacing: 2,
-            crossAxisSpacing: 2,
-          ),
+          gridDelegate: kachelRaster,
           itemCount: anzahl,
           itemBuilder: (context, i) => FutureBuilder(
             future: _geraetSeite(i),
@@ -170,10 +426,13 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                 );
               }
               final a = fotos[i % _seite];
-              return _Kachel(
+              return FotoKachel(
                 key: ValueKey(a.id),
-                bild: _GeraetMiniatur(a),
+                bild: GeraetMiniatur(a),
                 stapel: 1,
+                ablage: _stand.geraetGesichert.contains(a.id)
+                    ? Ablage.beide
+                    : Ablage.geraet,
                 gewaehlt: _auswahl.contains(a.id),
                 waehlt: _auswahl.isNotEmpty,
                 onTap: () => _auswahl.isEmpty
@@ -209,207 +468,55 @@ class _GalerieSeiteState extends State<GalerieSeite> {
       return RefreshIndicator(
         onRefresh: _neuLaden,
         child: CustomScrollView(
-          slivers: [for (final m in monate) ..._monatsAbschnitt(m)],
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            for (final m in monate) ...[
+              _monatsKopf(DateTime.parse(m.beginn)),
+              SliverGrid.builder(
+                gridDelegate: kachelRaster,
+                itemCount: m.anzahl,
+                itemBuilder: (context, i) => FutureBuilder(
+                  future: _monat(m.beginn),
+                  builder: (context, s) {
+                    final kacheln = s.data;
+                    if (kacheln == null) {
+                      return ColoredBox(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                      );
+                    }
+                    if (i >= kacheln.length) return const SizedBox();
+                    final k = kacheln[i];
+                    return FotoKachel(
+                      bild: ServerMiniatur(
+                        widget.immich.miniatur(k.id).toString(),
+                        widget.immich.kopf,
+                      ),
+                      stapel: k.stapel,
+                      ablage: _stand.serverAufGeraet.contains(k.id)
+                          ? Ablage.beide
+                          : Ablage.server,
+                      gewaehlt: _auswahl.contains(k.id),
+                      waehlt: _auswahl.isNotEmpty,
+                      onTap: () => _auswahl.isEmpty
+                          ? _oeffnen(
+                              kacheln.length,
+                              (j) async => (id: kacheln[j].id, geraet: false),
+                              i,
+                            )
+                          : _waehlen(k.id),
+                      onLongPress: () => _waehlen(k.id),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ],
         ),
       );
     },
   );
-
-  AppBar _leiste() => AppBar(
-    centerTitle: false, // wie Immichs Zeitleiste: Name links, Profilbild rechts
-    title: const Text('Editor for Immich'),
-    actions: [
-      KontoKnopf(immich: widget.immich, onAbmelden: widget.onAbmelden),
-      const SizedBox(width: 8),
-    ],
-  );
-
-  AppBar _auswahlLeiste() => AppBar(
-    leading: IconButton(
-      icon: const Icon(Icons.close),
-      tooltip: 'Auswahl beenden',
-      onPressed: () => setState(_auswahl.clear),
-    ),
-    title: Text('${_auswahl.length} ausgewählt'),
-  );
-
-  List<Widget> _monatsAbschnitt(Monat m) {
-    final datum = DateTime.parse(m.beginn);
-    return [
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-          child: Text(
-            '${_monatsnamen[datum.month - 1]} ${datum.year}',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-      ),
-      SliverGrid.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          mainAxisSpacing: 2,
-          crossAxisSpacing: 2,
-        ),
-        itemCount: m.anzahl,
-        itemBuilder: (context, i) => FutureBuilder(
-          future: _monat(m.beginn),
-          builder: (context, s) {
-            final kacheln = s.data;
-            // Videos zählen im Monat mit, zeigen wir aber nicht
-            if (kacheln == null || i >= kacheln.length) {
-              return ColoredBox(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              );
-            }
-            final k = kacheln[i];
-            return _Kachel(
-              bild: _ServerMiniatur(
-                widget.immich.miniatur(k.id).toString(),
-                widget.immich.kopf,
-              ),
-              stapel: k.stapel,
-              gewaehlt: _auswahl.contains(k.id),
-              waehlt: _auswahl.isNotEmpty,
-              onTap: () => _auswahl.isEmpty
-                  ? _oeffnen(
-                      kacheln.length,
-                      (j) async => (id: kacheln[j].id, geraet: false),
-                      i,
-                    )
-                  : _waehlen(k.id),
-              onLongPress: () => _waehlen(k.id),
-            );
-          },
-        ),
-      ),
-    ];
-  }
-}
-
-/// Miniatur eines Server-Fotos. Eine frisch hochgeladene Kopie hat noch keine — Immich rechnet
-/// sie erst Sekunden später; bis dahin neu versuchen statt schwarz zu bleiben.
-class _ServerMiniatur extends StatefulWidget {
-  const _ServerMiniatur(this.url, this.kopf);
-
-  final String url;
-  final Map<String, String> kopf;
-
-  @override
-  State<_ServerMiniatur> createState() => _ServerMiniaturState();
-}
-
-class _ServerMiniaturState extends State<_ServerMiniatur> {
-  var _versuch = 0;
-  var _wartet = false;
-
-  @override
-  Widget build(BuildContext context) => Image.network(
-    widget.url,
-    key: ValueKey(_versuch),
-    headers: widget.kopf,
-    fit: BoxFit.cover,
-    excludeFromSemantics: true,
-    errorBuilder: (context, fehler, stapel) {
-      if (!_wartet && _versuch < 10) {
-        _wartet = true;
-        Future.delayed(const Duration(seconds: 2), () {
-          if (!mounted) return;
-          PaintingBinding.instance.imageCache.evict(NetworkImage(widget.url));
-          setState(() {
-            _wartet = false;
-            _versuch++;
-          });
-        });
-      }
-      return const SizedBox();
-    },
-  );
-}
-
-/// Miniatur eines Gerätefotos; lädt einmal, solange die Kachel lebt.
-class _GeraetMiniatur extends StatefulWidget {
-  const _GeraetMiniatur(this.foto);
-
-  final AssetEntity foto;
-
-  @override
-  State<_GeraetMiniatur> createState() => _GeraetMiniaturState();
-}
-
-class _GeraetMiniaturState extends State<_GeraetMiniatur> {
-  late final Future<Uint8List?> _bytes = widget.foto.thumbnailDataWithSize(
-    const ThumbnailSize.square(256),
-  );
-
-  @override
-  Widget build(BuildContext context) => FutureBuilder(
-    future: _bytes,
-    builder: (context, s) => s.data == null
-        ? const SizedBox()
-        : Image.memory(
-            s.data!,
-            fit: BoxFit.cover,
-            gaplessPlayback: true,
-            excludeFromSemantics: true,
-          ),
-  );
-}
-
-class _Kachel extends StatelessWidget {
-  const _Kachel({
-    super.key,
-    required this.bild,
-    required this.stapel,
-    required this.gewaehlt,
-    required this.waehlt,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  final Widget bild;
-  final int stapel;
-  final bool gewaehlt, waehlt;
-  final VoidCallback onTap, onLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final farbe = Theme.of(context).colorScheme;
-    return Semantics(
-      label: stapel > 1 ? 'Foto, Stapel mit $stapel' : 'Foto',
-      selected: gewaehlt,
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            AnimatedPadding(
-              duration: const Duration(milliseconds: 120),
-              padding: EdgeInsets.all(gewaehlt ? 10 : 0),
-              child: bild,
-            ),
-            if (stapel > 1)
-              const Positioned(
-                right: 4,
-                top: 4,
-                child: Icon(Icons.filter_none, size: 16, color: Colors.white),
-              ),
-            if (waehlt)
-              Positioned(
-                left: 4,
-                top: 4,
-                child: Icon(
-                  gewaehlt ? Icons.check_circle : Icons.radio_button_unchecked,
-                  color: gewaehlt ? farbe.primary : Colors.white,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _Fehler extends StatelessWidget {

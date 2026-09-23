@@ -84,11 +84,18 @@ Future<void> ausstehendeStapeln(Immich immich) =>
 
 Future<void> _stapeln(Immich immich) async {
   final erledigt = <Vorgemerkt>{};
-  for (final v in await _lesen()) {
-    final kopie = await immich.perPruefsumme(v.kopie);
-    final original = await immich.perPruefsumme(v.original);
+  final liste = await _lesen();
+  if (liste.isEmpty) return;
+  // Eine Anfrage für alle: welche Prüfsummen kennt der Server (auch archiviert, D-36)?
+  final da = await immich.vorhanden({
+    for (final v in liste)
+      for (final summe in [v.kopie, v.original, ?v.alt]) summe: summe,
+  });
+  for (final v in liste) {
+    final kopie = da[v.kopie];
+    final original = da[v.original];
     if (kopie == null || original == null) continue;
-    final alt = v.alt == null ? null : await immich.perPruefsumme(v.alt!);
+    final alt = da[v.alt];
     await vorOriginal(
       immich,
       kopie,
