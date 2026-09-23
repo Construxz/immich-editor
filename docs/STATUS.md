@@ -44,7 +44,9 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     denselben Ordner der Gerätegalerie, vorgemerkt; sobald die Immich-App Original und Kopie
     gesichert hat, stapelt die Galerie beim Öffnen oder Aktualisieren (D-26). **Online-Fotos**
     ebenso (Vorgabe) in den Kameraordner; nach dem Stapeln verlässt die Kopie das Gerät (D-28).
-    Mit der Einstellung aus direkt auf den Server wie oben.
+    Mit der Einstellung aus direkt auf den Server wie oben. Ein Server-Foto, dessen Original auch
+    auf dem Gerät liegt, bearbeitet die App lokal (D-45). Was nie ankommen kann (Kopie oder
+    Original überall gelöscht), fällt aus der Warteschlange.
   - Netzwerk: Zeitgrenzen (30 s, Originale und Upload 3 min) und verständliche Fehler.
   - Ultra HDR: Die Kopie behält die Gain-Map des Originals (D-16), Standardformat (D-19); die
     Vorschau zeigt HDR (D-20). Der HDR-Knopf schaltet beides ab (Einstellung `hdr`).
@@ -62,7 +64,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
   Englisch** (D-42). Anzeigesprache Deutsch oder Englisch nach dem Gerät, in den Einstellungen
   umstellbar (D-43); Texte in `lib/l10n/app_{de,en}.arb`. Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (19 — Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
+- Tests: `test/` (20 — Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
   Prüfsummen-Abgleich, Start),
   `android/app/src/test/` (9 — Geometrie, JVM, auch in der CI) und `android/app/src/androidTest/`
   (11 — Renderer auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).

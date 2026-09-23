@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../export/export.dart';
 import '../export/jpeg.dart' show recipeFrom;
 import '../photo.dart';
+import '../gallery/checksums.dart' show deviceIdWithChecksum;
 import '../gallery/device.dart';
 import '../language.dart';
 import '../main.dart' show storage;
@@ -69,6 +70,13 @@ Future<Loaded> loadPhoto(
   final photo = await details;
   final head = await headStarted;
   final from = recipeFrom(head);
+  // An original that also lives on the device is edited there, without the server (D-24).
+  final here = await _onDevice(
+    from?.originalSha1 ?? photo.checksum,
+    from == null ? null : photo,
+    from == null ? const Recipe() : Recipe.fromJson(from.recipe),
+  );
+  if (here != null) return here;
   final originalId = from == null
       ? null
       : await immich.byChecksum(from.originalSha1);
@@ -92,10 +100,30 @@ Future<Loaded> loadPhoto(
   );
 }
 
+/// The device's file with [checksum] as a [Loaded], or null: unknown, gone or changed since the
+/// checksum was stored.
+Future<Loaded?> _onDevice(String checksum, Photo? oldCopy, Recipe start) async {
+  final id = await deviceIdWithChecksum(checksum);
+  if (id == null) return null;
+  try {
+    final (photo, bytes) = await deviceOriginal(id);
+    if (photo.checksum != checksum) return null;
+    return (
+      photo: photo,
+      original: bytes,
+      preview: null,
+      oldCopy: oldCopy,
+      start: start,
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
 /// Renders the copy of [photo] with [recipe] and saves it: with [toDevice] into the device
 /// gallery and queued for stacking after backup (D-24, D-25), otherwise uploaded, verified
 /// and stacked on top of the original. With [replace] the [oldCopy] goes to the trash
-/// (D-31). [onDevice]: [photo] lives on the device. [onStep] reports what is happening.
+/// (D-31), on the device or the server, wherever it lives. [onStep] reports what is happening.
 Future<({Entry entry, Uint8List copy})> saveCopy(
   Immich immich, {
   required Photo photo,
@@ -103,7 +131,6 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
   required Recipe recipe,
   required bool hdr,
   required bool toDevice,
-  required bool onDevice,
   Photo? oldCopy,
   bool replace = false,
   void Function(String)? onStep,
@@ -116,12 +143,15 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
       copy: await sha1(copy),
       original: photo.checksum,
       old: replace ? oldCopy?.checksum : null,
-      removeLocal: onDevice ? null : local,
+      removeLocal: photo.folder != null ? null : local,
     ));
-    // An old copy on the device goes to its trash; one on the server only when
-    // stacking (old).
-    if (oldCopy != null && replace && onDevice) {
-      await deviceTrash([oldCopy.id]);
+    // The old copy leaves the device: itself, or its twin when it was opened from the server
+    // (D-24). The server's goes when stacking (old).
+    if (replace && oldCopy != null) {
+      final here = oldCopy.folder != null
+          ? oldCopy.id
+          : await deviceIdWithChecksum(oldCopy.checksum);
+      if (here != null) await deviceTrash([here]);
     }
     return (entry: (id: local, onDevice: true), copy: copy);
   }
@@ -170,8 +200,7 @@ Future<List<Object>> applyPreset(
         original: l.original ?? await immich.original(l.photo.id),
         recipe: withPreset(l.start, preset),
         hdr: hdr,
-        toDevice: e.onDevice || online,
-        onDevice: e.onDevice,
+        toDevice: l.original != null || online,
         oldCopy: l.oldCopy,
         replace: true,
       );

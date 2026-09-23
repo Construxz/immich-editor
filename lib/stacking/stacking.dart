@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import '../photo.dart';
-import '../gallery/device.dart' show deviceTrash;
+import '../gallery/checksums.dart' show deviceChecksums;
+import '../gallery/device.dart' show devicePermitted, deviceTrash;
 import '../main.dart' show storage;
 import '../server/immich.dart';
 
@@ -77,6 +78,21 @@ Future<int> pendingCount() async => (await _read()).length;
 Future<void> enqueue(Pending added) async =>
     _write(enqueueIn(await _read(), added));
 
+/// What can never be stacked: its copy or its original is neither on the server nor on the
+/// device any more (deleted, D-24). A copy that exists but isn't backed up keeps waiting.
+List<Pending> unreachable(
+  List<Pending> queue,
+  Set<String> onServer,
+  Set<String> onDevice,
+) => [
+  for (final p in queue)
+    if ([
+      p.copy,
+      p.original,
+    ].any((s) => !onServer.contains(s) && !onDevice.contains(s)))
+      p,
+];
+
 Future<void>? _running;
 
 /// Stacks what is pending and has meanwhile reached the server. Runs at most once at a time.
@@ -105,10 +121,20 @@ Future<void> _stackAll(Immich immich) async {
     );
     done.add(p);
   }
+  // Drop what can never arrive. Only a checksum pass started after reading the queue counts —
+  // an earlier one may miss a copy saved just before; without access to photos drop nothing.
+  if (await devicePermitted()) {
+    await deviceChecksums();
+    final onDevice = (await deviceChecksums()).values.toSet();
+    done.addAll(unreachable(queue, found.keys.toSet(), onDevice));
+  }
   // Read again: the editor may have enqueued something while we were stacking.
   await _write([
     for (final p in await _read())
       if (!done.contains(p)) p,
   ]);
-  await deviceTrash([for (final p in done) ?p.removeLocal]);
+  await deviceTrash([
+    for (final p in done)
+      if (found.containsKey(p.copy)) ?p.removeLocal,
+  ]);
 }

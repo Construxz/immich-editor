@@ -7,6 +7,34 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-45: Server-Fotos mit lokalem Original lokal bearbeiten; Unerreichbares verwerfen
+
+Nach D-24 („Original liegt auf dem Gerät: die App bearbeitet die lokale Datei und fragt den
+Server nichts") — bisher galt das nur für Fotos, die man vom Gerät aus öffnete.
+
+- `loadPhoto` sucht die Prüfsumme des Originals — bei einer Kopie die aus ihrem Rezept — in den
+  **gespeicherten** Geräte-Prüfsummen (`deviceIdWithChecksum`; rechnet nie, damit der Editor
+  nicht auf einen Abgleich wartet). Bei einem Treffer lädt es die lokale Datei und nimmt sie nur,
+  wenn ihre SHA-1 noch stimmt. Dann: volle Auflösung und HDR sofort, kein Vorschaubild vom
+  Server, die Kopie geht in den Ordner des Originals und wird vorgemerkt — wie bei Gerätefotos.
+- Ob ein Foto auf dem Gerät liegt, leitet `saveCopy` jetzt aus dem Foto ab (`folder`), nicht aus
+  dem Einstieg. **Ersetzen** trifft auch den Zwilling einer Server-Kopie auf dem Gerät (über die
+  Prüfsumme; Android fragt), der Server-Teil geht beim Stapeln in den Papierkorb.
+- **Warteschlange:** Nach dem Stapeln fällt heraus, was nie ankommen kann — Kopie oder Original
+  weder auf dem Server noch auf dem Gerät (`unreachable`, getestet). Es zählt nur ein
+  Prüfsummen-Lauf, der nach dem Lesen der Warteschlange begann, sonst ginge eine eben gespeicherte
+  Kopie verloren; ohne Zugriff auf die Fotos wird nichts verworfen. Eine Kopie, die da ist, aber
+  nicht gesichert wird, wartet weiter.
+
+**Geprüft** 23.09.2026 im Emulator: vordere Kopie des Stapels `geraet-preset` (Original auch auf
+dem Gerät) geöffnet — Bild nach 1,4 s statt 2 s, gespeichert: `geraet-preset.edit (1).jpg` im
+Kameraordner, kein Upload. Stapel `preset-11` (Original nur auf dem Server, alte Kopie auch als
+Datei hier) → „Kopie ersetzen" → Android fragt, die alte Datei ist weg, die neue da. Warteschlange:
+10 Einträge bleiben 10 (alle Kopien noch auf dem Gerät); `testfoto-a-lokal.edit.jpg` gelöscht →
+9.
+
+---
+
 ## 2026-09-23 · D-44: Eine Kopie öffnet in 2 s
 
 ROADMAP: Eine ältere Kopie aus dem Betrachter zu öffnen dauerte „etwa 8 s". **Gemessen**

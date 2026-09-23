@@ -99,7 +99,8 @@ class _EditorPageState extends State<EditorPage> {
         // persisted: do not rename
         final hdr = hdrSetting != 'aus';
         // Online photos per setting, default device (D-25).
-        final toDevice = widget.onDevice || online != 'server';
+        // A local original (also a server photo that lives here, D-24) saves to the device.
+        final toDevice = original != null || online != 'server';
         final wifiOnly = mobile == 'aus';
         final loaded = await loadOriginal(
           original ?? preview!,
@@ -312,7 +313,6 @@ class _EditorPageState extends State<EditorPage> {
         recipe: _recipe,
         hdr: _hdr,
         toDevice: _toDevice,
-        onDevice: widget.onDevice,
         oldCopy: _oldCopy,
         replace: replace,
         onStep: (s) => setState(() => _step = s),
@@ -324,7 +324,7 @@ class _EditorPageState extends State<EditorPage> {
       }
       // A folder the Immich app does not back up: on request upload archived and open in
       // the Immich app (D-36).
-      if (widget.onDevice && photo.folder != null) {
+      if (photo.folder != null) {
         setState(() => _step = l.stepChecking);
         final backedUp = await folderBackedUp(
           immich,

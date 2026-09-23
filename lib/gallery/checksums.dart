@@ -50,6 +50,15 @@ Future<Map<String, (int, String)>> _read() async {
   }
 }
 
+/// The device photo with [checksum], from the stored checksums only — never computes, so an
+/// opening editor doesn't wait for a pass. Null if unknown (or not computed yet).
+Future<String?> deviceIdWithChecksum(String checksum) async {
+  for (final MapEntry(:key, :value) in (await _read()).entries) {
+    if (value.$2 == checksum) return key;
+  }
+  return null;
+}
+
 Future<void> _write(Map<String, int> photos, Map<String, String> sums) async =>
     (await _file()).writeAsString(
       jsonEncode({
