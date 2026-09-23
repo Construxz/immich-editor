@@ -27,9 +27,10 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     zurück zum Ergebnis. Zwei Reiter: „Gerät" (Fotos auf dem Gerät,
     neueste zuerst, D-26) und „Immich": Server-Fotos nach Monaten über Immichs Timeline,
     Monate laden beim Hinscrollen, ein Stapel zählt einmal (vorn die Bearbeitung), Mehrfachauswahl
-    per langem Druck.
+    per langem Druck; die Auswahl bekommt ein **Preset** (D-40).
   - Editor im Aufbau von Google Fotos (D-22): schwarz; oben Schließen, Rückgängig/Wiederholen,
-    HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Zuschneiden" (Rahmen mit Anfassern,
+    HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Presets" (Regler sichern, anwenden,
+    D-40), „Zuschneiden" (Rahmen mit Anfassern,
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal) und „Anpassen" (12 Regler als runde Knöpfe,
     Skalen-Lineal); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
     Renderer (AGSL, `Renderer.kt`); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
@@ -49,15 +50,16 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Erneut bearbeiten: Öffnet man eine Kopie, öffnet der Editor das Original mit deren Rezept;
     beim Speichern „Kopie ersetzen" (die alte in den Papierkorb) oder „Als weitere Kopie
     speichern" — alle Kopien bleiben in einem Stapel (D-31).
-  - **Noch nicht:** Presets, Filter,
+  - **Noch nicht:** Filter,
     Perspektive — siehe ROADMAP.
 - Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung),
   `lib/gallery/` (mit `geraet.dart` über `photo_manager`), `lib/stapeln/` (Stapeln, auch
-  vorgemerkt nach dem Backup), `lib/editor/` (Seite, Rezept, Lineal, Zuschnittrahmen, Vorschau-Kanal),
+  vorgemerkt nach dem Backup), `lib/editor/` (Seite, Rezept, Presets, Laden und Speichern einer Kopie, Lineal,
+  Zuschnittrahmen, Vorschau-Kanal),
   `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/foto.dart`; nativ in
   `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometrie.kt`, `Vorschau.kt` (Sitzung, Ansicht),
   `MainActivity.kt` (Kanal `immich_editor/renderer`). Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (16 — JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Lineal, Warteschlange,
+- Tests: `test/` (18 — JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
   Prüfsummen-Abgleich, Start),
   `android/app/src/test/` (9 — Geometrie, JVM, auch in der CI) und `android/app/src/androidTest/`
   (11 — Renderer auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).
@@ -100,7 +102,8 @@ Für die Entwicklung gibt es auf dem Server des Besitzers den Benutzer **„Edit
 Testfoto A (Ultra HDR) und Testfoto B (D-12), dazu Varianten des Testfoto A mit angehängten
 Nullbytes, damit Immich sie nicht als Duplikat ablehnt (`testfoto-a-hdr.jpg` … `-hdr4.jpg`,
 `testfoto-a-exif6.jpg` mit EXIF-Orientierung 6), die meisten mit bearbeiteter Kopie im Stapel;
-ältere Kopien im Papierkorb; Album „M1-Test". Die Bilder selbst (Wikimedia Commons, CC BY-SA 4.0)
+ältere Kopien im Papierkorb; Album „M1-Test"; `preset-01` … `-11` und `geraet-preset` mit Kopie
+aus der Presets-Abnahme (D-40). Die Bilder selbst (Wikimedia Commons, CC BY-SA 4.0)
 liegen nicht im Repo. Server-Adresse, API-Schlüssel (Berechtigung „all", wirkt nur auf die eigene Bibliothek),
 E-Mail und Passwort stehen in der lokalen `.env` im Projektordner (`IMMICH_SERVER`,
 `IMMICH_API_KEY`, `IMMICH_TEST_EMAIL`, `IMMICH_TEST_PASSWORD`; von `.gitignore` erfasst).

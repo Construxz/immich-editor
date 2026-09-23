@@ -1,21 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../export/export.dart';
-import '../export/jpeg.dart' show rezeptAus;
 import '../foto.dart';
 import '../gallery/abgleich.dart' show ordnerGesichert;
-import '../gallery/geraet.dart';
 import '../main.dart' show speicher;
 import '../server/immich.dart';
-import '../stapeln/stapeln.dart';
 import '../thema.dart';
 import 'lineal.dart';
+import 'presets.dart';
 import 'rezept.dart';
+import 'speichern.dart';
 import 'vorschau.dart';
 import 'zuschnitt.dart';
 
-enum _Bereich { zuschneiden, anpassen }
+enum _Bereich { presets, zuschneiden, anpassen }
 
 /// Der Editor im Aufbau von Google Fotos (Spec, *Bedienung*): oben Schließen, Rückgängig,
 /// Speichern; in der Mitte das Bild; unten Werkzeuge und Bereiche.
@@ -64,6 +62,7 @@ class _EditorSeiteState extends State<EditorSeite> {
   var _schritt = ''; // was beim Speichern gerade passiert
   var _bereich = _Bereich.anpassen;
   String? _werkzeug; // gewählter Regler im Bereich Anpassen
+  var _presets = <Preset>[];
 
   // Rückgängig/Wiederholen: der Verlauf und die Stelle darin
   var _verlauf = <Rezept>[const Rezept()];
@@ -84,26 +83,14 @@ class _EditorSeiteState extends State<EditorSeite> {
         final aufsGeraet =
             widget.geraet || await speicher.read(key: 'online') != 'server';
         final immich = widget.immich;
-        // Gerätefotos ganz; vom Server erst Details und Anfang (EXIF, XMP) — das Original
-        // (Megabytes) lädt im Hintergrund, der Editor startet mit Immichs Vorschaubild (D-24).
-        Future<(Foto, Uint8List)> laden(String id) async => widget.geraet
-            ? await geraetOriginal(id)
-            : (await immich.foto(id), await immich.anfang(id));
-        var (foto, bytes) = await laden(widget.id);
-        // Eine Kopie dieser App? Dann das Original mit ihrem Rezept öffnen.
-        Foto? alteKopie;
-        var start = const Rezept();
-        final aus = rezeptAus(bytes);
-        final originalId = aus == null
-            ? null
-            : widget.geraet
-            ? await geraetPerPruefsumme(aus.originalSha1, foto.aufgenommen)
-            : await immich.perPruefsumme(aus.originalSha1);
-        if (aus != null && originalId != null) {
-          alteKopie = foto;
-          start = Rezept.fromJson(aus.rezept);
-          (foto, bytes) = await laden(originalId);
-        }
+        // Vom Server erst Details und Anfang — das Original lädt im Hintergrund, der Editor
+        // startet mit Immichs Vorschaubild (D-29). Eine Kopie öffnet ihr Original mit ihrem Rezept.
+        final (:foto, :bytes, :alteKopie, :start) = await fotoLaden(
+          immich,
+          widget.id,
+          geraet: widget.geraet,
+        );
+        final presets = await presetsLesen();
         final original = widget.geraet ? bytes : null;
         final nurWlan = await speicher.read(key: 'mobil') == 'aus';
         final geladen = await ladeOriginal(
@@ -124,6 +111,7 @@ class _EditorSeiteState extends State<EditorSeite> {
           _hatGainmap = geladen.hatGainmap;
           _masse = Size(geladen.breite, geladen.hoehe);
           _nurWlan = nurWlan;
+          _presets = presets;
         });
         if (original != null) {
           _originalFertig = Future.value(original);
@@ -308,77 +296,47 @@ class _EditorSeiteState extends State<EditorSeite> {
       if (_original == null) {
         setState(() => _schritt = 'Original wird geladen …');
       }
-      final original = await _originalFertig!;
-      setState(() => _schritt = 'Wird gerendert …');
-      final kopie = await exportieren(
-        _rezept,
-        original,
-        foto.pruefsumme,
+      final (:e, :kopie) = await kopieSpeichern(
+        immich,
+        foto: foto,
+        original: await _originalFertig!,
+        rezept: _rezept,
         hdr: _hdr,
+        aufsGeraet: _aufsGeraet,
+        geraet: widget.geraet,
+        alteKopie: _alteKopie,
+        ersetzen: ersetzen,
+        schritt: (s) => setState(() => _schritt = s),
       );
-      if (_aufsGeraet) {
-        final lokal = await geraetSpeichern(kopie, foto);
-        await vormerken((
-          kopie: await sha1(kopie),
-          original: foto.pruefsumme,
-          alt: ersetzen ? _alteKopie?.pruefsumme : null,
-          entfernen: widget.geraet ? null : lokal,
-        ));
-        // Eine alte Kopie auf dem Gerät geht in dessen Papierkorb; eine auf dem Server erst
-        // beim Stapeln (alt).
-        final alt = _alteKopie;
-        if (alt != null && ersetzen && widget.geraet) {
-          await geraetPapierkorb([alt.id]);
-        }
-        // Ein Ordner, den die Immich-App nicht sichert: auf Wunsch archiviert hochladen und in
-        // der Immich-App öffnen (D-36).
-        if (widget.geraet && foto.ordner != null) {
-          setState(() => _schritt = 'Wird geprüft …');
-          final gesichert = await ordnerGesichert(
-            immich,
-            foto.ordner!,
-          ).catchError((_) => true); // ohne Netz nicht fragen
-          if (!gesichert && mounted && await _inImmichFragen(foto.ordner!)) {
-            await _inImmichOeffnen(kopie, foto, meldung);
-            navigator.pop((id: lokal, geraet: true));
-            return;
-          }
-        }
+      if (!e.geraet) {
         meldung.showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Auf dem Gerät gespeichert — gestapelt wird nach dem Backup',
-            ),
-          ),
+          const SnackBar(content: Text('Gespeichert und geprüft')),
         );
-        navigator.pop((id: lokal, geraet: true));
+        navigator.pop(e);
         return;
       }
-      setState(() => _schritt = 'Wird hochgeladen …');
-      final id = await immich.hochladen(
-        kopie,
-        foto.dateiname.replaceFirst(RegExp(r'(\.[^.]*)?$'), '.edit.jpg'),
-        foto.aufgenommen,
-      );
-      // Erst stapeln, wenn der Server genau die Bytes hat, die wir geschickt haben:
-      // Immich berechnet die SHA-1 beim Empfang — sie muss unserer gleichen.
-      setState(() => _schritt = 'Wird geprüft …');
-      final serverSha1 = (await immich.foto(id)).pruefsumme;
-      if (serverSha1 != await sha1(kopie)) {
-        throw Exception('Kopie auf dem Server weicht ab ($id)');
+      // Ein Ordner, den die Immich-App nicht sichert: auf Wunsch archiviert hochladen und in
+      // der Immich-App öffnen (D-36).
+      if (widget.geraet && foto.ordner != null) {
+        setState(() => _schritt = 'Wird geprüft …');
+        final gesichert = await ordnerGesichert(
+          immich,
+          foto.ordner!,
+        ).catchError((_) => true); // ohne Netz nicht fragen
+        if (!gesichert && mounted && await _inImmichFragen(foto.ordner!)) {
+          await _inImmichOeffnen(kopie, foto, meldung);
+          navigator.pop(e);
+          return;
+        }
       }
-      setState(() => _schritt = 'Wird gestapelt …');
-      await vorOriginal(
-        immich,
-        id,
-        foto,
-        alteKopie: ersetzen ? _alteKopie?.id : null,
-      );
-
       meldung.showSnackBar(
-        const SnackBar(content: Text('Gespeichert und geprüft')),
+        const SnackBar(
+          content: Text(
+            'Auf dem Gerät gespeichert — gestapelt wird nach dem Backup',
+          ),
+        ),
       );
-      navigator.pop((id: id, geraet: false));
+      navigator.pop(e);
     } catch (e) {
       meldung.showSnackBar(
         SnackBar(content: Text('Speichern fehlgeschlagen: $e')),
@@ -634,7 +592,99 @@ class _EditorSeiteState extends State<EditorSeite> {
     ],
   );
 
+  /// Die Regler als Preset sichern, unter einem Namen, den man eingibt.
+  Future<void> _presetSichern() async {
+    final feld = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Als Preset sichern'),
+        content: TextField(
+          controller: feld,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Name'),
+          onSubmitted: (t) => Navigator.pop(c, t),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, feld.text),
+            child: const Text('Sichern'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.trim().isEmpty) return;
+    final presets = [
+      for (final p in _presets)
+        if (p.name != name.trim()) p,
+      presetAus(name.trim(), _rezept),
+    ];
+    await presetsSchreiben(presets);
+    if (mounted) setState(() => _presets = presets);
+  }
+
+  Future<void> _presetLoeschen(Preset preset) async {
+    final ja = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('Preset „${preset.name}" löschen?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Löschen'),
+          ),
+        ],
+      ),
+    );
+    if (ja != true) return;
+    final presets = [
+      for (final p in _presets)
+        if (p != preset) p,
+    ];
+    await presetsSchreiben(presets);
+    if (mounted) setState(() => _presets = presets);
+  }
+
   Widget _werkzeuge() {
+    if (_bereich == _Bereich.presets) {
+      // ponytail: Namen statt Vorschaubildern (Spec); die rechnet der Renderer nur einzeln.
+      final eigene = presetAus('', _rezept).regler;
+      return SizedBox(
+        height: 96,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          children: [
+            _WerkzeugKnopf(
+              werkzeug: (schluessel: '', name: 'Sichern', symbol: Icons.add),
+              gewaehlt: false,
+              veraendert: false,
+              onTap: eigene.isEmpty ? null : _presetSichern,
+            ),
+            for (final p in _presets)
+              _WerkzeugKnopf(
+                werkzeug: (
+                  schluessel: p.name,
+                  name: p.name,
+                  symbol: Icons.auto_awesome,
+                ),
+                gewaehlt: mapEquals(p.regler, eigene),
+                veraendert: false,
+                onTap: () => _aendern(mitPreset(_rezept, p)),
+                onLongPress: () => _presetLoeschen(p),
+              ),
+          ],
+        ),
+      );
+    }
     if (_bereich == _Bereich.zuschneiden) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -696,6 +746,7 @@ class _EditorSeiteState extends State<EditorSeite> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         for (final (b, name) in [
+          (_Bereich.presets, 'Presets'),
           (_Bereich.zuschneiden, 'Zuschneiden'),
           (_Bereich.anpassen, 'Anpassen'),
         ])
@@ -721,17 +772,19 @@ class _WerkzeugKnopf extends StatelessWidget {
     required this.gewaehlt,
     required this.veraendert,
     required this.onTap,
+    this.onLongPress,
   });
 
   final Werkzeug werkzeug;
   final bool gewaehlt, veraendert;
-  final VoidCallback onTap;
+  final VoidCallback? onTap, onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final farbe = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       borderRadius: BorderRadius.circular(12),
       child: SizedBox(
         width: 80,

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../editor/presets.dart';
+import '../editor/speichern.dart' show presetAnwenden;
+import '../editor/vorschau.dart' show getaktet;
 import '../einstellungen.dart';
 import '../foto.dart';
 import '../main.dart' show speicher;
@@ -61,7 +64,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
   late Future<List<Monat>> _monate = widget.immich.monate();
   final _geladen = <String, Future<List<Kachel>>>{};
   final _zGeladen = <String, Future<List<_Eintrag>>>{};
-  final _auswahl = <String>{};
+  final _auswahl = <Eintrag>{};
   var _reiter = 0;
   var _getrennt = false;
   Abgleich _stand = leererAbgleich;
@@ -179,9 +182,122 @@ class _GalerieSeiteState extends State<GalerieSeite> {
     await _neuLaden();
   }
 
-  void _waehlen(String id) => setState(
-    () => _auswahl.contains(id) ? _auswahl.remove(id) : _auswahl.add(id),
+  void _waehlen(Eintrag e) => setState(
+    () => _auswahl.contains(e) ? _auswahl.remove(e) : _auswahl.add(e),
   );
+
+  /// Ein Preset wählen und auf die Auswahl anwenden; jedes Foto bekommt eine Kopie wie aus dem
+  /// Editor (Spec, *Presets*).
+  Future<void> _presetAnwenden() async {
+    final meldung = ScaffoldMessenger.of(context);
+    final presets = await presetsLesen();
+    if (!mounted) return;
+    if (presets.isEmpty) {
+      meldung.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Noch keine Presets — im Editor unter „Presets" sichern',
+          ),
+        ),
+      );
+      return;
+    }
+    final preset = await showModalBottomSheet<Preset>(
+      context: context,
+      builder: (c) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              title: Text(
+                'Preset auf ${_auswahl.length} Fotos anwenden',
+                style: Theme.of(c).textTheme.titleMedium,
+              ),
+            ),
+            for (final p in presets)
+              ListTile(
+                leading: const Icon(Icons.auto_awesome),
+                title: Text(p.name),
+                onTap: () => Navigator.pop(c, p),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (preset == null || !mounted) return;
+    // Originale vom Server laden: nach der Einstellung „Mobile Daten" nur im WLAN (D-30).
+    if (_auswahl.any((e) => !e.geraet) &&
+        await speicher.read(key: 'mobil') == 'aus' &&
+        await getaktet()) {
+      if (!mounted) return;
+      final trotzdem = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Mobile Daten verwenden?'),
+          content: const Text(
+            'Die Originale der Online-Fotos werden geladen — laut Einstellung '
+            'nur im WLAN.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: const Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: const Text('Trotzdem'),
+            ),
+          ],
+        ),
+      );
+      if (trotzdem != true) return;
+    }
+    if (!mounted) return;
+    final fotos = _auswahl.toList();
+    final fertig = ValueNotifier(0);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text('„${preset.name}" wird angewendet'),
+          content: ValueListenableBuilder(
+            valueListenable: fertig,
+            builder: (c, n, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 12,
+              children: [
+                LinearProgressIndicator(value: n / fotos.length),
+                Text('$n von ${fotos.length} Fotos'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    final fehler = await presetAnwenden(
+      widget.immich,
+      fotos,
+      preset,
+      fertig: (n) => fertig.value = n,
+    );
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    setState(_auswahl.clear);
+    final gut = fotos.length - fehler.length;
+    meldung.showSnackBar(
+      SnackBar(
+        content: Text(
+          fehler.isEmpty
+              ? '$gut Kopien gespeichert'
+              : '$gut Kopien gespeichert, ${fehler.length} fehlgeschlagen: ${fehler.first}',
+        ),
+      ),
+    );
+    await _neuLaden();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -243,6 +359,13 @@ class _GalerieSeiteState extends State<GalerieSeite> {
       onPressed: () => setState(_auswahl.clear),
     ),
     title: Text('${_auswahl.length} ausgewählt'),
+    actions: [
+      IconButton(
+        icon: const Icon(Icons.auto_awesome),
+        tooltip: 'Preset anwenden',
+        onPressed: _presetAnwenden,
+      ),
+    ],
   );
 
   Widget _monatsKopf(DateTime datum) => SliverToBoxAdapter(
@@ -357,7 +480,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                             ),
                       stapel: z.stapel,
                       ablage: z.ablage,
-                      gewaehlt: _auswahl.contains(z.e.id),
+                      gewaehlt: _auswahl.contains(z.e),
                       waehlt: _auswahl.isNotEmpty,
                       onTap: () => _auswahl.isEmpty
                           ? _oeffnen(
@@ -365,8 +488,8 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                               (j) async => eintraege[j].e,
                               i,
                             )
-                          : _waehlen(z.e.id),
-                      onLongPress: () => _waehlen(z.e.id),
+                          : _waehlen(z.e),
+                      onLongPress: () => _waehlen(z.e),
                     );
                   },
                 ),
@@ -423,7 +546,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                 ablage: _stand.geraetGesichert.contains(a.id)
                     ? Ablage.beide
                     : Ablage.geraet,
-                gewaehlt: _auswahl.contains(a.id),
+                gewaehlt: _auswahl.contains((id: a.id, geraet: true)),
                 waehlt: _auswahl.isNotEmpty,
                 onTap: () => _auswahl.isEmpty
                     ? _oeffnen(
@@ -434,8 +557,8 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                         ),
                         i,
                       )
-                    : _waehlen(a.id),
-                onLongPress: () => _waehlen(a.id),
+                    : _waehlen((id: a.id, geraet: true)),
+                onLongPress: () => _waehlen((id: a.id, geraet: true)),
               );
             },
           ),
@@ -487,7 +610,7 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                       ablage: _stand.serverAufGeraet.contains(k.id)
                           ? Ablage.beide
                           : Ablage.server,
-                      gewaehlt: _auswahl.contains(k.id),
+                      gewaehlt: _auswahl.contains((id: k.id, geraet: false)),
                       waehlt: _auswahl.isNotEmpty,
                       onTap: () => _auswahl.isEmpty
                           ? _oeffnen(
@@ -495,8 +618,8 @@ class _GalerieSeiteState extends State<GalerieSeite> {
                               (j) async => (id: kacheln[j].id, geraet: false),
                               i,
                             )
-                          : _waehlen(k.id),
-                      onLongPress: () => _waehlen(k.id),
+                          : _waehlen((id: k.id, geraet: false)),
+                      onLongPress: () => _waehlen((id: k.id, geraet: false)),
                     );
                   },
                 ),

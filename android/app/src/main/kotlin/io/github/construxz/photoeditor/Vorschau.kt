@@ -23,8 +23,6 @@ object Sitzung {
     val hintergrund = Handler(faden.looper)
     private val haupt = Handler(Looper.getMainLooper())
 
-    var original: ByteArray? = null
-        private set
     private var quelle: Bitmap? = null
     private var orientierung = 1
     private var rezept = JSONObject()
@@ -39,7 +37,6 @@ object Sitzung {
 
     /** Lädt das Original mit [rezeptJson]; die Vorschau rechnet auf einer verkleinerten Fassung. */
     fun laden(bytes: ByteArray, hdrAn: Boolean, rezeptJson: String): Map<String, Any> {
-        original = bytes
         orientierung = Renderer.orientierung(bytes)
         hdr = hdrAn
         rezept = JSONObject(rezeptJson)
@@ -69,7 +66,6 @@ object Sitzung {
     }
 
     fun beenden() {
-        original = null
         quelle = null
         bild = null
     }

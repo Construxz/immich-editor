@@ -69,7 +69,7 @@ class MainActivity : FlutterActivity() {
                         val rezept = JSONObject(call.argument<String>("rezept")!!)
                         val qualitaet = call.argument<Int>("quality")!!
                         val hdr = call.argument<Boolean>("hdr")!!
-                        val original = Sitzung.original!!
+                        val original = call.argument<ByteArray>("original")!!
                         Sitzung.hintergrund.post {
                             try {
                                 val jpeg = exportieren(original, rezept, qualitaet, hdr)

@@ -7,6 +7,34 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-40: Presets — im Editor sichern, auf eine Mehrfachauswahl anwenden
+
+Gebaut nach der Spec (*Presets*: ein Rezept ohne Geometrie und ohne Masken):
+- **Editor**, Reiter **„Presets"** vorn (Spec, *Bedienung*): „Sichern" fragt einen Namen und
+  nimmt die veränderten Regler; ein Preset antippen setzt dessen Regler, Zuschnitt und Drehung
+  bleiben; lange drücken löscht (mit Rückfrage). Namen statt Vorschaubildern — der Renderer
+  rechnet nur ein Bild zugleich.
+- Abgelegt in `presets.json` im App-Ordner, je Preset das Rezept-JSON (`v: 1`); nicht in
+  `flutter_secure_storage`, das beim Abmelden geleert wird.
+- **Galerie**: Mehrfachauswahl (langer Druck) → ✨ „Preset anwenden" → Preset wählen → Fortschritt
+  „3 von 20 Fotos". Jedes Foto geht denselben Weg wie aus dem Editor: Die Lade- und Speicherlogik
+  steckt jetzt in `lib/editor/speichern.dart` (`fotoLaden`, `kopieSpeichern`), Editor und
+  Mehrfachauswahl rufen sie beide. Der native Export bekommt das Original als Bytes und braucht
+  keine Editor-Sitzung mehr.
+- Eine gewählte **Kopie dieser App** wird **ersetzt** (Original mit dem Zuschnitt der Kopie und
+  den Reglern des Presets; die alte Kopie in den Papierkorb) — die Vorgabe aus D-31, ohne
+  Rückfrage je Foto. Ein Fehler hält die übrigen nicht auf; die Meldung nennt die Zahl.
+
+**Abnahme (M2) gemessen** 23.09.2026 im Emulator, Testbenutzer: Preset „Kontrast" gesichert;
+20 Fotos gewählt — 19 vom Server (8 bearbeitete Stapel, 11 neue `preset-01` … `-11`) und
+`geraet-preset.jpg`, das nur auf dem Gerät lag. Anwenden: **233 s** (etwa 12 s je Foto: Original
+laden, rendern, in den Kameraordner, Vorgabe „übers Gerät", D-28); 20 Kopien, kein Fehler, jede
+mit dem Rezept des Presets und `hdrgm`. Backup der Immich-App nachgestellt (Dateien unverändert per
+`POST /assets`); nach dem Neustart der App über die Asset-IDs geprüft: **20 von 20 Kopien vorn im
+Stapel mit ihrem Original**, auch `geraet-preset.edit.jpg`; ersetzte Kopien im Papierkorb.
+
+---
+
 ## 2026-09-23 · D-39: Der erste Bildabgleich erklärt sich
 
 Befund des Besitzers auf dem Pixel: Beim ersten Öffnen stand oben nur „6000/17400" neben dem
