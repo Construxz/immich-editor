@@ -21,123 +21,123 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * Der eine Renderer für Vorschau und Export (D-17): Geometrie und Regler per AGSL auf der GPU,
- * Ergebnis als sRGB-Bitmap. Die Gain-Map bekommt dieselbe Geometrie ([gainmap]).
+ * The one renderer for preview and export (D-17): geometry and adjustments via AGSL on the GPU,
+ * result as an sRGB bitmap. The gain map gets the same geometry ([gainmap]).
  */
 object Renderer {
-    /** Regler des Rezepts (JSON-Schlüssel → Uniform), je −1 … 1, 0 = unverändert (Spec, Stufe 1). */
-    val REGLER = mapOf(
-        "brightness" to "helligkeit", "contrast" to "kontrast", "whitePoint" to "weiss",
-        "blackPoint" to "schwarz", "highlights" to "lichter", "shadows" to "tiefen",
-        "saturation" to "saettigung", "warmth" to "waerme", "tint" to "faerbung",
-        "blueTones" to "blau", "vignette" to "vignette", "sharpness" to "schaerfe",
+    /** Recipe adjustments (JSON key → uniform), each −1 … 1, 0 = unchanged (spec, stage 1). */
+    val ADJUSTMENTS = mapOf(
+        "brightness" to "brightness", "contrast" to "contrast", "whitePoint" to "whitePoint",
+        "blackPoint" to "blackPoint", "highlights" to "highlights", "shadows" to "shadows",
+        "saturation" to "saturation", "warmth" to "warmth", "tint" to "tint",
+        "blueTones" to "blueTones", "vignette" to "vignette", "sharpness" to "sharpness",
     )
 
-    // Farbwerte kommen im Farbraum des Ziels an (sRGB, nicht linear). Weißabgleich rechnet in
-    // linearem Licht, Tonwerte in der wahrgenommenen Helligkeit. Alle Regler auf 0 = unverändert.
+    // Color values arrive in the target's color space (sRGB, not linear). White balance works in
+    // linear light, tones in perceived lightness. All adjustments at 0 = unchanged.
     private const val AGSL = """
-        uniform shader bild;
-        uniform float2 groesse; // Ausgabe in Pixeln
-        uniform float helligkeit, kontrast, weiss, schwarz, lichter, tiefen,
-                      saettigung, waerme, faerbung, blau, vignette, schaerfe;
+        uniform shader image;
+        uniform float2 size; // output in pixels
+        uniform float brightness, contrast, whitePoint, blackPoint, highlights, shadows,
+                      saturation, warmth, tint, blueTones, vignette, sharpness;
 
-        float3 zuLinear(float3 c) {
+        float3 toLinear(float3 c) {
             return mix(c / 12.92, pow((c + 0.055) / 1.055, float3(2.4)), step(0.04045, c));
         }
-        float3 zuSrgb(float3 c) {
+        float3 toSrgb(float3 c) {
             c = max(c, 0.0);
             return mix(c * 12.92, 1.055 * pow(c, float3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
         }
         float luma(float3 c) { return dot(c, float3(0.2126, 0.7152, 0.0722)); }
-        float farbton(float3 c) { // 0 … 1
+        float hue(float3 c) { // 0 … 1
             float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), d = mx - mn;
             if (d < 1e-5) return 0.0;
             float h = mx == c.r ? mod((c.g - c.b) / d, 6.0) : mx == c.g ? (c.b - c.r) / d + 2.0 : (c.r - c.g) / d + 4.0;
             return h / 6.0;
         }
-        // Anheben (a > 0) zieht Richtung 1, Absenken Richtung 0 — nie über den Rand hinaus.
-        float3 schieben(float3 c, float a) { return a >= 0.0 ? c + a * (1.0 - c) : c + a * c; }
+        // Raising (a > 0) pulls toward 1, lowering toward 0 — never past the edge.
+        float3 push(float3 c, float a) { return a >= 0.0 ? c + a * (1.0 - c) : c + a * c; }
 
         half4 main(float2 p) {
-            float3 c = bild.eval(p).rgb;
+            float3 c = image.eval(p).rgb;
 
-            // Schärfe: Unscharfmaske, Radius relativ zur Bildgröße — Vorschau wie Export.
-            if (schaerfe != 0.0) {
-                float r = max(1.0, max(groesse.x, groesse.y) / 2000.0);
-                float3 weich = (bild.eval(p + float2(r, 0)).rgb + bild.eval(p - float2(r, 0)).rgb
-                              + bild.eval(p + float2(0, r)).rgb + bild.eval(p - float2(0, r)).rgb) * 0.25;
-                c += (c - weich) * schaerfe * 1.5;
+            // Sharpness: unsharp mask, radius relative to image size — preview like export.
+            if (sharpness != 0.0) {
+                float r = max(1.0, max(size.x, size.y) / 2000.0);
+                float3 soft = (image.eval(p + float2(r, 0)).rgb + image.eval(p - float2(r, 0)).rgb
+                              + image.eval(p + float2(0, r)).rgb + image.eval(p - float2(0, r)).rgb) * 0.25;
+                c += (c - soft) * sharpness * 1.5;
             }
 
-            // Wärme und Färbung in linearem Licht.
-            float3 l = zuLinear(saturate(c)) * float3(1.0 + 0.15 * waerme, 1.0 - 0.15 * faerbung, 1.0 - 0.15 * waerme);
-            c = zuSrgb(l);
+            // Warmth and tint in linear light.
+            float3 l = toLinear(saturate(c)) * float3(1.0 + 0.15 * warmth, 1.0 - 0.15 * tint, 1.0 - 0.15 * warmth);
+            c = toSrgb(l);
 
-            // Weiß- und Schwarzpunkt.
-            float sp = 0.15 * schwarz, wp = 1.0 - 0.15 * weiss;
-            c = saturate((c - sp) / (wp - sp));
+            // White and black point.
+            float bp = 0.15 * blackPoint, wp = 1.0 - 0.15 * whitePoint;
+            c = saturate((c - bp) / (wp - bp));
 
-            // Helligkeit: Mitteltöne, Enden bleiben.
-            c = pow(c, float3(exp2(-helligkeit)));
+            // Brightness: midtones, ends stay.
+            c = pow(c, float3(exp2(-brightness)));
 
-            // Spitzlichter und Schatten nach Luminanz.
+            // Highlights and shadows by luminance.
             float L = luma(c);
-            c = schieben(c, 0.35 * tiefen * (1.0 - smoothstep(0.0, 0.6, L)));
-            c = schieben(c, 0.35 * lichter * smoothstep(0.4, 1.0, L));
+            c = push(c, 0.35 * shadows * (1.0 - smoothstep(0.0, 0.6, L)));
+            c = push(c, 0.35 * highlights * smoothstep(0.4, 1.0, L));
 
-            // Kontrast: S-Kurve (mehr) oder zur Mitte hin (weniger).
-            c = kontrast >= 0.0 ? mix(c, c * c * (3.0 - 2.0 * c), kontrast) : 0.5 + (c - 0.5) * (1.0 + 0.6 * kontrast);
+            // Contrast: S-curve (more) or toward the middle (less).
+            c = contrast >= 0.0 ? mix(c, c * c * (3.0 - 2.0 * c), contrast) : 0.5 + (c - 0.5) * (1.0 + 0.6 * contrast);
 
-            // Sättigung; Blautöne nur um den Farbton Blau.
+            // Saturation; blue tones only around the blue hue.
             L = luma(c);
-            c = mix(float3(L), c, 1.0 + saettigung);
-            float nahBlau = saturate(1.0 - abs(farbton(c) - 0.6) * 8.0);
-            c = mix(float3(luma(c)), c, 1.0 + blau * nahBlau);
+            c = mix(float3(L), c, 1.0 + saturation);
+            float nearBlue = saturate(1.0 - abs(hue(c) - 0.6) * 8.0);
+            c = mix(float3(luma(c)), c, 1.0 + blueTones * nearBlue);
 
-            // Vignette: Ecken dunkler (> 0) oder heller (< 0).
-            float d = length((p / groesse - 0.5) * 2.0) / 1.41421356;
-            c = schieben(c, -0.8 * vignette * smoothstep(0.35, 1.0, d));
+            // Vignette: corners darker (> 0) or lighter (< 0).
+            float d = length((p / size - 0.5) * 2.0) / 1.41421356;
+            c = push(c, -0.8 * vignette * smoothstep(0.35, 1.0, d));
 
             return half4(half3(saturate(c)), 1.0);
         }
     """
 
-    /** EXIF-Orientierung (1…8) des Originals; BitmapFactory richtet nicht selbst auf. */
-    fun orientierung(original: ByteArray) = ExifInterface(ByteArrayInputStream(original))
+    /** EXIF orientation (1…8) of the original; BitmapFactory does not set it upright itself. */
+    fun orientation(original: ByteArray) = ExifInterface(ByteArrayInputStream(original))
         .getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
 
-    /** Rendert [quelle] mit Geometrie [geo] und [rezept]; das Ergebnis ist eine HARDWARE-Bitmap. */
-    fun rendern(quelle: Bitmap, geo: Geometrie, rezept: JSONObject): Bitmap {
-        val (breite, hoehe) = groesse(geo, quelle)
-        val bildShader = BitmapShader(quelle, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+    /** Renders [source] with geometry [geo] and [recipe]; the result is a HARDWARE bitmap. */
+    fun render(source: Bitmap, geo: Geometry, recipe: JSONObject): Bitmap {
+        val (width, height) = size(geo, source)
+        val imageShader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
             filterMode = BitmapShader.FILTER_MODE_LINEAR
-            setLocalMatrix(matrix(geo, quelle))
+            setLocalMatrix(matrix(geo, source))
         }
         val shader = RuntimeShader(AGSL).apply {
-            setInputShader("bild", bildShader)
-            setFloatUniform("groesse", breite.toFloat(), hoehe.toFloat())
-            for ((schluessel, uniform) in REGLER) {
-                setFloatUniform(uniform, rezept.optDouble(schluessel, 0.0).toFloat().coerceIn(-1f, 1f))
+            setInputShader("image", imageShader)
+            setFloatUniform("size", width.toFloat(), height.toFloat())
+            for ((key, uniform) in ADJUSTMENTS) {
+                setFloatUniform(uniform, recipe.optDouble(key, 0.0).toFloat().coerceIn(-1f, 1f))
             }
         }
 
         val reader = ImageReader.newInstance(
-            breite, hoehe, PixelFormat.RGBA_8888, 1,
+            width, height, PixelFormat.RGBA_8888, 1,
             HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE or HardwareBuffer.USAGE_GPU_COLOR_OUTPUT,
         )
-        val knoten = RenderNode("bild").apply { setPosition(0, 0, breite, hoehe) }
-        knoten.beginRecording().drawPaint(Paint().apply { this.shader = shader })
-        knoten.endRecording()
+        val node = RenderNode("image").apply { setPosition(0, 0, width, height) }
+        node.beginRecording().drawPaint(Paint().apply { this.shader = shader })
+        node.endRecording()
         val renderer = HardwareRenderer().apply {
             setSurface(reader.surface)
-            setContentRoot(knoten)
+            setContentRoot(node)
         }
         try {
             renderer.createRenderRequest().setWaitForPresent(true).syncAndDraw()
-            reader.acquireNextImage().use { bild ->
-                val puffer = bild.hardwareBuffer!!
-                return Bitmap.wrapHardwareBuffer(puffer, ColorSpace.get(ColorSpace.Named.SRGB))!!
-                    .also { puffer.close() }
+            reader.acquireNextImage().use { image ->
+                val buffer = image.hardwareBuffer!!
+                return Bitmap.wrapHardwareBuffer(buffer, ColorSpace.get(ColorSpace.Named.SRGB))!!
+                    .also { buffer.close() }
             }
         } finally {
             renderer.destroy()
@@ -146,16 +146,16 @@ object Renderer {
     }
 
     /**
-     * Die Gain-Map [g] mit derselben Geometrie wie das Bild, in ihrer eigenen Auflösung. Klein
-     * genug für die CPU; die HDR-Kennwerte bleiben, wie sie sind.
+     * The gain map [g] with the same geometry as the image, at its own resolution. Small
+     * enough for the CPU; the HDR parameters stay as they are.
      */
-    fun gainmap(g: Gainmap, geo: Geometrie): Gainmap {
-        if (geo.istNeutral) return g
+    fun gainmap(g: Gainmap, geo: Geometry): Gainmap {
+        if (geo.isNeutral) return g
         val q = g.gainmapContents
-        val (breite, hoehe) = groesse(geo, q)
-        val ziel = Bitmap.createBitmap(breite, hoehe, q.config ?: Bitmap.Config.ARGB_8888)
-        Canvas(ziel).drawBitmap(q, matrix(geo, q), Paint(Paint.FILTER_BITMAP_FLAG))
-        return Gainmap(ziel).apply {
+        val (width, height) = size(geo, q)
+        val target = Bitmap.createBitmap(width, height, q.config ?: Bitmap.Config.ARGB_8888)
+        Canvas(target).drawBitmap(q, matrix(geo, q), Paint(Paint.FILTER_BITMAP_FLAG))
+        return Gainmap(target).apply {
             g.ratioMin.let { setRatioMin(it[0], it[1], it[2]) }
             g.ratioMax.let { setRatioMax(it[0], it[1], it[2]) }
             g.gamma.let { setGamma(it[0], it[1], it[2]) }
@@ -166,12 +166,12 @@ object Renderer {
         }
     }
 
-    private fun groesse(geo: Geometrie, b: Bitmap): Pair<Int, Int> {
-        val (w, h) = geo.ausgabe(b.width.toDouble(), b.height.toDouble())
+    private fun size(geo: Geometry, b: Bitmap): Pair<Int, Int> {
+        val (w, h) = geo.output(b.width.toDouble(), b.height.toDouble())
         return max(1, w.roundToInt()) to max(1, h.roundToInt())
     }
 
-    private fun matrix(geo: Geometrie, b: Bitmap) = Matrix().apply {
+    private fun matrix(geo: Geometry, b: Bitmap) = Matrix().apply {
         setValues(geo.matrix(b.width.toDouble(), b.height.toDouble()).map { it.toFloat() }.toFloatArray())
     }
 }

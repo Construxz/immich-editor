@@ -22,57 +22,57 @@ import java.security.MessageDigest
 import java.io.ByteArrayOutputStream
 
 class MainActivity : FlutterActivity() {
-    /** Eigener Faden für Prüfsummen, damit der Renderer nicht wartet. */
-    private val pruefFaden = Handler(HandlerThread("pruefsummen").apply { start() }.looper)
+    /** Own thread for checksums, so the renderer does not wait. */
+    private val checksumThread = Handler(HandlerThread("checksums").apply { start() }.looper)
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         flutterEngine.platformViewsController.registry
-            .registerViewFactory("immich_editor/vorschau", VorschauFabrik())
+            .registerViewFactory("immich_editor/preview", PreviewFactory())
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "immich_editor/renderer")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "laden" -> {
+                    "load" -> {
                         val hdr = call.argument<Boolean>("hdr")!!
                         val original = call.argument<ByteArray>("original")!!
-                        val rezept = call.argument<String>("rezept")!!
-                        // Dekodieren nicht auf dem Haupt-Thread — sonst droht „App reagiert nicht".
-                        Sitzung.hintergrund.post {
-                            val antwort = Sitzung.laden(original, hdr, rezept)
+                        val recipe = call.argument<String>("recipe")!!
+                        // Decode off the main thread — otherwise "app not responding" looms.
+                        Session.background.post {
+                            val answer = Session.load(original, hdr, recipe)
                             runOnUiThread {
-                                hdrFenster(hdr)
-                                result.success(antwort)
+                                hdrWindow(hdr)
+                                result.success(answer)
                             }
                         }
                     }
                     "sha1" -> {
                         val bytes = call.argument<ByteArray>("bytes")!!
-                        Sitzung.hintergrund.post {
-                            val summe = Base64.encodeToString(
+                        Session.background.post {
+                            val sum = Base64.encodeToString(
                                 MessageDigest.getInstance("SHA-1").digest(bytes), Base64.NO_WRAP,
                             )
-                            runOnUiThread { result.success(summe) }
+                            runOnUiThread { result.success(sum) }
                         }
                     }
                     "hdr" -> {
-                        val an = call.argument<Boolean>("an")!!
-                        Sitzung.setzeHdr(an)
-                        hdrFenster(an)
+                        val on = call.argument<Boolean>("on")!!
+                        Session.setHdr(on)
+                        hdrWindow(on)
                         result.success(null)
                     }
-                    "rezept" -> {
-                        Sitzung.setzeRezept(call.argument<String>("rezept")!!)
+                    "recipe" -> {
+                        Session.setRecipe(call.argument<String>("recipe")!!)
                         result.success(null)
                     }
-                    "exportieren" -> {
-                        val rezept = JSONObject(call.argument<String>("rezept")!!)
-                        val qualitaet = call.argument<Int>("quality")!!
+                    "export" -> {
+                        val recipe = JSONObject(call.argument<String>("recipe")!!)
+                        val quality = call.argument<Int>("quality")!!
                         val hdr = call.argument<Boolean>("hdr")!!
                         val original = call.argument<ByteArray>("original")!!
-                        Sitzung.hintergrund.post {
+                        Session.background.post {
                             try {
-                                val jpeg = exportieren(original, rezept, qualitaet, hdr)
+                                val jpeg = export(original, recipe, quality, hdr)
                                 runOnUiThread { result.success(jpeg) }
                             } catch (e: Exception) {
                                 runOnUiThread { result.error("export", e.toString(), null) }
@@ -81,62 +81,62 @@ class MainActivity : FlutterActivity() {
                     }
                     "exif" -> {
                         val e = ExifInterface(ByteArrayInputStream(call.argument<ByteArray>("bytes")!!))
-                        val werte = mutableMapOf<String, Any>()
-                        for (t in listOf("Make", "Model", "LensModel")) e.getAttribute(t)?.let { werte[t] = it.trim() }
-                        // Tag 0x8827; das Framework kennt ihn je nach Version unter dem alten Namen
+                        val values = mutableMapOf<String, Any>()
+                        for (t in listOf("Make", "Model", "LensModel")) e.getAttribute(t)?.let { values[t] = it.trim() }
+                        // Tag 0x8827; depending on version the framework knows it by the old name
                         listOf("PhotographicSensitivity", "ISOSpeedRatings").map { e.getAttributeInt(it, 0) }
-                            .firstOrNull { it > 0 }?.let { werte["PhotographicSensitivity"] = it }
+                            .firstOrNull { it > 0 }?.let { values["PhotographicSensitivity"] = it }
                         for (t in listOf("FNumber", "ExposureTime", "FocalLength")) {
-                            e.getAttributeDouble(t, -1.0).takeIf { it > 0 }?.let { werte[t] = it }
+                            e.getAttributeDouble(t, -1.0).takeIf { it > 0 }?.let { values[t] = it }
                         }
-                        val ort = FloatArray(2)
-                        if (e.getLatLong(ort)) { werte["lat"] = ort[0].toDouble(); werte["lon"] = ort[1].toDouble() }
-                        result.success(werte)
+                        val place = FloatArray(2)
+                        if (e.getLatLong(place)) { values["lat"] = place[0].toDouble(); values["lon"] = place[1].toDouble() }
+                        result.success(values)
                     }
                     "appVersion" -> {
                         val p = packageManager.getPackageInfo(packageName, 0)
                         result.success("${p.versionName} build.${p.longVersionCode}")
                     }
-                    "pruefsummen" -> {
-                        // SHA-1 der Gerätefotos, direkt aus der Datei gelesen (unverändert, mit Ort —
-                        // ACCESS_MEDIA_LOCATION), wie Immich sie als checksum führt (D-36).
+                    "checksums" -> {
+                        // SHA-1 of the device photos, read straight from the file (unchanged, with location —
+                        // ACCESS_MEDIA_LOCATION), as Immich keeps it as checksum (D-36).
                         val ids = call.argument<List<String>>("ids")!!
-                        pruefFaden.post {
-                            val summen = mutableMapOf<String, String>()
+                        checksumThread.post {
+                            val sums = mutableMapOf<String, String>()
                             for (id in ids) {
                                 try {
                                     val uri = MediaStore.setRequireOriginal(
                                         ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toLong()),
                                     )
                                     val sha = MessageDigest.getInstance("SHA-1")
-                                    contentResolver.openInputStream(uri)?.use { ein ->
-                                        val puffer = ByteArray(1 shl 16)
+                                    contentResolver.openInputStream(uri)?.use { input ->
+                                        val buffer = ByteArray(1 shl 16)
                                         while (true) {
-                                            val n = ein.read(puffer)
+                                            val n = input.read(buffer)
                                             if (n < 0) break
-                                            sha.update(puffer, 0, n)
+                                            sha.update(buffer, 0, n)
                                         }
-                                        summen[id] = Base64.encodeToString(sha.digest(), Base64.NO_WRAP)
+                                        sums[id] = Base64.encodeToString(sha.digest(), Base64.NO_WRAP)
                                     }
                                 } catch (_: Exception) {
-                                    // gelöscht oder nicht lesbar: fehlt in der Antwort
+                                    // deleted or unreadable: missing from the answer
                                 }
                             }
-                            runOnUiThread { result.success(summen) }
+                            runOnUiThread { result.success(sums) }
                         }
                     }
-                    "dateien" -> result.success(filesDir.path)
-                    "oeffnen" -> try {
+                    "filesDir" -> result.success(filesDir.path)
+                    "openUrl" -> try {
                         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(call.argument<String>("url")!!)))
                         result.success(true)
                     } catch (_: ActivityNotFoundException) {
-                        result.success(false) // keine App dafür, etwa ohne Immich-App
+                        result.success(false) // no app for it, e.g. without the Immich app
                     }
-                    "getaktet" -> result.success(
+                    "isMetered" -> result.success(
                         getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered,
                     )
-                    "beenden" -> {
-                        Sitzung.beenden()
+                    "end" -> {
+                        Session.end()
                         window.colorMode = ActivityInfo.COLOR_MODE_DEFAULT
                         result.success(null)
                     }
@@ -145,27 +145,27 @@ class MainActivity : FlutterActivity() {
             }
     }
 
-    /** HDR-Fenster nur, wenn es etwas zu zeigen gibt (D-17). */
-    private fun hdrFenster(an: Boolean) {
-        window.colorMode = if (an && Sitzung.hatGainmap)
+    /** HDR window only when there is something to show (D-17). */
+    private fun hdrWindow(on: Boolean) {
+        window.colorMode = if (on && Session.hasGainmap)
             ActivityInfo.COLOR_MODE_HDR else ActivityInfo.COLOR_MODE_DEFAULT
     }
 
     /**
-     * Volle Auflösung durch denselben Renderer wie die Vorschau, dann JPEG über den Kodierer des
-     * Systems (D-13). Mit HDR hängt die Gain-Map des Originals an, und compress schreibt
+     * Full resolution through the same renderer as the preview, then JPEG via the system
+     * encoder (D-13). With HDR the original's gain map is attached, and compress writes
      * Ultra HDR (D-16, D-19).
      */
-    private fun exportieren(original: ByteArray, rezept: JSONObject, qualitaet: Int, hdr: Boolean): ByteArray {
-        val quelle = BitmapFactory.decodeByteArray(original, 0, original.size)
-        val geo = Geometrie.aus(rezept).nachExif(Renderer.orientierung(original))
-        val gerendert = Renderer.rendern(quelle, geo, rezept)
-        val bitmap = gerendert.copy(Bitmap.Config.ARGB_8888, true)
-        gerendert.recycle()
-        if (hdr) quelle.gainmap?.let { bitmap.gainmap = Renderer.gainmap(it, geo) }
-        quelle.recycle()
+    private fun export(original: ByteArray, recipe: JSONObject, quality: Int, hdr: Boolean): ByteArray {
+        val source = BitmapFactory.decodeByteArray(original, 0, original.size)
+        val geo = Geometry.from(recipe).afterExif(Renderer.orientation(original))
+        val rendered = Renderer.render(source, geo, recipe)
+        val bitmap = rendered.copy(Bitmap.Config.ARGB_8888, true)
+        rendered.recycle()
+        if (hdr) source.gainmap?.let { bitmap.gainmap = Renderer.gainmap(it, geo) }
+        source.recycle()
         val out = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, qualitaet, out)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
         bitmap.recycle()
         return out.toByteArray()
     }

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-// Das Aussehen der Immich-App (`mobile/lib/theme/`, `constants/colors.dart`, Tag v3.2.2, AGPL-3.0):
-// Markenfarbe Indigo, entfärbte Flächen, Google Sans. Der Editor selbst bleibt schwarz wie bei
-// Google Fotos (D-22, D-35).
+// The look of the Immich app (`mobile/lib/theme/`, `constants/colors.dart`, tag v3.2.2, AGPL-3.0):
+// brand color indigo, desaturated surfaces, Google Sans. The editor itself stays black like
+// Google Photos (D-22, D-35).
 
-const _markeHell = Color(0xFF4150AF);
-const _markeDunkel = Color(0xFFACCBFA);
+const _brandLight = Color(0xFF4150AF);
+const _brandDark = Color(0xFFACCBFA);
 
-final _hell = ColorScheme.fromSeed(seedColor: _markeHell).copyWith(
-  primary: _markeHell,
+final _light = ColorScheme.fromSeed(seedColor: _brandLight).copyWith(
+  primary: _brandLight,
   surface: const Color(0xFFf9f9f9),
   onSurface: const Color(0xFF1b1b1b),
   surfaceContainerLowest: const Color(0xFFffffff),
@@ -23,12 +23,12 @@ final _hell = ColorScheme.fromSeed(seedColor: _markeHell).copyWith(
   onInverseSurface: const Color(0xFFf1f1f1),
 );
 
-final _dunkel =
+final _dark =
     ColorScheme.fromSeed(
-      seedColor: _markeDunkel,
+      seedColor: _brandDark,
       brightness: Brightness.dark,
     ).copyWith(
-      primary: _markeDunkel,
+      primary: _brandDark,
       surface: const Color(0xFF131313),
       onSurface: const Color(0xFFE2E2E2),
       surfaceContainerLowest: const Color(0xFF0E0E0E),
@@ -43,41 +43,41 @@ final _dunkel =
       onInverseSurface: const Color(0xFF303030),
     );
 
-final themaHell = _thema(_hell);
-final themaDunkel = _thema(_dunkel);
+final lightTheme = _theme(_light);
+final darkTheme = _theme(_dark);
 
-const _schrift = 'GoogleSans';
+const _font = 'GoogleSans';
 
-ThemeData _thema(ColorScheme farben) {
-  final dunkel = farben.brightness == Brightness.dark;
+ThemeData _theme(ColorScheme colors) {
+  final dark = colors.brightness == Brightness.dark;
   return ThemeData(
     useMaterial3: true,
-    colorScheme: farben,
-    primaryColor: farben.primary,
-    scaffoldBackgroundColor: farben.surface,
-    splashColor: farben.primary.withValues(alpha: 0.1),
-    highlightColor: farben.primary.withValues(alpha: 0.1),
-    fontFamily: _schrift,
+    colorScheme: colors,
+    primaryColor: colors.primary,
+    scaffoldBackgroundColor: colors.surface,
+    splashColor: colors.primary.withValues(alpha: 0.1),
+    highlightColor: colors.primary.withValues(alpha: 0.1),
+    fontFamily: _font,
     bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: farben.surfaceContainer,
+      backgroundColor: colors.surfaceContainer,
     ),
     snackBarTheme: SnackBarThemeData(
       contentTextStyle: TextStyle(
-        fontFamily: _schrift,
-        color: farben.primary,
+        fontFamily: _font,
+        color: colors.primary,
         fontWeight: FontWeight.bold,
       ),
-      backgroundColor: farben.surfaceContainerHighest,
+      backgroundColor: colors.surfaceContainerHighest,
     ),
     appBarTheme: AppBarTheme(
       titleTextStyle: TextStyle(
-        color: farben.primary,
-        fontFamily: _schrift,
+        color: colors.primary,
+        fontFamily: _font,
         fontWeight: FontWeight.w600,
         fontSize: 18,
       ),
-      backgroundColor: farben.surface,
-      foregroundColor: farben.primary,
+      backgroundColor: colors.surface,
+      foregroundColor: colors.primary,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: true,
@@ -92,8 +92,8 @@ ThemeData _thema(ColorScheme farben) {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: farben.primary,
-        foregroundColor: dunkel ? Colors.black87 : Colors.white,
+        backgroundColor: colors.primary,
+        foregroundColor: dark ? Colors.black87 : Colors.white,
       ),
     ),
     chipTheme: const ChipThemeData(side: BorderSide.none),
@@ -103,7 +103,7 @@ ThemeData _thema(ColorScheme farben) {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: dunkel ? farben.surfaceContainer : farben.surface,
+      backgroundColor: dark ? colors.surfaceContainer : colors.surface,
       labelTextStyle: const WidgetStatePropertyAll(
         TextStyle(
           fontSize: 14,
@@ -114,23 +114,23 @@ ThemeData _thema(ColorScheme farben) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: farben.primary),
+        borderSide: BorderSide(color: colors.primary),
         borderRadius: const BorderRadius.all(Radius.circular(15)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: farben.outlineVariant),
+        borderSide: BorderSide(color: colors.outlineVariant),
         borderRadius: const BorderRadius.all(Radius.circular(15)),
       ),
-      labelStyle: TextStyle(color: farben.primary),
+      labelStyle: TextStyle(color: colors.primary),
       hintStyle: const TextStyle(fontSize: 14.0, fontWeight: FontWeight.normal),
     ),
-    textSelectionTheme: TextSelectionThemeData(cursorColor: farben.primary),
-    dialogTheme: DialogThemeData(backgroundColor: farben.surfaceContainer),
+    textSelectionTheme: TextSelectionThemeData(cursorColor: colors.primary),
+    dialogTheme: DialogThemeData(backgroundColor: colors.surfaceContainer),
   );
 }
 
-extension ImmichFarben on ColorScheme {
-  /// Immichs zweite Textfarbe (`onSurfaceSecondary`): Text um 30 % zur Fläche hin.
+extension ImmichColors on ColorScheme {
+  /// Immich's secondary text color (`onSurfaceSecondary`): text moved 30 % toward the surface.
   Color get onSurfaceSecondary => Color.lerp(
     onSurface,
     brightness == Brightness.dark ? Colors.black : Colors.white,

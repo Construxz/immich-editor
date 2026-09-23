@@ -10,11 +10,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.math.abs
 
-/** Der Renderer auf der GPU: neutral heißt unverändert, jeder Regler wirkt in seine Richtung. */
+/** The renderer on the GPU: neutral means unchanged, every adjustment acts in its direction. */
 @RunWith(AndroidJUnit4::class)
 class RendererTest {
-    // 64×64: waagerecht ein Grauverlauf, oben rechts ein blaues, unten links ein oranges Feld
-    private val quelle = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888).apply {
+    // 64×64: a horizontal gray ramp, a blue patch top right, an orange patch bottom left
+    private val source = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888).apply {
         for (y in 0 until 64) for (x in 0 until 64) {
             val g = x * 4
             setPixel(x, y, when {
@@ -25,79 +25,79 @@ class RendererTest {
         }
     }
 
-    private fun rendern(rezept: String, geo: Geometrie = Geometrie()) =
-        Renderer.rendern(quelle, geo, JSONObject(rezept)).copy(Bitmap.Config.ARGB_8888, false)
+    private fun render(recipe: String, geo: Geometry = Geometry()) =
+        Renderer.render(source, geo, JSONObject(recipe)).copy(Bitmap.Config.ARGB_8888, false)
 
-    private fun kanaele(b: Bitmap, x: Int, y: Int) = b.getPixel(x, y).let { intArrayOf(Color.red(it), Color.green(it), Color.blue(it)) }
-    private fun hell(b: Bitmap, x: Int, y: Int) = kanaele(b, x, y).average()
-    private fun buntheit(b: Bitmap, x: Int, y: Int) = kanaele(b, x, y).let { it.max() - it.min() }
+    private fun channels(b: Bitmap, x: Int, y: Int) = b.getPixel(x, y).let { intArrayOf(Color.red(it), Color.green(it), Color.blue(it)) }
+    private fun lightness(b: Bitmap, x: Int, y: Int) = channels(b, x, y).average()
+    private fun chroma(b: Bitmap, x: Int, y: Int) = channels(b, x, y).let { it.max() - it.min() }
 
-    @Test fun neutralLaesstDasBildUnveraendert() {
-        val b = rendern("""{"v":1}""")
-        var abweichung = 0
+    @Test fun neutralLeavesTheImageUnchanged() {
+        val b = render("""{"v":1}""")
+        var deviation = 0
         for (y in 0 until 64) for (x in 0 until 64) {
-            val a = kanaele(quelle, x, y); val n = kanaele(b, x, y)
-            for (i in 0..2) abweichung = maxOf(abweichung, abs(a[i] - n[i]))
+            val a = channels(source, x, y); val n = channels(b, x, y)
+            for (i in 0..2) deviation = maxOf(deviation, abs(a[i] - n[i]))
         }
-        assertTrue("größte Abweichung $abweichung", abweichung <= 2)
+        assertTrue("largest deviation $deviation", deviation <= 2)
     }
 
-    @Test fun helligkeitHebtMitteltoeneEndenBleiben() {
-        val b = rendern("""{"brightness":0.5}""")
-        assertTrue(hell(b, 32, 32) > hell(quelle, 32, 32) + 10)
-        assertEquals(hell(quelle, 0, 32), hell(b, 0, 32), 2.0)
+    @Test fun brightnessLiftsMidtonesEndsStay() {
+        val b = render("""{"brightness":0.5}""")
+        assertTrue(lightness(b, 32, 32) > lightness(source, 32, 32) + 10)
+        assertEquals(lightness(source, 0, 32), lightness(b, 0, 32), 2.0)
     }
 
-    @Test fun kontrastSpreizt() {
-        val b = rendern("""{"contrast":1}""")
-        assertTrue(hell(b, 12, 32) < hell(quelle, 12, 32))
-        assertTrue(hell(b, 52, 32) > hell(quelle, 52, 32))
+    @Test fun contrastSpreads() {
+        val b = render("""{"contrast":1}""")
+        assertTrue(lightness(b, 12, 32) < lightness(source, 12, 32))
+        assertTrue(lightness(b, 52, 32) > lightness(source, 52, 32))
     }
 
-    @Test fun saettigungMinusEinsIstGrau() {
-        val b = rendern("""{"saturation":-1}""")
-        assertTrue(buntheit(b, 56, 8) <= 2)
-        assertTrue(buntheit(b, 8, 56) <= 2)
+    @Test fun saturationMinusOneIsGray() {
+        val b = render("""{"saturation":-1}""")
+        assertTrue(chroma(b, 56, 8) <= 2)
+        assertTrue(chroma(b, 8, 56) <= 2)
     }
 
-    @Test fun blautoeneWirkenNurAufBlau() {
-        val b = rendern("""{"blueTones":-1}""")
-        assertTrue(buntheit(b, 56, 8) < buntheit(quelle, 56, 8) - 20)
-        assertEquals(buntheit(quelle, 8, 56).toDouble(), buntheit(b, 8, 56).toDouble(), 3.0)
+    @Test fun blueTonesOnlyAffectBlue() {
+        val b = render("""{"blueTones":-1}""")
+        assertTrue(chroma(b, 56, 8) < chroma(source, 56, 8) - 20)
+        assertEquals(chroma(source, 8, 56).toDouble(), chroma(b, 8, 56).toDouble(), 3.0)
     }
 
-    @Test fun waermeMachtRoterUndWenigerBlau() {
-        val b = rendern("""{"warmth":1}""")
-        val a = kanaele(quelle, 32, 32); val n = kanaele(b, 32, 32)
+    @Test fun warmthMakesRedderAndLessBlue() {
+        val b = render("""{"warmth":1}""")
+        val a = channels(source, 32, 32); val n = channels(b, 32, 32)
         assertTrue(n[0] > a[0] && n[2] < a[2])
     }
 
-    @Test fun schattenUndSpitzlichter() {
-        assertTrue(hell(rendern("""{"shadows":1}"""), 12, 32) > hell(quelle, 12, 32) + 5)
-        assertTrue(hell(rendern("""{"highlights":-1}"""), 60, 32) < hell(quelle, 60, 32) - 5)
+    @Test fun shadowsAndHighlights() {
+        assertTrue(lightness(render("""{"shadows":1}"""), 12, 32) > lightness(source, 12, 32) + 5)
+        assertTrue(lightness(render("""{"highlights":-1}"""), 60, 32) < lightness(source, 60, 32) - 5)
     }
 
-    @Test fun weissUndSchwarzpunkt() {
-        assertTrue(hell(rendern("""{"whitePoint":1}"""), 56, 32) > hell(quelle, 56, 32))
-        assertTrue(hell(rendern("""{"blackPoint":1}"""), 8, 32) < hell(quelle, 8, 32))
+    @Test fun whiteAndBlackPoint() {
+        assertTrue(lightness(render("""{"whitePoint":1}"""), 56, 32) > lightness(source, 56, 32))
+        assertTrue(lightness(render("""{"blackPoint":1}"""), 8, 32) < lightness(source, 8, 32))
     }
 
-    @Test fun vignetteDunkeltDieEcken() {
-        val b = rendern("""{"vignette":1}""")
-        assertTrue(hell(b, 63, 20) < hell(quelle, 63, 20) - 10) // Rand
-        assertEquals(hell(quelle, 32, 32), hell(b, 32, 32), 2.0) // Mitte
+    @Test fun vignetteDarkensTheCorners() {
+        val b = render("""{"vignette":1}""")
+        assertTrue(lightness(b, 63, 20) < lightness(source, 63, 20) - 10) // edge
+        assertEquals(lightness(source, 32, 32), lightness(b, 32, 32), 2.0) // center
     }
 
-    @Test fun schaerfeHebtKanten() {
-        val b = rendern("""{"sharpness":1}""")
-        // an der Kante des blauen Feldes wird der Unterschied größer
-        val vorher = abs(hell(quelle, 47, 8) - hell(quelle, 48, 8))
-        val nachher = abs(hell(b, 47, 8) - hell(b, 48, 8))
-        assertTrue("$vorher → $nachher", nachher > vorher)
+    @Test fun sharpnessRaisesEdges() {
+        val b = render("""{"sharpness":1}""")
+        // at the edge of the blue patch the difference grows
+        val before = abs(lightness(source, 47, 8) - lightness(source, 48, 8))
+        val after = abs(lightness(b, 47, 8) - lightness(b, 48, 8))
+        assertTrue("$before → $after", after > before)
     }
 
-    @Test fun geometrieVertauschtBreiteUndHoehe() {
-        val b = Renderer.rendern(quelle, Geometrie(viertel = 1, zuschnitt = listOf(0.0, 0.0, 1.0, 0.5)), JSONObject("{}"))
+    @Test fun geometrySwapsWidthAndHeight() {
+        val b = Renderer.render(source, Geometry(quarterTurns = 1, crop = listOf(0.0, 0.0, 1.0, 0.5)), JSONObject("{}"))
         assertEquals(64, b.width); assertEquals(32, b.height)
     }
 }

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Prueft die Projektdokumentation auf die Fehler, die still bleiben.
+"""Checks the project documentation for the errors that stay silent.
 
-Kaputte Links und tote Anker faellt niemandem auf, solange niemand klickt.
-Doppelte Punktnummern entstehen, wenn zwei Sitzungen parallel schreiben. Das
-sind Fehler, weil etwas nachweislich kaputt ist. Verweise auf geloeschte Punkte
-und zu lang gewordene Dateien sind Hinweise -- dort entscheidet das Urteil, ob
-der Verweis Geschichte ist oder Verfall.
+Broken links and dead anchors go unnoticed as long as nobody clicks.
+Duplicate point numbers appear when two sessions write in parallel. Those
+are errors, because something is demonstrably broken. References to deleted
+points and files grown too long are hints -- there judgment decides whether
+the reference is history or decay.
 
-    python doccheck.py [verzeichnis] [--max-lines 600]
+    python doccheck.py [directory] [--max-lines 600]
     python doccheck.py --selftest
 
-Exit 1, sobald ein Fehler gefunden wurde. Nur Standardbibliothek.
+Exit 1 as soon as an error was found. Standard library only.
 """
 
 from __future__ import annotations
@@ -22,79 +22,79 @@ from pathlib import Path
 from urllib.parse import unquote
 
 LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
-#: Inline-Code: was darin wie ein Link aussieht, ist keiner
+#: inline code: what looks like a link in it is none
 CODE_SPAN = re.compile(r"`[^`\n]*`")
 HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*$", re.M)
-#: `**B7.`, `**A4b.` am Zeilenanfang -- ein Punkt der Absichtsdatei
+#: `**B7.`, `**A4b.` at line start -- a point of the intent file
 POINT = re.compile(r"^\*\*([A-Z]\d+[a-z]?)\.", re.M)
-#: ein Verweis, der eindeutig als Verweis gemeint ist
+#: a reference that is unambiguously meant as one
 POINT_REF = re.compile(r"(?:ROADMAP|siehe|Siehe|Punkt)\s+\[?([A-Z]\d+[a-z]?)\b")
 
 
 def slug(text: str) -> str:
-    """GitHubs Ankerform: klein, Sonderzeichen weg, Leerzeichen zu Bindestrich."""
+    """GitHub's anchor form: lowercase, special characters removed, spaces to hyphens."""
     text = re.sub(r"[`*_\[\]()]", "", text).lower()
     text = re.sub(r"[^\w\s-]", "", text, flags=re.UNICODE)
     return re.sub(r"\s", "-", text.strip())
 
 
-def sammle(basis: Path) -> dict[Path, str]:
-    dateien = (sorted(basis.glob("*.md")) + sorted(basis.glob("docs/*.md"))
-               + sorted(basis.glob("specs/*.md")))
-    return {p: p.read_text(encoding="utf-8", errors="replace") for p in dateien}
+def collect(base: Path) -> dict[Path, str]:
+    files = (sorted(base.glob("*.md")) + sorted(base.glob("docs/*.md"))
+               + sorted(base.glob("specs/*.md")))
+    return {p: p.read_text(encoding="utf-8", errors="replace") for p in files}
 
 
-def pruefe(basis: Path, max_lines: int) -> tuple[list[str], list[str]]:
-    docs = sammle(basis)
-    fehler: list[str] = []
-    hinweise: list[str] = []
+def check(base: Path, max_lines: int) -> tuple[list[str], list[str]]:
+    docs = collect(base)
+    errors: list[str] = []
+    hints: list[str] = []
     if not docs:
         return ["keine .md-Dateien gefunden"], []
 
-    anker = {p: {slug(h) for h in HEADING.findall(t)} for p, t in docs.items()}
-    punkte: dict[str, list[str]] = {}
+    anchors = {p: {slug(h) for h in HEADING.findall(t)} for p, t in docs.items()}
+    points: dict[str, list[str]] = {}
     for p, t in docs.items():
         for pid in POINT.findall(t):
-            punkte.setdefault(pid, []).append(p.name)
+            points.setdefault(pid, []).append(p.name)
 
-    for pid, orte in sorted(punkte.items()):
-        if len(orte) > 1:
-            fehler.append(f"Punkt {pid} ist {len(orte)}-mal vergeben: {', '.join(orte)}")
+    for pid, places in sorted(points.items()):
+        if len(places) > 1:
+            errors.append(f"Punkt {pid} ist {len(places)}-mal vergeben: {', '.join(places)}")
 
     for p, t in docs.items():
-        for ziel in LINK.findall(CODE_SPAN.sub("", t)):
-            if ziel.startswith(("http://", "https://", "mailto:")):
+        for target in LINK.findall(CODE_SPAN.sub("", t)):
+            if target.startswith(("http://", "https://", "mailto:")):
                 continue
-            pfad, _, frag = ziel.partition("#")
-            # relativ zur verlinkenden Datei, nicht zur Basis; %20 usw. dekodieren
-            zieldatei = p if not pfad else (p.parent / unquote(pfad)).resolve()
-            if pfad and not zieldatei.exists():
-                fehler.append(f"{p.name}: Link ins Leere -> {pfad}")
+            path, _, frag = target.partition("#")
+            # relative to the linking file, not the base; decode %20 etc.
+            target_file = p if not path else (p.parent / unquote(path)).resolve()
+            if path and not target_file.exists():
+                errors.append(f"{p.name}: Link ins Leere -> {path}")
                 continue
-            if frag and zieldatei in anker and slug(frag) not in anker[zieldatei]:
-                fehler.append(f"{p.name}: toter Anker -> {ziel}")
+            if frag and target_file in anchors and slug(frag) not in anchors[target_file]:
+                errors.append(f"{p.name}: toter Anker -> {target}")
 
-        # Kein Fehler, sondern ein Hinweis: in einer Befunddatei darf ein
-        # seither erledigter Punkt genannt sein -- sie haelt Geschichte fest.
-        # In einer Absichtsdatei ist derselbe Verweis dagegen Verfall.
+        # Not an error but a hint: a findings file may name a point done
+        # since -- it records history. In an intent file the same reference
+        # is decay.
         for ref in sorted(set(POINT_REF.findall(t))):
-            if ref not in punkte:
-                hinweise.append(f"{p.name}: Verweis auf {ref}, den es nicht (mehr) gibt")
+            if ref not in points:
+                hints.append(f"{p.name}: Verweis auf {ref}, den es nicht (mehr) gibt")
 
-        zeilen = t.count("\n") + 1
-        if zeilen > max_lines:
-            hinweise.append(f"{p.name}: {zeilen} Zeilen (Richtwert {max_lines})"
+        lines = t.count("\n") + 1
+        if lines > max_lines:
+            hints.append(f"{p.name}: {lines} Zeilen (Richtwert {max_lines})"
                             " -- kopiert es Befunde?")
 
-    # Besitztabelle: jede Datei sollte irgendwo benannt sein
-    genannt = " ".join(docs.values())
+    # ownership table: every file should be named somewhere
+    named = " ".join(docs.values())
     for p in docs:
         if p.name.lower() in ("readme.md",):
             continue
-        if p.name not in genannt.replace(p.read_text(encoding="utf-8", errors="replace"), "", 1):
-            hinweise.append(f"{p.name}: nirgends verlinkt -- fehlt der Besitzeintrag?")
+        if p.name not in named.replace(p.read_text(encoding="utf-8", errors="replace"), "", 1):
+            hints.append(f"{p.name}: nirgends verlinkt -- fehlt der Besitzeintrag?")
 
-    return fehler, hinweise
+    return errors, hints
 
 
 def selftest() -> int:
@@ -111,37 +111,37 @@ def selftest() -> int:
             "siehe B9\n",
             encoding="utf-8",
         )
-        fehler, hinweise = pruefe(b, 600)
-        text = " | ".join(fehler)
-        assert any("B1 ist 2-mal" in f for f in fehler), text
-        assert any("Link ins Leere" in f for f in fehler), text
-        assert any("toter Anker" in f for f in fehler), text
-        assert not any("Verweis auf B9" in f for f in fehler), text
-        assert not any("#titel" in f for f in fehler), text
-        assert not any("S.md" in f for f in fehler), text  # Links aus docs/ relativ aufgeloest
-        assert not any("-> x" in f for f in fehler), text  # Link im Code-Span ignoriert
-        assert any("Verweis auf B9" in h for h in hinweise), " | ".join(hinweise)
+        errors, hints = check(b, 600)
+        text = " | ".join(errors)
+        assert any("B1 ist 2-mal" in f for f in errors), text
+        assert any("Link ins Leere" in f for f in errors), text
+        assert any("toter Anker" in f for f in errors), text
+        assert not any("Verweis auf B9" in f for f in errors), text
+        assert not any("#titel" in f for f in errors), text
+        assert not any("S.md" in f for f in errors), text  # links from docs/ resolved relatively
+        assert not any("-> x" in f for f in errors), text  # link in code span ignored
+        assert any("Verweis auf B9" in h for h in hints), " | ".join(hints)
     print("selftest ok -- Fehler und Hinweise getrennt, gueltiger Anker nicht gemeldet")
     return 0
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("verzeichnis", nargs="?", default=".")
+    ap.add_argument("directory", nargs="?", default=".")
     ap.add_argument("--max-lines", type=int, default=600)
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
         return selftest()
 
-    basis = Path(a.verzeichnis).resolve()
-    fehler, hinweise = pruefe(basis, a.max_lines)
-    for f in fehler:
+    base = Path(a.directory).resolve()
+    errors, hints = check(base, a.max_lines)
+    for f in errors:
         print(f"FEHLER   {f}")
-    for h in hinweise:
+    for h in hints:
         print(f"hinweis  {h}")
-    print(f"--- {len(fehler)} Fehler, {len(hinweise)} Hinweise")
-    return 1 if fehler else 0
+    print(f"--- {len(errors)} Fehler, {len(hints)} Hinweise")
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":

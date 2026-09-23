@@ -53,12 +53,13 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - **Noch nicht:** Filter,
     Perspektive — siehe ROADMAP.
 - Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung),
-  `lib/gallery/` (mit `geraet.dart` über `photo_manager`), `lib/stapeln/` (Stapeln, auch
+  `lib/gallery/` (mit `device.dart` über `photo_manager`), `lib/stacking/` (Stapeln, auch
   vorgemerkt nach dem Backup), `lib/editor/` (Seite, Rezept, Presets, Laden und Speichern einer Kopie, Lineal,
   Zuschnittrahmen, Vorschau-Kanal),
-  `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/foto.dart`; nativ in
-  `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometrie.kt`, `Vorschau.kt` (Sitzung, Ansicht),
-  `MainActivity.kt` (Kanal `immich_editor/renderer`). Keine Google-Play-Dienste, kein Firebase.
+  `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/photo.dart`; nativ in
+  `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometry.kt`, `Preview.kt` (Sitzung, Ansicht),
+  `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
+  Englisch** (D-42); Anzeigetexte noch Deutsch. Keine Google-Play-Dienste, kein Firebase.
 - Tests: `test/` (18 — JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
   Prüfsummen-Abgleich, Start),
   `android/app/src/test/` (9 — Geometrie, JVM, auch in der CI) und `android/app/src/androidTest/`

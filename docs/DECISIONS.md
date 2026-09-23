@@ -7,6 +7,29 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-23 · D-42: Code auf Englisch
+
+Wunsch des Besitzers, damit die App international verständlich ist: alle Dateinamen,
+Bezeichner und Kommentare im Code auf Englisch — Dart, Kotlin (auch der AGSL-Shader), Tests,
+`tool/emu.sh` (`tap`, `shot`, `open_photo` …), `doccheck.py`. Die Doku bleibt bis zur Übersetzung
+Deutsch (D-15); ältere Einträge hier nennen die alten Namen.
+
+- Gespeichertes bleibt, damit bestehende Installationen (Pixel) nichts verlieren: die Schlüssel
+  in `flutter_secure_storage` samt Werten (`hdr`, `mobil`, `online`, `zusammen`, `stapeln` mit den
+  Feldern `kopie`, `original`, `alt`, `entfernen`), markiert mit `// persisted: do not rename`.
+- Umbenannt, weil nie ausgeliefert: `abgleichErklaert` → `checksumsExplained`, das Feld `rezept`
+  in `presets.json` → `recipe`. `pruefsummen.json` heißt `checksums.json`; die App benennt die
+  alte Datei beim ersten Lesen um.
+- Der Stapel-Typ heißt `PhotoStack` (nicht `Stack`, das ist Flutters Widget).
+- Die Anzeigesprache folgt als Nächstes dem Gerät, Deutsch und Englisch, umstellbar (ROADMAP).
+
+**Geprüft** 23.09.2026: `flutter analyze` ohne Befund, 18 Flutter- und 9 JVM-Tests grün; im
+Emulator Galerie, Editor (Shader rendert, HDR-Knopf nach dem Original), Speichern als Kopie mit
+Rezept und `hdrgm`, `checksums.json` aus der alten Datei umgezogen. Die Instrumented Tests
+(`RendererTest`) sind übersetzt und kompilieren, liefen aber nicht (sie deinstallieren die App).
+
+---
+
 ## 2026-09-23 · D-41: Der Nullpunkt der Lineale ist zu sehen
 
 Wunsch des Besitzers: Die Null rastet mit kurzem Haptik-Feedback ein, war aber kaum zu sehen

@@ -167,7 +167,7 @@ einmal** — gehört in den ersten Wurf.
 | `gallery/` | Gerätefotos + Server-Assets, über die Prüfsumme zusammengeführt | `photo_manager` |
 | `editor/` | Rezept-Modell und Bedienung (Flutter); Renderer für Vorschau und Export nativ in Android — AGSL-Shader, Bildfläche als native Ansicht im HDR-Fenster (D-17) | keine |
 | `export/` | volle Auflösung rendern, JPEG kodieren, EXIF übernehmen, XMP und Gain-Map einfügen | Systemkodierer über einen Plattformkanal (D-13) |
-| `stapeln/` | lokal entstandene Kopien nach dem Backup dem Original zuordnen | — |
+| `stacking/` | lokal entstandene Kopien nach dem Backup dem Original zuordnen | — |
 
 **Die Endpunkte** (geprüft gegen die OpenAPI-Spezifikation 3.2.2): `POST /auth/login`,
 `GET`, `PUT` und `DELETE /stacks/{id}` (Mitglieder, Hauptfoto, auflösen — im Betrachter), `GET /map/reverse-geocode` (Ort eines

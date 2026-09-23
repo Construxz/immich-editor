@@ -3,81 +3,81 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-import '../editor/editor_seite.dart';
-import '../foto.dart';
+import '../editor/editor_page.dart';
+import '../photo.dart';
 import '../server/immich.dart';
-import '../thema.dart';
-import 'geraet.dart';
+import '../theme.dart';
+import 'device.dart';
 
-/// Ein Foto groß: wischen zum nächsten, zoomen, im Stapel wechseln, nach oben wischen für die
-/// Infos; „Bearbeiten" öffnet den Editor, danach steht hier das Ergebnis (ROADMAP, Betrachter).
-/// Teilen, Alben, Papierkorb bleiben bei der Immich-App.
-class BetrachterSeite extends StatefulWidget {
-  const BetrachterSeite({
+/// One photo large: swipe to the next, zoom, switch within the stack, swipe up for the info;
+/// "Bearbeiten" opens the editor, afterwards the result shows here (ROADMAP, viewer).
+/// Sharing, albums, trash stay with the Immich app.
+class ViewerPage extends StatefulWidget {
+  const ViewerPage({
     super.key,
     required this.immich,
-    required this.anzahl,
-    required this.eintragBei,
+    required this.count,
+    required this.entryAt,
     required this.start,
   });
 
   final Immich immich;
-  final int anzahl;
-  final Future<Eintrag> Function(int) eintragBei;
+  final int count;
+  final Future<Entry> Function(int) entryAt;
   final int start;
 
   @override
-  State<BetrachterSeite> createState() => _BetrachterSeiteState();
+  State<ViewerPage> createState() => _ViewerPageState();
 }
 
-class _BetrachterSeiteState extends State<BetrachterSeite> {
-  late final _seiten = PageController(initialPage: widget.start);
-  final _eintraege = <int, Future<Eintrag>>{};
-  var _gezoomt = false;
+class _ViewerPageState extends State<ViewerPage> {
+  late final _pages = PageController(initialPage: widget.start);
+  final _entries = <int, Future<Entry>>{};
+  var _zoomed = false;
 
   @override
   void dispose() {
-    _seiten.dispose();
+    _pages.dispose();
     super.dispose();
   }
 
-  Future<void> _bearbeiten(int i, Eintrag e) async {
-    final ergebnis = await Navigator.of(context).push<Eintrag>(
+  Future<void> _edit(int i, Entry e) async {
+    final result = await Navigator.of(context).push<Entry>(
       MaterialPageRoute(
         builder: (_) =>
-            EditorSeite(immich: widget.immich, id: e.id, geraet: e.geraet),
+            EditorPage(immich: widget.immich, id: e.id, onDevice: e.onDevice),
       ),
     );
-    // Zurück zum Ergebnis: die neue Kopie an dieser Stelle.
-    if (ergebnis != null && mounted) {
+    // Back to the result: the new copy at this position.
+    if (result != null && mounted) {
       setState(() {
-        _eintraege[i] = Future.value(ergebnis);
+        _entries[i] = Future.value(result);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) => Theme(
-    data: themaDunkel,
+    data: darkTheme,
     child: Scaffold(
       backgroundColor: Colors.black,
       body: PageView.builder(
-        controller: _seiten,
-        physics: _gezoomt ? const NeverScrollableScrollPhysics() : null,
-        itemCount: widget.anzahl,
+        controller: _pages,
+        physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+        itemCount: widget.count,
         itemBuilder: (context, i) => FutureBuilder(
-          future: _eintraege[i] ??= widget.eintragBei(i),
+          future: _entries[i] ??= widget.entryAt(i),
           builder: (context, s) {
             final e = s.data;
             if (e == null) return const SizedBox();
-            return _Seite(
+            return _Page(
               key: ValueKey(e),
               immich: widget.immich,
-              eintrag: e,
+              entry: e,
               onZoom: (z) {
-                if (z != _gezoomt) setState(() => _gezoomt = z);
+                if (z != _zoomed) setState(() => _zoomed = z);
               },
-              onBearbeiten: (gezeigt) => _bearbeiten(i, gezeigt),
+              onEdit: (shown) => _edit(i, shown),
             );
           },
         ),
@@ -86,45 +86,49 @@ class _BetrachterSeiteState extends State<BetrachterSeite> {
   );
 }
 
-/// Eine Seite: oben Datum und Version, das Foto, darunter die Miniaturen des Stapels, unten die
-/// Knöpfe — wie Google Fotos bei Langzeitbelichtungen (D-34).
-class _Seite extends StatefulWidget {
-  const _Seite({
+/// One page: date and version on top, the photo, below it the stack's thumbnails, the buttons
+/// at the bottom — like Google Photos for long exposures (D-34).
+class _Page extends StatefulWidget {
+  const _Page({
     super.key,
     required this.immich,
-    required this.eintrag,
+    required this.entry,
     required this.onZoom,
-    required this.onBearbeiten,
+    required this.onEdit,
   });
 
   final Immich immich;
-  final Eintrag eintrag;
+  final Entry entry;
   final ValueChanged<bool> onZoom;
-  final ValueChanged<Eintrag> onBearbeiten;
+  final ValueChanged<Entry> onEdit;
 
   @override
-  State<_Seite> createState() => _SeiteState();
+  State<_Page> createState() => _PageState();
 }
 
-class _SeiteState extends State<_Seite> {
+class _PageState extends State<_Page> {
   final _zoom = TransformationController();
-  late Future<Stapel> _stapel = _laden();
-  late String _gezeigt = widget.eintrag.id;
-  AssetEntity? _geraetFoto;
-  Future<Uint8List?>? _geraetBild;
+  late Future<PhotoStack> _stack = _load();
+  late String _shown = widget.entry.id;
+  AssetEntity? _deviceAsset;
+  Future<Uint8List?>? _deviceImage;
 
-  Future<Stapel> _laden() => widget.eintrag.geraet
-      ? Future.value((id: null, vorn: widget.eintrag.id, fotos: const <Foto>[]))
-      : widget.immich.stapelMit(
-          _gezeigt,
-        ); // nach „Rest löschen" vom behaltenen aus
+  Future<PhotoStack> _load() => widget.entry.onDevice
+      ? Future.value((
+          id: null,
+          primary: widget.entry.id,
+          photos: const <Photo>[],
+        ))
+      : widget.immich.stackOf(
+          _shown,
+        ); // after "Rest löschen" starting from the kept one
 
   @override
   void initState() {
     super.initState();
-    if (widget.eintrag.geraet) {
-      _geraetBild = AssetEntity.fromId(widget.eintrag.id).then((a) {
-        if (mounted) setState(() => _geraetFoto = a);
+    if (widget.entry.onDevice) {
+      _deviceImage = AssetEntity.fromId(widget.entry.id).then((a) {
+        if (mounted) setState(() => _deviceAsset = a);
         return a?.thumbnailDataWithSize(const ThumbnailSize.square(1440));
       });
     }
@@ -139,24 +143,24 @@ class _SeiteState extends State<_Seite> {
     super.dispose();
   }
 
-  Eintrag get _eintrag => (id: _gezeigt, geraet: widget.eintrag.geraet);
+  Entry get _entry => (id: _shown, onDevice: widget.entry.onDevice);
 
   void _info() => showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
     builder: (_) => _Info(
-      _eintrag.geraet
-          ? geraetInfo(_gezeigt, widget.immich.ortVon)
-          : widget.immich.info(_gezeigt),
+      _entry.onDevice
+          ? deviceInfo(_shown, widget.immich.placeAt)
+          : widget.immich.info(_shown),
     ),
   );
 
-  Future<bool> _sicher(String titel, String text, String ja) async =>
+  Future<bool> _confirm(String title, String text, String yes) async =>
       await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
-          title: Text(titel),
+          title: Text(title),
           content: Text(text),
           actions: [
             TextButton(
@@ -165,24 +169,24 @@ class _SeiteState extends State<_Seite> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(c, true),
-              child: Text(ja),
+              child: Text(yes),
             ),
           ],
         ),
       ) ==
       true;
 
-  Future<void> _aktion(Stapel s, String was, String name) async {
-    final meldung = ScaffoldMessenger.of(context);
+  Future<void> _act(PhotoStack s, String action, String name) async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
-      if (was == 'vorn') {
-        await widget.immich.vornSetzen(s.id!, _gezeigt);
+      if (action == 'primary') {
+        await widget.immich.setPrimary(s.id!, _shown);
       } else {
         final rest = [
-          for (final f in s.fotos)
-            if (f.id != _gezeigt) f.id,
+          for (final f in s.photos)
+            if (f.id != _shown) f.id,
         ];
-        if (!await _sicher(
+        if (!await _confirm(
           '$name behalten?',
           'Die anderen ${rest.length} Fotos des Stapels gehen in Immichs '
               'Papierkorb — dort lassen sie sich wiederherstellen.',
@@ -190,58 +194,58 @@ class _SeiteState extends State<_Seite> {
         )) {
           return;
         }
-        await widget.immich.papierkorb(rest);
-        await widget.immich.stapelAufloesen(s.id!);
+        await widget.immich.trash(rest);
+        await widget.immich.deleteStack(s.id!);
       }
       setState(() {
-        _stapel = _laden();
+        _stack = _load();
       });
     } catch (e) {
-      meldung.showSnackBar(SnackBar(content: Text('$e')));
+      messenger.showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final bild = widget.eintrag.geraet
+    final image = widget.entry.onDevice
         ? FutureBuilder(
-            future: _geraetBild,
+            future: _deviceImage,
             builder: (context, s) => s.data == null
                 ? const Center(child: CircularProgressIndicator())
                 : Image.memory(s.data!, fit: BoxFit.contain),
           )
         : Image.network(
-            widget.immich.vorschauUri(_gezeigt).toString(),
-            key: ValueKey(_gezeigt),
-            headers: widget.immich.kopf,
+            widget.immich.previewUri(_shown).toString(),
+            key: ValueKey(_shown),
+            headers: widget.immich.headers,
             fit: BoxFit.contain,
             gaplessPlayback: true,
           );
     return FutureBuilder(
-      future: _stapel,
+      future: _stack,
       builder: (context, s) {
-        final stapel = s.data;
-        final fotos = stapel == null
-            ? const <(Foto, String)>[]
-            : _versionen(stapel);
-        final gezeigt = fotos.where((f) => f.$1.id == _gezeigt).firstOrNull;
-        final zeit = widget.eintrag.geraet
-            ? _geraetFoto?.createDateTime
-            : gezeigt?.$1.ortszeit;
+        final stack = s.data;
+        final photos = stack == null
+            ? const <(Photo, String)>[]
+            : _versions(stack);
+        final shown = photos.where((f) => f.$1.id == _shown).firstOrNull;
+        final time = widget.entry.onDevice
+            ? _deviceAsset?.createDateTime
+            : shown?.$1.localTime;
         return SafeArea(
           child: Column(
             children: [
-              // Kopf: zurück, Datum und Uhrzeit, darunter die Version
+              // Header: back, date and time, below it the version
               Row(
                 children: [
                   const BackButton(),
                   Expanded(
                     child: Column(
                       children: [
-                        if (zeit != null) ...[
-                          Text(_tag(zeit), style: text.titleMedium),
-                          Text(_uhrzeit(zeit), style: text.bodySmall),
+                        if (time != null) ...[
+                          Text(_day(time), style: text.titleMedium),
+                          Text(_clock(time), style: text.bodySmall),
                         ],
                       ],
                     ),
@@ -249,17 +253,17 @@ class _SeiteState extends State<_Seite> {
                   const SizedBox(width: 48),
                 ],
               ),
-              if (fotos.length > 1 && gezeigt != null)
+              if (photos.length > 1 && shown != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Chip(
                     avatar: Icon(
-                      gezeigt.$1.id == stapel!.vorn
+                      shown.$1.id == stack!.primary
                           ? Icons.star
                           : Icons.filter_none,
                       size: 18,
                     ),
-                    label: Text(gezeigt.$2),
+                    label: Text(shown.$2),
                   ),
                 ),
               Expanded(
@@ -267,18 +271,18 @@ class _SeiteState extends State<_Seite> {
                   transformationController: _zoom,
                   maxScale: 8,
                   panEnabled: _zoom.value.getMaxScaleOnAxis() > 1.01,
-                  // Nach oben wischen zeigt die Infos, wie bei Google Fotos. Der Zoom fängt
-                  // die Geste ab, deshalb hier statt in einem GestureDetector.
+                  // Swiping up shows the info, as in Google Photos. The zoom catches the
+                  // gesture, hence here instead of in a GestureDetector.
                   onInteractionEnd: (d) {
                     if (_zoom.value.getMaxScaleOnAxis() <= 1.01 &&
                         d.velocity.pixelsPerSecond.dy < -300) {
                       _info();
                     }
                   },
-                  child: SizedBox.expand(child: bild),
+                  child: SizedBox.expand(child: image),
                 ),
               ),
-              if (fotos.length > 1) _miniaturen(stapel!, fotos),
+              if (photos.length > 1) _thumbnails(stack!, photos),
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 4, 16, 8),
                 child: Row(
@@ -292,7 +296,7 @@ class _SeiteState extends State<_Seite> {
                     FilledButton.icon(
                       icon: const Icon(Icons.tune),
                       label: const Text('Bearbeiten'),
-                      onPressed: () => widget.onBearbeiten(_eintrag),
+                      onPressed: () => widget.onEdit(_entry),
                     ),
                   ],
                 ),
@@ -304,8 +308,11 @@ class _SeiteState extends State<_Seite> {
     );
   }
 
-  /// Die Miniaturen des Stapels; die gewählte trägt ⋮ mit den Stapel-Aktionen.
-  Widget _miniaturen(Stapel stapel, List<(Foto, String)> fotos) => SizedBox(
+  /// The stack's thumbnails; the selected one carries ⋮ with the stack actions.
+  Widget _thumbnails(
+    PhotoStack stack,
+    List<(Photo, String)> photos,
+  ) => SizedBox(
     height: 76,
     child: Center(
       child: ListView(
@@ -313,22 +320,22 @@ class _SeiteState extends State<_Seite> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         children: [
-          for (final (f, name) in fotos)
+          for (final (f, name) in photos)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Semantics(
                 label: name,
-                selected: f.id == _gezeigt,
+                selected: f.id == _shown,
                 button: true,
                 child: GestureDetector(
-                  onTap: () => setState(() => _gezeigt = f.id),
+                  onTap: () => setState(() => _shown = f.id),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
-                    width: f.id == _gezeigt ? 96 : 64,
+                    width: f.id == _shown ? 96 : 64,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: f.id == _gezeigt
+                        color: f.id == _shown
                             ? Colors.white
                             : Colors.transparent,
                         width: 2,
@@ -339,18 +346,18 @@ class _SeiteState extends State<_Seite> {
                       fit: StackFit.expand,
                       children: [
                         Image.network(
-                          widget.immich.miniatur(f.id).toString(),
-                          headers: widget.immich.kopf,
+                          widget.immich.thumbnailUri(f.id).toString(),
+                          headers: widget.immich.headers,
                           fit: BoxFit.cover,
                           excludeFromSemantics: true,
                         ),
-                        if (f.id == stapel.vorn)
+                        if (f.id == stack.primary)
                           const Positioned(
                             left: 4,
                             top: 4,
                             child: Icon(Icons.star, size: 16),
                           ),
-                        if (f.id == _gezeigt)
+                        if (f.id == _shown)
                           Positioned(
                             right: 0,
                             top: 0,
@@ -358,15 +365,15 @@ class _SeiteState extends State<_Seite> {
                             child: PopupMenuButton<String>(
                               tooltip: 'Stapel',
                               icon: const Icon(Icons.more_vert, size: 20),
-                              onSelected: (w) => _aktion(stapel, w, name),
+                              onSelected: (w) => _act(stack, w, name),
                               itemBuilder: (_) => [
-                                if (f.id != stapel.vorn)
+                                if (f.id != stack.primary)
                                   const PopupMenuItem(
-                                    value: 'vorn',
+                                    value: 'primary',
                                     child: Text('Als Hauptfoto festlegen'),
                                   ),
                                 const PopupMenuItem(
-                                  value: 'behalten',
+                                  value: 'keep',
                                   child: Text(
                                     'Dieses Foto behalten, den Rest löschen',
                                   ),
@@ -386,47 +393,47 @@ class _SeiteState extends State<_Seite> {
   );
 }
 
-/// Der Stapel in fester Reihenfolge: das Original, dann die Kopien in der Reihenfolge ihres
-/// Entstehens als V1, V2 … Kopien dieser App erkennt man am Namen (`.edit`, s. Speicherweg).
-// ponytail: am Namen erkannt; das Rezept-XMP wäre sicherer, kostet aber je Mitglied einen Abruf.
-List<(Foto, String)> _versionen(Stapel stapel) {
-  final originale = [
-    for (final f in stapel.fotos)
-      if (!f.dateiname.contains('.edit')) f,
+/// The stack in fixed order: the original, then the copies in order of creation as V1, V2 …
+/// Copies from this app are recognized by name (`.edit`, see spec, *Speicherweg*).
+// ponytail: recognized by name; the recipe XMP would be safer but costs one request per member.
+List<(Photo, String)> _versions(PhotoStack stack) {
+  final originals = [
+    for (final f in stack.photos)
+      if (!f.fileName.contains('.edit')) f,
   ];
-  final kopien = [
-    for (final f in stapel.fotos)
-      if (f.dateiname.contains('.edit')) f,
-  ]..sort((a, b) => (a.angelegt ?? '').compareTo(b.angelegt ?? ''));
+  final copies = [
+    for (final f in stack.photos)
+      if (f.fileName.contains('.edit')) f,
+  ]..sort((a, b) => (a.createdAt ?? '').compareTo(b.createdAt ?? ''));
   return [
-    for (final f in originale) (f, 'Original'),
-    for (final (i, f) in kopien.indexed) (f, 'V${i + 1}'),
+    for (final f in originals) (f, 'Original'),
+    for (final (i, f) in copies.indexed) (f, 'V${i + 1}'),
   ];
 }
 
-const _wochentage = ['Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.', 'So.'];
-const _monate = [
+const _weekdays = ['Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.', 'So.'];
+const _months = [
   'Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', //
   'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.',
 ];
 
-String _tag(DateTime d) => '${d.day}. ${_monate[d.month - 1]} ${d.year}';
+String _day(DateTime d) => '${d.day}. ${_months[d.month - 1]} ${d.year}';
 
-String _uhrzeit(DateTime d) =>
+String _clock(DateTime d) =>
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
-String _datum(DateTime d) =>
-    '${_wochentage[d.weekday - 1]} ${_tag(d)} · ${_uhrzeit(d)}';
+String _date(DateTime d) =>
+    '${_weekdays[d.weekday - 1]} ${_day(d)} · ${_clock(d)}';
 
-String _groesse(int bytes) => bytes >= 1 << 20
+String _size(int bytes) => bytes >= 1 << 20
     ? '${(bytes / (1 << 20)).toStringAsFixed(1).replaceAll('.', ',')} MB'
     : '${(bytes / 1024).round()} KB';
 
-/// Die Infos zum Foto, wie Google Fotos sie beim Hochwischen zeigt — ohne Karte.
+/// The photo's info, as Google Photos shows it when swiping up — without a map.
 class _Info extends StatelessWidget {
   const _Info(this.info);
 
-  final Future<FotoInfo> info;
+  final Future<PhotoInfo> info;
 
   @override
   Widget build(BuildContext context) => FutureBuilder(
@@ -445,42 +452,39 @@ class _Info extends StatelessWidget {
           child: Center(child: CircularProgressIndicator()),
         );
       }
-      final mp = i.breite == null || i.hoehe == null
+      final mp = i.width == null || i.height == null
           ? null
-          : '${(i.breite! * i.hoehe! / 1e6).toStringAsFixed(1).replaceAll('.', ',')} MP'
-                ' · ${i.breite} × ${i.hoehe}';
-      final bild = [?mp, if (i.bytes != null) _groesse(i.bytes!)].join(' · ');
+          : '${(i.width! * i.height! / 1e6).toStringAsFixed(1).replaceAll('.', ',')} MP'
+                ' · ${i.width} × ${i.height}';
+      final details = [?mp, if (i.bytes != null) _size(i.bytes!)].join(' · ');
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (i.aufgenommen != null)
+              if (i.takenAt != null)
                 ListTile(
                   leading: const Icon(Icons.calendar_today),
-                  title: Text(_datum(i.aufgenommen!)),
+                  title: Text(_date(i.takenAt!)),
                 ),
               ListTile(
                 leading: const Icon(Icons.image_outlined),
                 title: Text(i.name),
-                subtitle: bild.isEmpty ? null : Text(bild),
+                subtitle: details.isEmpty ? null : Text(details),
               ),
-              if (i.kamera != null || i.belichtung != null)
+              if (i.camera != null || i.exposure != null)
                 ListTile(
                   leading: const Icon(Icons.camera_outlined),
-                  title: Text(i.kamera ?? i.objektiv ?? ''),
+                  title: Text(i.camera ?? i.lens ?? ''),
                   subtitle: Text(
-                    [
-                      if (i.kamera != null) ?i.objektiv,
-                      ?i.belichtung,
-                    ].join('\n'),
+                    [if (i.camera != null) ?i.lens, ?i.exposure].join('\n'),
                   ),
                 ),
-              if (i.ort != null)
+              if (i.place != null)
                 ListTile(
                   leading: const Icon(Icons.place_outlined),
-                  title: Text(i.ort!),
+                  title: Text(i.place!),
                 ),
             ],
           ),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'gallery/galerie_seite.dart';
+import 'gallery/gallery_page.dart';
 import 'server/immich.dart';
-import 'thema.dart';
+import 'theme.dart';
 
-const speicher = FlutterSecureStorage();
+const storage = FlutterSecureStorage();
 
 void main() {
   runApp(const MainApp());
@@ -18,14 +18,14 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Editor for Immich',
-      theme: themaHell,
-      darkTheme: themaDunkel,
+      theme: lightTheme,
+      darkTheme: darkTheme,
       home: const Start(),
     );
   }
 }
 
-/// Zeigt die Anmeldung oder, mit gespeicherter Sitzung, die Galerie.
+/// Shows the login or, with a stored session, the gallery.
 class Start extends StatefulWidget {
   const Start({super.key});
 
@@ -35,64 +35,65 @@ class Start extends StatefulWidget {
 
 class _StartState extends State<Start> {
   Immich? _immich;
-  var _geladen = false;
+  var _loaded = false;
 
   @override
   void initState() {
     super.initState();
     () async {
-      final server = await speicher.read(key: 'server');
-      final token = await speicher.read(key: 'token');
+      // persisted: do not rename
+      final server = await storage.read(key: 'server');
+      final token = await storage.read(key: 'token');
       setState(() {
         if (server != null && token != null) _immich = Immich(server, token);
-        _geladen = true;
+        _loaded = true;
       });
     }();
   }
 
-  Future<void> _abmelden() async {
-    await speicher.deleteAll();
+  Future<void> _logout() async {
+    await storage.deleteAll();
     setState(() => _immich = null);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_geladen) return const Scaffold();
+    if (!_loaded) return const Scaffold();
     final immich = _immich;
     if (immich == null) {
-      return AnmeldeSeite(onAngemeldet: (i) => setState(() => _immich = i));
+      return LoginPage(onLoggedIn: (i) => setState(() => _immich = i));
     }
-    return GalerieSeite(immich: immich, onAbmelden: _abmelden);
+    return GalleryPage(immich: immich, onLogout: _logout);
   }
 }
 
-class AnmeldeSeite extends StatefulWidget {
-  const AnmeldeSeite({super.key, required this.onAngemeldet});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key, required this.onLoggedIn});
 
-  final ValueChanged<Immich> onAngemeldet;
+  final ValueChanged<Immich> onLoggedIn;
 
   @override
-  State<AnmeldeSeite> createState() => _AnmeldeSeiteState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _AnmeldeSeiteState extends State<AnmeldeSeite> {
+class _LoginPageState extends State<LoginPage> {
   final _server = TextEditingController();
   final _email = TextEditingController();
-  final _passwort = TextEditingController();
-  var _laeuft = false;
+  final _password = TextEditingController();
+  var _busy = false;
 
-  Future<void> _anmelden() async {
-    setState(() => _laeuft = true);
-    final meldung = ScaffoldMessenger.of(context);
+  Future<void> _login() async {
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
     try {
-      final immich = await Immich.anmelden(
+      final immich = await Immich.login(
         _server.text.trim(),
         _email.text.trim(),
-        _passwort.text,
+        _password.text,
       );
-      final version = await immich.hauptversion();
-      if (!Immich.bekannteHauptversionen.contains(version)) {
-        meldung.showSnackBar(
+      final version = await immich.majorVersion();
+      if (!Immich.knownMajorVersions.contains(version)) {
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               'Immich $version.x ist nicht geprüft — '
@@ -101,14 +102,14 @@ class _AnmeldeSeiteState extends State<AnmeldeSeite> {
           ),
         );
       }
-      await speicher.write(key: 'server', value: immich.basis);
-      await speicher.write(key: 'token', value: immich.token);
-      widget.onAngemeldet(immich);
+      await storage.write(key: 'server', value: immich.baseUrl);
+      await storage.write(key: 'token', value: immich.token);
+      widget.onLoggedIn(immich);
     } catch (e) {
-      meldung.showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text('Anmeldung fehlgeschlagen: $e')),
       );
-      setState(() => _laeuft = false);
+      setState(() => _busy = false);
     }
   }
 
@@ -135,14 +136,14 @@ class _AnmeldeSeiteState extends State<AnmeldeSeite> {
             autocorrect: false,
           ),
           TextField(
-            controller: _passwort,
+            controller: _password,
             decoration: const InputDecoration(labelText: 'Passwort'),
             obscureText: true,
-            onSubmitted: (_) => _anmelden(),
+            onSubmitted: (_) => _login(),
           ),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: _laeuft ? null : _anmelden,
+            onPressed: _busy ? null : _login,
             child: const Text('Anmelden'),
           ),
         ],

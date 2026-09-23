@@ -12,6 +12,9 @@ Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map,
 Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über Gerät und Server,
 Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets (D-17 bis D-40). Offen, in dieser
 Reihenfolge:
+- ⬜ **Anzeigesprache:** Deutsch und Englisch, nach der Sprache des Geräts, in den Einstellungen
+  umstellbar (Wunsch des Besitzers, 23.09.2026). *Abnahme:* Gerät auf Englisch → App englisch;
+  Einstellung „Deutsch" → deutsch, ohne Neustart.
 - ⬜ **Kopie schneller öffnen:** Eine ältere Kopie aus dem Betrachter zu öffnen dauert im Emulator
   etwa 8 s — nacheinander Details und Anfang der Kopie, Original per Prüfsumme suchen, dessen
   Details und Vorschaubild. Anfragen bündeln oder parallel stellen. *Abnahme:* Editor mit Bild in

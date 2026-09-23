@@ -2,30 +2,30 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-import '../editor/rezept.dart';
-import '../editor/vorschau.dart';
+import '../editor/recipe.dart';
+import '../editor/preview.dart';
 import 'jpeg.dart';
 
-/// Rendert [original] in voller Auflösung mit [rezept] (nativer Renderer, D-17) und gibt ein
-/// JPEG zurück, das EXIF des [original]s und das Rezept als XMP trägt — mit [hdr] als Ultra HDR.
-Future<Uint8List> exportieren(
-  Rezept rezept,
+/// Renders [original] at full resolution with [recipe] (native renderer, D-17) and returns a
+/// JPEG carrying the [original]'s EXIF and the recipe as XMP — with [hdr] as Ultra HDR.
+Future<Uint8List> exportJpeg(
+  Recipe recipe,
   Uint8List original,
   String originalSha1, {
   required bool hdr,
 }) async {
-  final kodiert = await rendererKanal.invokeMethod<Uint8List>('exportieren', {
+  final encoded = await rendererChannel.invokeMethod<Uint8List>('export', {
     'original': original,
-    'rezept': jsonEncode(rezept.toJson()),
+    'recipe': jsonEncode(recipe.toJson()),
     'quality': 95,
     'hdr': hdr,
   });
-  final exif = exifAus(original);
-  if (exif != null) orientierungNormal(exif);
-  return zusammensetzen(
-    kodiert!,
+  final exif = exifFrom(original);
+  if (exif != null) normalizeOrientation(exif);
+  return assemble(
+    encoded!,
     exif: exif,
-    rezept: rezept.toJson(),
+    recipe: recipe.toJson(),
     originalSha1: originalSha1,
   );
 }
