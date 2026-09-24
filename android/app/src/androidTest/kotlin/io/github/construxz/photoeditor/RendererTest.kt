@@ -119,6 +119,21 @@ class RendererTest {
         assertTrue("$before → $after", after > before)
     }
 
+    @Test fun popRaisesFineDetailFlatStays() {
+        // Left half a fine checker around 128, right half flat 128.
+        val src = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888).apply {
+            for (y in 0 until 64) for (x in 0 until 64) {
+                val v = if (x < 32 && (x / 2 + y / 2) % 2 == 0) 148 else if (x < 32) 108 else 128
+                setPixel(x, y, Color.rgb(v, v, v))
+            }
+        }
+        val b = Renderer.render(src, Geometry(), JSONObject("""{"pop":1}""")).copy(Bitmap.Config.ARGB_8888, false)
+        val before = abs(lightness(src, 10, 10) - lightness(src, 12, 10))
+        val after = abs(lightness(b, 10, 10) - lightness(b, 12, 10))
+        assertTrue("$before → $after", after > before + 10)
+        assertEquals(128.0, lightness(b, 52, 32), 2.0)
+    }
+
     /** Gray patches of the test chart as Google Photos' copies show them at ±1 (D-73). */
     @Test fun matchesGooglePhotosOnGray() {
         val cases = listOf(

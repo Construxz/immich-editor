@@ -64,6 +64,7 @@ void main() {
       'whitePoint': 0.2,
       'warmth': 0.0,
       'tint': 0.0,
+      'saturation': 0.0,
     });
     expect(o.angle, 4);
   });

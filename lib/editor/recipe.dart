@@ -20,6 +20,7 @@ const tools = <Tool>[
   (key: 'warmth', icon: Icons.thermostat),
   (key: 'tint', icon: Icons.colorize),
   (key: 'blueTones', icon: Icons.water),
+  (key: 'pop', icon: Icons.flare),
   (key: 'vignette', icon: Icons.vignette),
   (key: 'sharpness', icon: Icons.details),
 ];
@@ -36,6 +37,7 @@ String toolName(AppLocalizations l, String key) => switch (key) {
   'warmth' => l.toolWarmth,
   'tint' => l.toolTint,
   'blueTones' => l.toolBlueTones,
+  'pop' => l.toolPop,
   'vignette' => l.toolVignette,
   'sharpness' => l.toolSharpness,
   _ => key,
@@ -186,13 +188,14 @@ class Recipe {
   };
 }
 
-/// The adjustments "Optimieren" may set (D-70).
+/// The adjustments "Optimieren" may set (D-70, D-74).
 const optimizedKeys = [
   'blackPoint',
   'whitePoint',
   'brightness',
   'warmth',
   'tint',
+  'saturation',
 ];
 
 /// [recipe] with the [values] of "Optimieren": its adjustments start from 0, not on top;

@@ -31,6 +31,7 @@ object Renderer {
         "blackPoint" to "blackPoint", "highlights" to "highlights", "shadows" to "shadows",
         "saturation" to "saturation", "warmth" to "warmth", "tint" to "tint",
         "blueTones" to "blueTones", "vignette" to "vignette", "sharpness" to "sharpness",
+        "pop" to "pop",
     )
 
     // Color values arrive in the target's color space (sRGB, not linear). All adjustments at 0 =
@@ -41,7 +42,8 @@ object Renderer {
         uniform shader image;
         uniform float2 size; // output in pixels
         uniform float brightness, contrast, whitePoint, blackPoint, highlights, shadows,
-                      saturation, warmth, tint, blueTones, vignette, sharpness;
+                      saturation, warmth, tint, blueTones, vignette, sharpness, pop;
+        uniform shader guide;   // Pop: guided-filter a, b in red and green (Pop.guide)
         uniform shader lut;     // filter as a strip (Lut.bitmap)
         uniform float lutSize;  // grid points per axis
         uniform float lutStrength; // 0 = no filter
@@ -88,6 +90,13 @@ object Renderer {
             }
             c = saturate(c);
 
+            // Pop: the detail above an edge-preserving blur (a·L + b) raised, plus a little colour.
+            if (pop != 0.0) {
+                float y = luma(c);
+                float2 ab = guide.eval(p).rg;
+                c = saturate(c + pop * 1.31 * (y - (ab.x * y + ab.y)));
+            }
+
             // Warmth and tint: a shift strongest in the midtones, black and white stay.
             float L = luma(c);
             float w = pow(L, 1.55) * pow(1.0 - L, 1.19) / 0.1533;
@@ -104,9 +113,9 @@ object Renderer {
 
             // Brightness: exposure in linear light, ±2.4 / 2.8 stops; brighter rolls off toward white.
             L = luma(c);
-            float y = toLinear(float3(L)).x, e = exp2(brightness * (brightness < 0.0 ? 2.419 : 2.796));
-            y = brightness < 0.0 ? y * e : y * e / (1.0 + y * (e - 1.0));
-            c = relight(c, L, toSrgb(float3(y)).x, q(brightness, 0.681, 1.202));
+            float yl = toLinear(float3(L)).x, e = exp2(brightness * (brightness < 0.0 ? 2.419 : 2.796));
+            yl = brightness < 0.0 ? yl * e : yl * e / (1.0 + yl * (e - 1.0));
+            c = relight(c, L, toSrgb(float3(yl)).x, q(brightness, 0.681, 1.202));
 
             // Shadows and highlights: a bump in the dark or the bright tones, added to all channels.
             L = luma(c);
@@ -123,7 +132,8 @@ object Renderer {
             // Saturation: less toward the gray of the same luminance (linear light); more lifts
             // the dull colours more than the saturated ones.
             float gray = toSrgb(float3(luma(toLinear(c)))).x;
-            float k = 1.0 + saturation * (saturation < 0.0 ? 1.0 : 1.27 * (1.0 - (max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b)))));
+            float s = clamp(saturation + 0.07 * pop, -1.0, 1.0);
+            float k = 1.0 + s * (s < 0.0 ? 1.0 : 1.27 * (1.0 - (max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b)))));
             c = saturate(gray + (c - gray) * k);
 
             // Blue tones: cyan to azure (184° ± 58°), saturation at the same maximum.
@@ -196,6 +206,12 @@ object Renderer {
             })
             setFloatUniform("lutSize", lutSize.toFloat())
             setFloatUniform("lutStrength", if (strip == null) 0f else filter!!.optDouble("strength", 1.0).toFloat().coerceIn(0f, 1f))
+            // Pop's coefficients on a small copy, laid over the image with the same geometry.
+            val g = if (recipe.optDouble("pop", 0.0) != 0.0) Pop.guide(source) else NO_LUT
+            setInputShader("guide", BitmapShader(g, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+                filterMode = BitmapShader.FILTER_MODE_LINEAR
+                setLocalMatrix(matrix(geo, source).apply { preScale(source.width / g.width.toFloat(), source.height / g.height.toFloat()) })
+            })
         }
         return Paint().apply { this.shader = shader }
     }

@@ -10,7 +10,7 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** 🔶
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über Gerät und Server,
-Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server, Filter, Optimieren, Betrachter wie Google Fotos, Regler und Optimieren nach Google kalibriert (D-17 bis D-74). Offen, in dieser
+Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server, Filter, Optimieren, Betrachter wie Google Fotos, Regler und Optimieren nach Google kalibriert, Pop (D-17 bis D-75). Offen, in dieser
 Reihenfolge:
 - ⬜ **Noodle:** bei Noodle anfragen, ob ihr Editor das Rezept-Format übernimmt (D-27, D-56).
 - 🔶 **Regler kalibrieren nach Google Fotos:** 8 von 11 Reglern liegen bei ±100 unter 10 % zu
@@ -18,9 +18,8 @@ Reihenfolge:
   - Kontrast (26 % / 16 %), Sättigung + (13 %) und Blautöne + (32 %) unter 10 % bringen.
   - Leere Bilder des Renderers im Emulator: Ursache finden und klären, ob Kopien betroffen sein
     können.
-- ⬜ **Werkzeuge wie in Google Fotos** (Wunsch des Besitzers, 25.09.2026; Messungen an der
-  Testtafel D-73). In dieser Reihenfolge:
-  - **Pop** (nutzt der Besitzer oft; Kopien `testchart~33`/`~34`): lokaler Kontrast und Farbe.
+- 🔶 **Werkzeuge wie in Google Fotos** (Wunsch des Besitzers, 25.09.2026; Messungen an der
+  Testtafel D-73). Pop ist gebaut (D-75); offen, in dieser Reihenfolge:
   - **Ton** (`~10`/`~11`).
   - **Hautton** (`~26`/`~27`): wirkt nur auf Hauttöne.
   - **Dynamisch** (`~3`): wohl lokale Tonwerte; D-74 zeigt, dass es auch in „Optimieren" steckt.

@@ -1,9 +1,13 @@
 """Test chart for calibrating the adjustments against Google Photos (D-71): every patch has a
 known sRGB value, so a copy edited elsewhere shows per patch what the adjustment did.
 Run from the project root: python tool/testchart.py  → testchart.png (1200 × 1600)
+                           python tool/testchart.py pop  → popchart.png: isolated squares on mid
+gray, every edge in every direction equally often — tells a directional look (relief) from plain
+local contrast (D-75).
 Whoever reads the copies back samples the same grid (CELL, patches()): change both together."""
 
 import colorsys
+import sys
 
 from PIL import Image, ImageDraw
 
@@ -40,7 +44,25 @@ def patches():
     return out
 
 
-if __name__ == "__main__":
+POP_CELL, POP_SQUARE = 150, 70  # 8 × 10 cells, square centred, 40 px gray around it at least
+POP_LEVELS = (30, 90, 170, 230)
+
+
+def pop_squares():
+    """(x0, y0, value) of the squares; the levels rotate so every row and column has all four."""
+    inset = (POP_CELL - POP_SQUARE) // 2
+    return [(c * POP_CELL + inset, r * POP_CELL + inset + 50, POP_LEVELS[(c + r) % 4])
+            for r in range(10) for c in range(8)]
+
+
+if __name__ == "__main__" and sys.argv[1:] == ["pop"]:
+    im = Image.new("RGB", (W, H), (128, 128, 128))
+    d = ImageDraw.Draw(im)
+    for x, y, v in pop_squares():
+        d.rectangle([x, y, x + POP_SQUARE - 1, y + POP_SQUARE - 1], fill=(v, v, v))
+    im.save("popchart.png")
+    print("popchart.png", len(pop_squares()), "squares")
+elif __name__ == "__main__":
     im = Image.new("RGB", (W, H), (128, 128, 128))
     d = ImageDraw.Draw(im)
     for c, r, rgb in patches():

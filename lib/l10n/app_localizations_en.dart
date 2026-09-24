@@ -82,6 +82,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolBlueTones => 'Blue tone';
 
   @override
+  String get toolPop => 'Pop';
+
+  @override
   String get toolVignette => 'Vignette';
 
   @override

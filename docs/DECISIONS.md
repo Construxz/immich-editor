@@ -7,6 +7,69 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-75: Pop — lokaler Kontrast mit Guided Filter, kein Relief
+
+Wunsch des Besitzers: Pop nutzt er oft. Sein Eindruck von Googles Pop 100 auf der Testtafel war
+„wie eine Normalmap": Jedes Feld bekomme rechts und unten einen Schlagschatten, das Bild wirke
+reliefartig.
+
+**Messweg.** Google-Kopien mit Pop 100 von sechs Kamerafotos des Besitzers (`DCIM/Camera`,
+25.09.2026: die fünf aus D-74 und ein weiteres; nur im Arbeitsordner). Dazu eine zweite Tafel
+(`python tool/testchart.py pop`: 80 einzelne Quadrate in 30/90/170/230 auf Grau 128, jede Kante in
+jeder Richtung gleich oft), in Google mit Pop 100 (`popchart~2`) und laut Besitzer Pop 50
+(`popchart~3`). Googles Änderung der Luminanz wurde per Regression zerlegt: in lokalen Kontrast
+(Bild minus Weichzeichnung), die Ableitungen nach x und y (das wäre ein Relief) und eine Tonkurve.
+
+**Befunde:**
+- **Kein Relief.** Die Ableitungen erklären auf der Tafel und auf allen sechs Fotos höchstens
+  0,4 % zusätzlich. Auf der Pop-Tafel werden die Ränder links und rechts gleich behandelt. Oben und
+  unten gibt es um etwa 4 Stufen verschiedene Säume, deren Vorzeichen aber mit der Graustufe
+  wechselt, also keine Lichtrichtung. Der plastische Eindruck kommt vom lokalen Kontrast: Ein
+  Quadrat 90 auf 128 wird zu 54, eines mit 170 zu 213, dazu Säume an den Kanten.
+- **Kantenerhaltend.** Mit einem Guided Filter als Basis erklärt das Modell 45–80 % der Änderung,
+  mit einem gewöhnlichen Gauß-Weichzeichner weniger. Mit festen Werten für alle Fotos (Radius 2 %
+  der langen Kante, eps 0,01, Detail × 2,31) sind es 30–67 %. Mehrere Maßstäbe, das Detail im
+  logarithmischen Raum oder eine Verstärkung abhängig von der Helligkeit bringen nur wenige
+  Prozentpunkte.
+- **Farbe** steigt um 0–14 % (Mittel etwa 8 %). Die Tonkurve ist vernachlässigbar.
+- **Pop 50 (`popchart~3`) wirkt stärker als Pop 100:** Das Quadrat 90 wird zu 34 statt zu 54. Die
+  Kopien sind entweder vertauscht, oder Pop 50 kam auf die Pop-100-Kopie. Auf der ersten Tafel
+  (`~33`/`~34`) war 50 halb so stark wie 100, deshalb gilt Pop hier linear im Wert.
+
+**Gebaut:**
+- Neuer Regler `pop` (−1 … 1, Rezept-Format in der Spec) in „Anpassen" vor der Vignette.
+- `Pop.kt` rechnet den Guided Filter auf einer Kopie mit höchstens 512 px (laufende Summen, O(n))
+  und legt die Koeffizienten a und b als Halbfloat-Bitmap ab (Extended sRGB, damit der Shader sie
+  unverändert liest). Der Renderer legt sie mit derselben Geometrie über das Bild („Fast Guided
+  Filter"), deshalb stimmen Vorschau und Export überein.
+- Im Shader direkt nach dem Schärfen: `L + 1,31 · pop · (L − (a·L + b))` auf alle Kanäle, dazu
+  Sättigung + 0,07 · pop.
+- Ein negativer Wert nimmt lokalen Kontrast weg. Google hat nur 0 … 100.
+
+**Ergebnis** (GPU im Emulator, 768 px, mittlere Änderung in Stufen):
+
+| Foto | Google | wir | Abstand zu Google |
+|---|---|---|---|
+| Pilz | 18,9 | 11,7 | 54 % |
+| Abendhimmel | 3,4 | 3,2 | 98 % |
+| Dunst | 9,2 | 6,4 | 72 % |
+| Haus | 10,5 | 11,5 | 87 % |
+| Wald | 11,2 | 10,1 | 82 % |
+| neues Foto | 10,0 | 9,4 | 89 % |
+
+Die Stärke stimmt, Pixel für Pixel trifft es Google nur mäßig. Das ist bei lokalen Filtern zu
+erwarten, weil schon ein etwas anderer Radius die Säume verschiebt. Im Ausschnitt bei doppelter
+Größe (Haus, Pilz, Wald) hat unser Pop denselben Charakter: klarere Struktur, keine Säume. Google
+ist bei Pilz und Wald kräftiger, mit dunkleren Schatten und satterem Rot.
+
+**Geprüft** 25.09.2026: `PopTest` (JVM, 2: eine glatte Fläche ist ihre eigene Basis, eine
+starke Kante bleibt in der Basis, feine Struktur geht ins Detail). `RendererTest`
+`popRaisesFineDetailFlatStays` (GPU, 3 von 3). `flutter analyze` sauber, `flutter test` 28 grün.
+Nebenbei behoben: `optimizedKeys` kannte die Sättigung aus D-74 nicht, daher blieb sie stehen,
+wenn man „Optimieren" ausschaltete. App-Version `0.1.0-dev.75`.
+
+---
+
 ## 2026-09-25 · D-74: „Optimieren" nach Google Fotos abgestimmt
 
 Befund D-71: „Optimieren" ist kaum sichtbar. Nach D-73 wirkte es auf dunkle Fotos dagegen viel

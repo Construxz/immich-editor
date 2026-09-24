@@ -38,7 +38,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Editor im Aufbau von Google Fotos (D-22): schwarz; oben Schließen, Rückgängig/Wiederholen,
     HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Presets" (vorn „Optimieren", das die
     Regler aus dem Bild setzt — ein Schalter, auch in der Mehrfachauswahl, nach Google abgestimmt, D-70, D-71, D-74; Regler sichern, anwenden, D-40), „Zuschneiden" (Rahmen mit Anfassern,
-    Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal), „Anpassen" (12 Regler als runde Knöpfe;
+    Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal), „Anpassen" (13 Regler als runde Knöpfe, darunter Pop, D-75;
     einer gewählt: Kategorienleiste, Regler als Pille mit Zahl, Zurücksetzen und „Fertig", D-72) und „Filter" (acht eigene Looks als 3D-LUT mit Vorschaubild und Stärke; Presets
     nehmen den Filter mit, D-62); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
     Renderer (AGSL, `Renderer.kt`), die Regler bei ±100 nach Google Fotos kalibriert (D-73); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
@@ -67,16 +67,16 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   vorgemerkt nach dem Backup), `lib/editor/` (Seite, Rezept, Presets, Laden und Speichern einer Kopie, Lineal,
   Zuschnittrahmen, Vorschau-Kanal),
   `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/photo.dart`; nativ in
-  `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometry.kt`, `Optimize.kt`, `Lut.kt` (Filter aus `assets/luts`, erzeugt von
+  `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometry.kt`, `Optimize.kt`, `Pop.kt` (Guided Filter für Pop), `Lut.kt` (Filter aus `assets/luts`, erzeugt von
   `tool/make_luts.py`), `Preview.kt` (Sitzung, Ansicht),
   Kalibrierung mit `tool/testchart.py`, `tool/readchart.py`, `tool/chartdump.sh` (D-73, auch für Fotos: D-74),
   `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
   Englisch** (D-42). Anzeigesprache Deutsch oder Englisch nach dem Gerät, in den Einstellungen
   umstellbar (D-43); Texte in `lib/l10n/app_{de,en}.arb`. Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (27 — Ordnerreihenfolge, Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange, Zoom im Betrachter,
+- Tests: `test/` (28 — Ordnerreihenfolge, Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange, Zoom im Betrachter,
   Prüfsummen-Abgleich, Start),
-  `android/app/src/test/` (18 — Geometrie, `.cube`-Filter, Optimieren, JVM, auch in der CI) und `android/app/src/androidTest/`
-  (14 — Renderer samt Filter und Messpunkten von Google Fotos auf der GPU, nur im Emulator:
+  `android/app/src/test/` (20 — Geometrie, `.cube`-Filter, Optimieren, Pop, JVM, auch in der CI) und `android/app/src/androidTest/`
+  (15 — Renderer samt Filter, Pop und Messpunkten von Google Fotos auf der GPU, nur im Emulator:
   `gradlew connectedDebugAndroidTest`; dort liefert der Renderer ab und zu ein leeres Bild, dann
   schlagen 1–3 Tests zufällig fehl — einzeln wiederholen, D-73).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,
@@ -90,7 +90,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Version `0.1.0-dev.74` (Release-Build, Debug-Schlüssel, arm64), installiert
+- **Pixel des Besitzers:** App-Version `0.1.0-dev.75` (Release-Build, Debug-Schlüssel, arm64), installiert
   25.09.2026 nachts mit `adb install -r`, als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung

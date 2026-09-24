@@ -242,6 +242,12 @@ abstract class AppLocalizations {
   /// **'Blue tone'**
   String get toolBlueTones;
 
+  /// No description provided for @toolPop.
+  ///
+  /// In en, this message translates to:
+  /// **'Pop'**
+  String get toolPop;
+
   /// No description provided for @toolVignette.
   ///
   /// In en, this message translates to:
