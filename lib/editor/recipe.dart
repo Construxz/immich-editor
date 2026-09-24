@@ -186,6 +186,26 @@ class Recipe {
   };
 }
 
+/// The adjustments "Optimieren" may set (D-70).
+const optimizedKeys = [
+  'blackPoint',
+  'whitePoint',
+  'brightness',
+  'warmth',
+  'tint',
+];
+
+/// [recipe] with the [values] of "Optimieren": its adjustments start from 0, not on top;
+/// everything else stays.
+Recipe withOptimized(Recipe recipe, Map<String, double> values) =>
+    recipe.copyWith(
+      adjustments: {
+        ...recipe.adjustments,
+        for (final k in optimizedKeys) k: 0.0,
+        ...values,
+      },
+    );
+
 /// Largest centered crop with aspect [ratio] (width/height) in a
 /// [width]×[height] frame; `null` means free (whole frame).
 List<double> cropFor(double? ratio, double width, double height) {

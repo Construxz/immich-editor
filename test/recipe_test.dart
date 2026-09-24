@@ -51,6 +51,23 @@ void main() {
     expect(Recipe.fromJson({'v': 1}).isNeutral, isTrue);
   });
 
+  test('"Optimieren" sets its adjustments from 0 and keeps the rest', () {
+    final r = const Recipe()
+        .withValue('brightness', 0.5)
+        .withValue('contrast', 0.3)
+        .copyWith(angle: 4);
+    final o = withOptimized(r, {'whitePoint': 0.2});
+    expect(o.adjustments, {
+      'brightness': 0.0,
+      'contrast': 0.3,
+      'blackPoint': 0.0,
+      'whitePoint': 0.2,
+      'warmth': 0.0,
+      'tint': 0.0,
+    });
+    expect(o.angle, 4);
+  });
+
   test('filter: ID and strength in the JSON, strength 0 = none', () {
     final r = const Recipe().withFilter((id: 'warm@1', strength: 0.7));
     expect(r.toJson()['filter'], {'id': 'warm@1', 'strength': 0.7});

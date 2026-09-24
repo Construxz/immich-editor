@@ -121,7 +121,6 @@
       }
     }
   },
-  "galleryNoPresets": "No presets yet — save one in the editor under \"Presets\"",
   "galleryApplyPresetTo": "{count, plural, =1{Apply preset to 1 photo} other{Apply preset to {count} photos}}",
   "@galleryApplyPresetTo": {
     "placeholders": {
@@ -185,6 +184,7 @@
     }
   },
   "galleryApplyPreset": "Apply preset",
+  "galleryOptimizeEach": "Computed for each photo",
   "galleryNoPhotos": "No photos yet.",
   "galleryNoDevicePermission": "The app is not allowed to see the photos on this device.",
   "galleryNoDevicePhotos": "No photos on this device.",

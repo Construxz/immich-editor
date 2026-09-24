@@ -36,11 +36,13 @@ Future<void> showRecipe(Recipe recipe) => rendererChannel.invokeMethod(
   {'recipe': jsonEncode(recipe.toJson())},
 );
 
-/// "Optimieren" (D-70): adjustments for the loaded photo — only the ones it would change.
-Future<Map<String, double>> optimize() async => {
+/// "Optimieren" (D-70): adjustments for the loaded photo — or for [original], one photo of a
+/// multiple selection (D-71) — only the ones it would change.
+Future<Map<String, double>> optimize([Uint8List? original]) async => {
   for (final MapEntry(:key, :value)
-      in (await rendererChannel.invokeMapMethod<String, double>('optimize'))!
-          .entries)
+      in (await rendererChannel.invokeMapMethod<String, double>('optimize', {
+        'bytes': original,
+      }))!.entries)
     key: value,
 };
 

@@ -66,13 +66,18 @@ class _EditorPageState extends State<EditorPage> {
   var _presets = <Preset>[];
 
   /// The adjustments "Optimieren" may set; a second tap starts from 0 for them, not on top.
-  static const _optimized = [
-    'blackPoint',
-    'whitePoint',
-    'brightness',
-    'warmth',
-    'tint',
-  ];
+  Future<Map<String, double>>?
+  _optimizedValues; // "Optimieren" for this photo, once
+  Map<String, double>? _optimizedNow; // its result, once known
+
+  /// "Optimieren" is on: the adjustments it sets hold exactly its values.
+  bool get _isOptimized {
+    final v = _optimizedNow;
+    return v != null &&
+        v.isNotEmpty &&
+        optimizedKeys.every((k) => _recipe.value(k) == (v[k] ?? 0));
+  }
+
   List<Uint8List>? _thumbs; // filter thumbnails, in the order of [filters]
 
   // Undo/redo: the history and the position in it
@@ -672,24 +677,21 @@ class _EditorPageState extends State<EditorPage> {
           children: [
             // First, as "Automatisch" in Google Photos: read the photo, set the adjustments
             // (D-70). Adjustments it does not touch stay as they are.
+            // A switch: selected while the adjustments hold its values; tapped again, they go
+            // back to 0 (D-71). Computed once per photo.
             _ToolButton(
               label: l.presetOptimize,
               icon: Icons.auto_fix_high,
-              selected: false,
+              selected: _isOptimized,
               changed: false,
               onTap: () async {
-                final values = await optimize();
+                final on = !_isOptimized;
+                final values = on
+                    ? _optimizedNow = await (_optimizedValues ??= optimize())
+                    : const <String, double>{};
                 if (!mounted) return;
-                _change(
-                  _recipe.copyWith(
-                    adjustments: {
-                      ..._recipe.adjustments,
-                      for (final k in _optimized) k: 0.0,
-                      ...values,
-                    },
-                  ),
-                );
-                if (values.isEmpty) {
+                _change(withOptimized(_recipe, values));
+                if (on && values.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(l.presetOptimizeNothing)),
                   );
@@ -705,6 +707,9 @@ class _EditorPageState extends State<EditorPage> {
                   ? null
                   : _savePreset,
             ),
+            // Own presets apart from the two actions (D-71).
+            if (_presets.isNotEmpty)
+              const VerticalDivider(width: 17, indent: 22, endIndent: 40),
             for (final p in _presets)
               _ToolButton(
                 label: p.name,
@@ -879,58 +884,63 @@ class _ToolButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 80,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // A thumbnail covers the fill, so a ring marks the choice.
-                DecoratedBox(
-                  decoration: ShapeDecoration(
-                    shape: CircleBorder(
-                      side: selected && image != null
-                          ? BorderSide(color: colors.primary, width: 3)
-                          : BorderSide.none,
+    return Semantics(
+      selected: selected,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 80,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // A thumbnail covers the fill, so a ring marks the choice.
+                  DecoratedBox(
+                    decoration: ShapeDecoration(
+                      shape: CircleBorder(
+                        side: selected && image != null
+                            ? BorderSide(color: colors.primary, width: 3)
+                            : BorderSide.none,
+                      ),
                     ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: selected
-                        ? colors.primary
-                        : colors.surfaceContainerHighest,
-                    foregroundColor: selected
-                        ? colors.onPrimary
-                        : colors.onSurface,
-                    foregroundImage: image == null ? null : MemoryImage(image!),
-                    child: Icon(icon),
-                  ),
-                ),
-                if (changed)
-                  Positioned(
-                    right: 0,
-                    top: 0,
                     child: CircleAvatar(
-                      radius: 5,
-                      backgroundColor: colors.primary,
+                      radius: 26,
+                      backgroundColor: selected
+                          ? colors.primary
+                          : colors.surfaceContainerHighest,
+                      foregroundColor: selected
+                          ? colors.onPrimary
+                          : colors.onSurface,
+                      foregroundImage: image == null
+                          ? null
+                          : MemoryImage(image!),
+                      child: Icon(icon),
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+                  if (changed)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: CircleAvatar(
+                        radius: 5,
+                        backgroundColor: colors.primary,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );

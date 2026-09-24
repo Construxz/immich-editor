@@ -67,8 +67,21 @@ object Session {
     }
 
     /** "Optimieren" (D-70): adjustments for the loaded photo, read from a 256 px version. */
-    fun optimize(): Map<String, Double> {
-        val q = source ?: return emptyMap()
+    fun optimize(): Map<String, Double> = source?.let { optimize(it) } ?: emptyMap()
+
+    /** "Optimieren" for [bytes] of an original — for a multiple selection, photo by photo (D-71). */
+    fun optimize(bytes: ByteArray): Map<String, Double> {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        var factor = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (factor * 2) >= PREVIEW_EDGE) factor *= 2
+        val q = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = factor })
+            ?: return emptyMap()
+        return optimize(q)
+    }
+
+    /** Both ways the same steps as the editor's preview (≤ 2048 px), then 256 px. */
+    private fun optimize(q: Bitmap): Map<String, Double> {
         val s = 256f / maxOf(q.width, q.height)
         val small = Bitmap.createScaledBitmap(q, maxOf(1, (q.width * s).toInt()), maxOf(1, (q.height * s).toInt()), true)
         val pixels = IntArray(small.width * small.height)

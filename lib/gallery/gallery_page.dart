@@ -243,11 +243,8 @@ class _GalleryPageState extends State<GalleryPage> {
     final l = AppLocalizations.of(context);
     final presets = await readPresets();
     if (!mounted) return;
-    if (presets.isEmpty) {
-      messenger.showSnackBar(SnackBar(content: Text(l.galleryNoPresets)));
-      return;
-    }
-    final preset = await showModalBottomSheet<Preset>(
+    // A preset, or "Optimieren" (null inside the record): computed per photo (D-71).
+    final choice = await showModalBottomSheet<({Preset? preset})>(
       context: context,
       builder: (c) => SafeArea(
         child: ListView(
@@ -259,17 +256,25 @@ class _GalleryPageState extends State<GalleryPage> {
                 style: Theme.of(c).textTheme.titleMedium,
               ),
             ),
+            ListTile(
+              leading: const Icon(Icons.auto_fix_high),
+              title: Text(l.presetOptimize),
+              subtitle: Text(l.galleryOptimizeEach),
+              onTap: () => Navigator.pop(c, (preset: null)),
+            ),
+            if (presets.isNotEmpty) const Divider(),
             for (final p in presets)
               ListTile(
                 leading: const Icon(Icons.auto_awesome),
                 title: Text(p.name),
-                onTap: () => Navigator.pop(c, p),
+                onTap: () => Navigator.pop(c, (preset: p)),
               ),
           ],
         ),
       ),
     );
-    if (preset == null || !mounted) return;
+    if (choice == null || !mounted) return;
+    final preset = choice.preset;
     // Load originals from the server: per the "Mobile Daten" setting only on Wi-Fi (D-30).
     if (_selection.any((e) => !e.onDevice) &&
         await storage.read(key: 'mobil') == 'aus' && // persisted: do not rename
@@ -303,7 +308,9 @@ class _GalleryPageState extends State<GalleryPage> {
       builder: (c) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: Text(l.galleryApplyingPreset(preset.name)),
+          title: Text(
+            l.galleryApplyingPreset(preset?.name ?? l.presetOptimize),
+          ),
           content: ValueListenableBuilder(
             valueListenable: progress,
             builder: (c, n, _) => Column(

@@ -13,6 +13,18 @@ Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über G
 Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server, Filter, Optimieren, Betrachter wie Google Fotos (D-17 bis D-70). Offen, in dieser
 Reihenfolge:
 - ⬜ **Noodle:** bei Noodle anfragen, ob ihr Editor das Rezept-Format übernimmt (D-27, D-56).
+- 🔶 **Regler kalibrieren nach Google Fotos** (Befund Besitzer, D-71: bei ±100 viel schwächer,
+  etwa „Schatten"; „Optimieren" kaum sichtbar). Testtafel `tool/testchart.py` (132 Felder mit
+  bekannten Werten) liegt auf dem Pixel in `Pictures/Testtafel`; der Besitzer speichert in Google
+  Fotos je Regler −100 und +100 und „Optimieren" als Kopien, ich lese sie aus und passe die
+  Formeln in `Renderer.kt` an. *Abnahme:* je Regler bei ±100 auf der Tafel höchstens 10 % Abstand
+  zu Google (Graustufen und Farbfelder), „Optimieren" in derselben Größenordnung.
+- ⬜ **„Anpassen" zweistufig wie Google:** Übersicht der runden Knöpfe (mit unseren Punkten für
+  Verändertes); ein Tipp öffnet die Reglerzeile: darüber die Kategorien zum Wechseln, links die
+  Zahl, Striche bis zum Wert gefüllt (jeder 50er länger, erreicht gelb, sonst grau),
+  Zurücksetzen, „Fertig" zurück zur Übersicht.
+- ⬜ **Meine Presets:** bearbeiten und umbenennen, eine Seite „Meine Presets", sichern und laden
+  als `.json` je Preset auf dem Telefon (Vorstufe der Idee „Presets teilen").
 - ⬜ Perspektive (Vier-Punkt).
 - ⬜ Zeitleiste ohne Netz: Immichs Monatsliste merken (D-55 — ohne Netz bleibt sie leer).
 - ⬜ HDR im Betrachter auch für reine Server-Fotos (Original laden, nach Einstellung „Mobile Daten").

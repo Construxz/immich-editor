@@ -554,12 +554,6 @@ abstract class AppLocalizations {
   /// **'Archived in Immich, album “{album}” — the Immich app is missing'**
   String saveArchivedNoApp(String album);
 
-  /// No description provided for @galleryNoPresets.
-  ///
-  /// In en, this message translates to:
-  /// **'No presets yet — save one in the editor under \"Presets\"'**
-  String get galleryNoPresets;
-
   /// No description provided for @galleryApplyPresetTo.
   ///
   /// In en, this message translates to:
@@ -631,6 +625,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apply preset'**
   String get galleryApplyPreset;
+
+  /// No description provided for @galleryOptimizeEach.
+  ///
+  /// In en, this message translates to:
+  /// **'Computed for each photo'**
+  String get galleryOptimizeEach;
 
   /// No description provided for @galleryNoPhotos.
   ///

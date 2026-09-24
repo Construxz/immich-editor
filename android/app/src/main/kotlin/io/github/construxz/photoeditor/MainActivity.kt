@@ -65,9 +65,12 @@ class MainActivity : FlutterActivity() {
                         hdrWindow(on)
                         result.success(null)
                     }
-                    "optimize" -> Session.background.post {
-                        val values = Session.optimize()
-                        runOnUiThread { result.success(values) }
+                    "optimize" -> {
+                        val bytes = call.argument<ByteArray>("bytes") // null: the editor's photo
+                        Session.background.post {
+                            val values = if (bytes == null) Session.optimize() else Session.optimize(bytes)
+                            runOnUiThread { result.success(values) }
+                        }
                     }
                     "filterThumbs" -> {
                         val ids = call.argument<List<String>>("ids")!!

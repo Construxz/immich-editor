@@ -253,10 +253,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get galleryNoPresets =>
-      'Noch keine Presets — im Editor unter „Presets\" sichern';
-
-  @override
   String galleryApplyPresetTo(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -322,6 +318,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get galleryApplyPreset => 'Preset anwenden';
+
+  @override
+  String get galleryOptimizeEach => 'Für jedes Foto einzeln berechnet';
 
   @override
   String get galleryNoPhotos => 'Noch keine Fotos.';

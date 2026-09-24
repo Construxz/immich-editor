@@ -12,7 +12,7 @@ import '../server/immich.dart';
 import '../stacking/stacking.dart';
 import 'presets.dart';
 import 'recipe.dart';
-import 'preview.dart' show sha1;
+import 'preview.dart' show optimize, sha1;
 
 /// A photo ready for editing: [original] holds a device photo's bytes (null for server
 /// photos — whoever needs the original, megabytes, loads it), [preview] with `preview: true`
@@ -178,7 +178,8 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
   return (entry: (id: id, onDevice: false), copy: copy);
 }
 
-/// Applies [preset] to [photos], one after another, the same way as the editor.
+/// Applies [preset] to [photos], one after another, the same way as the editor; no preset:
+/// "Optimieren", computed for each photo on its original (D-71).
 /// A copy made by this app is replaced: its original with the copy's crop and the
 /// preset's adjustments (D-31). [onDone] reports how many are through. Returns the errors;
 /// one error does not stop the rest.
@@ -186,7 +187,7 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
 Future<List<Object>> applyPreset(
   Immich immich,
   List<Entry> photos,
-  Preset preset, {
+  Preset? preset, {
   void Function(int done)? onDone,
 }) async {
   final hdr = hdrOn.value;
@@ -195,11 +196,14 @@ Future<List<Object>> applyPreset(
   for (final (i, e) in photos.indexed) {
     try {
       final l = await loadPhoto(immich, e.id, onDevice: e.onDevice);
+      final original = l.original ?? await immich.original(l.photo.id);
       await saveCopy(
         immich,
         photo: l.photo,
-        original: l.original ?? await immich.original(l.photo.id),
-        recipe: withPreset(l.start, preset),
+        original: original,
+        recipe: preset != null
+            ? withPreset(l.start, preset)
+            : withOptimized(l.start, await optimize(original)),
         hdr: hdr,
         toDevice: l.original != null || online,
         oldCopy: l.oldCopy,

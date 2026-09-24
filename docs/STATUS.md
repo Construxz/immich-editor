@@ -37,7 +37,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     per langem Druck; die Auswahl bekommt ein **Preset** (D-40).
   - Editor im Aufbau von Google Fotos (D-22): schwarz; oben Schließen, Rückgängig/Wiederholen,
     HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Presets" (vorn „Optimieren", das die
-    Regler aus dem Bild setzt, D-70; Regler sichern, anwenden, D-40), „Zuschneiden" (Rahmen mit Anfassern,
+    Regler aus dem Bild setzt — ein Schalter, auch in der Mehrfachauswahl, D-70, D-71; Regler sichern, anwenden, D-40), „Zuschneiden" (Rahmen mit Anfassern,
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal), „Anpassen" (12 Regler als runde Knöpfe,
     Skalen-Lineal) und „Filter" (acht eigene Looks als 3D-LUT mit Vorschaubild und Stärke; Presets
     nehmen den Filter mit, D-62); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
@@ -87,7 +87,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Version `0.1.0-dev.70` (Release-Build, Debug-Schlüssel), installiert
+- **Pixel des Besitzers:** App-Version `0.1.0-dev.71` (Release-Build, Debug-Schlüssel), installiert
   24.09.2026 abends, als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung

@@ -7,6 +7,34 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-71: „Optimieren" als Schalter und in der Mehrfachauswahl; Presets-Leiste
+
+Befund des Besitzers auf dem Pixel (Vergleich mit Google Fotos, 24.09.2026): „Optimieren" zeigt
+nicht, ob es an ist; eigene Presets standen hinter „Sichern" — unlogisch; „Optimieren" fehlt in
+der Mehrfachauswahl. Zudem: Regler wirken bei ±100 viel schwächer als bei Google, „Anpassen"
+soll zweistufig wie bei Google werden, Presets bearbeiten und sichern (→ ROADMAP).
+
+Gebaut:
+- **Schalter:** „Optimieren" rechnet einmal je Foto; gewählt (auch für Bildschirmleser,
+  `Semantics.selected` an allen runden Knöpfen), solange die Regler genau seine Werte tragen; ein
+  Tipp auf den gewählten setzt diese Regler auf 0.
+- **Leiste:** Optimieren, Sichern │ eigene Presets (senkrechter Trenner).
+- **Mehrfachauswahl:** im Auswahlblatt oben „Optimieren — für jedes Foto einzeln berechnet",
+  darunter die Presets; ohne eigene Presets kein Abbruch mehr. Jedes Foto bekommt „Optimieren"
+  aus seinem Original (`optimize` mit Bytes, nativ dieselben Schritte wie die Vorschau des
+  Editors: ≤ 2048 px, dann 256 px). `withOptimized` und `optimizedKeys` in `recipe.dart`, von
+  Editor und Mehrfachauswahl benutzt (Test).
+
+**Geprüft** 24.09.2026 im Emulator: Schalter an → gewählt, „Speichern" aktiv; aus → nicht
+gewählt, nichts zu speichern; wieder an. Mehrfachauswahl `optimize-dunkel.jpg` und
+`optimize-blau.jpg` → Rezepte **gleich** denen aus dem Editor (D-70): Weißpunkt 1,0 / Helligkeit
+0,39 und Weißpunkt 0,16 / Wärme 0,33 / Färbung 0,07. Befund dabei: Zwei Kopien, die ich per
+Mehrfachauswahl „optimierte", wurden als Originale behandelt (`… .edit (1).edit.jpg`) — die
+Testfotos tragen kein EXIF-Datum, und das Gerät findet das Original über Prüfsumme **und**
+Aufnahmezeit; Kamerafotos haben das Datum. App-Version `0.1.0-dev.71`.
+
+---
+
 ## 2026-09-24 · D-70: „Optimieren"
 
 Nach der ROADMAP (Idee des Besitzers, D-62): erster Eintrag unter „Presets", wie „Automatisch"
