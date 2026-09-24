@@ -52,5 +52,13 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
   `adb` testen, während der Besitzer den Emulator bedient — installieren und Tippen stören ihn.
   Auf dem Pixel kommt Wischen per `adb` (`input swipe`, `motionevent`) nicht als Scrollen an,
   Tippen schon — Listen dort den Besitzer scrollen lassen (D-50).
+- **Ist das Pixel per USB dran, läuft `gradlew connectedDebugAndroidTest` auch dort** und
+  deinstalliert die App: immer mit `ANDROID_SERIAL=emulator-5554`. `adb` in einer
+  `while read`-Schleife verschluckt deren Eingabe — `adb … </dev/null`. Hängt `git push`, mit
+  `GIT_TERMINAL_PROMPT=0 timeout 90 git push` wiederholen.
+- **Auf dem Pixel messen, ohne zu steuern** (der Besitzer bedient, der Agent liest): `adb logcat`
+  mit vorübergehenden Logzeilen (D-65), `adb shell screenrecord` und die Einzelbilder mit PyAV
+  auswerten (D-67), `dumpsys window`/`display` für den HDR-Zustand (D-63). Vorher ansagen, wann
+  die Aufnahme läuft — sonst ist sie leer.
 - Werkzeuge: siehe README, *Development*. Installationen, die Administratorrechte, Käufe oder
   Konten brauchen, übernimmt der Besitzer — vorher fragen, nicht selbst anstoßen.

@@ -1,7 +1,7 @@
 """Test chart for calibrating the adjustments against Google Photos (D-71): every patch has a
 known sRGB value, so a copy edited elsewhere shows per patch what the adjustment did.
 Run from the project root: python tool/testchart.py  → testchart.png (1200 × 1600)
-The layout is read back by tool/chart_read.py; change both together."""
+Whoever reads the copies back samples the same grid (CELL, patches()): change both together."""
 
 import colorsys
 
