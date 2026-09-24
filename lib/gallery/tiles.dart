@@ -1,47 +1,78 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../editor/preview.dart' show rendererChannel;
 import '../l10n/app_localizations.dart';
 import '../photo.dart' show Presence;
+import '../server/immich.dart';
 
 /// Thumbnail of a server photo. A freshly uploaded copy has none yet — Immich computes it only
 /// seconds later; retry until then instead of staying black.
 class ServerThumbnail extends StatefulWidget {
-  const ServerThumbnail(this.url, this.headers, {super.key});
+  const ServerThumbnail(this.immich, this.id, {super.key});
 
-  final String url;
-  final Map<String, String> headers;
+  final Immich immich;
+  final String id;
 
   @override
   State<ServerThumbnail> createState() => _ServerThumbnailState();
 }
 
+/// Server thumbnails on disk, in the app's cache folder (Android may clear it): scrolling back
+/// or opening the app again doesn't load them anew (D-55). The newest thousand also stay in
+/// memory, so Flutter's image cache recognises them.
+// ponytail: never evicted on disk except by Android; add a size limit if the cache grows too big.
+final _dir = rendererChannel
+    .invokeMethod<String>('cacheDir')
+    .then((d) => Directory('$d/thumbnails')..createSync(recursive: true));
+final _memory = <String, Future<Uint8List>>{};
+
+Future<Uint8List> _thumbnail(Immich immich, String id) {
+  final known = _memory.remove(id);
+  if (known != null) return _memory[id] = known; // now the newest
+  if (_memory.length >= 1000) _memory.remove(_memory.keys.first);
+  final loaded = () async {
+    final file = File('${(await _dir).path}/$id');
+    if (await file.exists()) return file.readAsBytes();
+    final bytes = await immich.thumbnail(id);
+    await file.writeAsBytes(bytes);
+    return bytes;
+  }();
+  // A failure is not kept: next time it tries again.
+  loaded.then((_) {}, onError: (_) => _memory.remove(id));
+  return _memory[id] = loaded;
+}
+
 class _ServerThumbnailState extends State<ServerThumbnail> {
+  late var _bytes = _thumbnail(widget.immich, widget.id);
   var _attempt = 0;
-  var _waiting = false;
 
   @override
-  Widget build(BuildContext context) => Image.network(
-    widget.url,
-    key: ValueKey(_attempt),
-    headers: widget.headers,
-    fit: BoxFit.cover,
-    excludeFromSemantics: true,
-    errorBuilder: (context, error, stack) {
-      if (!_waiting && _attempt < 10) {
-        _waiting = true;
+  Widget build(BuildContext context) => FutureBuilder(
+    future: _bytes,
+    builder: (context, s) {
+      if (s.hasError && _attempt < 10) {
+        // A new copy's thumbnail comes a few seconds after the upload.
         Future.delayed(const Duration(seconds: 2), () {
           if (!mounted) return;
-          PaintingBinding.instance.imageCache.evict(NetworkImage(widget.url));
           setState(() {
-            _waiting = false;
             _attempt++;
+            _bytes = _thumbnail(widget.immich, widget.id);
           });
         });
       }
-      return const SizedBox();
+      final bytes = s.data;
+      return bytes == null
+          ? const SizedBox()
+          : Image.memory(
+              bytes,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              excludeFromSemantics: true,
+            );
     },
   );
 }

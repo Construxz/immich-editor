@@ -128,6 +128,7 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                     "filesDir" -> result.success(filesDir.path)
+                    "cacheDir" -> result.success(cacheDir.path)
                     "openUrl" -> try {
                         // Without a package Android asks ("Just once" / "Always"), D-52.
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(call.argument<String>("url")!!))

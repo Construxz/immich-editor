@@ -526,10 +526,7 @@ class _GalleryPageState extends State<GalleryPage> {
                       key: ValueKey(z.e),
                       image: z.local != null
                           ? DeviceThumbnail(z.local!)
-                          : ServerThumbnail(
-                              widget.immich.thumbnailUri(z.e.id).toString(),
-                              widget.immich.headers,
-                            ),
+                          : ServerThumbnail(widget.immich, z.e.id),
                       stackSize: z.stackSize,
                       presence: z.presence,
                       selected: _selection.contains(z.e),
@@ -663,10 +660,7 @@ class _GalleryPageState extends State<GalleryPage> {
                     if (i >= tiles.length) return const SizedBox();
                     final k = tiles[i];
                     return PhotoTile(
-                      image: ServerThumbnail(
-                        widget.immich.thumbnailUri(k.id).toString(),
-                        widget.immich.headers,
-                      ),
+                      image: ServerThumbnail(widget.immich, k.id),
                       stackSize: k.stackSize,
                       presence: _backup.serverOnDevice.contains(k.id)
                           ? Presence.both

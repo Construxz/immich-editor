@@ -323,6 +323,11 @@ class Immich {
 
   Uri thumbnailUri(String id) => _uri('/assets/$id/thumbnail');
 
+  /// Immich's thumbnail (WebP, about 250 px), over the keep-alive connection.
+  Future<Uint8List> thumbnail(String id) async =>
+      _ok(await _await(_http.get(thumbnailUri(id), headers: headers), _short))
+          .bodyBytes;
+
   /// Immich's preview image (JPEG, long edge 1440 px, already uprighted, without gain map).
   Uri previewUri(String id) =>
       _uri('/assets/$id/thumbnail', {'size': 'preview'});
