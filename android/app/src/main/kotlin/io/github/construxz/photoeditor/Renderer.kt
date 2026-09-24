@@ -33,8 +33,10 @@ object Renderer {
         "blueTones" to "blueTones", "vignette" to "vignette", "sharpness" to "sharpness",
     )
 
-    // Color values arrive in the target's color space (sRGB, not linear). White balance works in
-    // linear light, tones in perceived lightness. All adjustments at 0 = unchanged.
+    // Color values arrive in the target's color space (sRGB, not linear). All adjustments at 0 =
+    // unchanged. Calibrated against Google Photos at ±1 on the test chart (tool/testchart.py,
+    // D-73): most tone adjustments bend the luma L of the sRGB values and carry the colour along
+    // as c − L, scaled by q — per channel would shift hues, Google's copies do not.
     private const val AGSL = """
         uniform shader image;
         uniform float2 size; // output in pixels
@@ -69,6 +71,10 @@ object Renderer {
         }
         // Raising (a > 0) pulls toward 1, lowering toward 0 — never past the edge.
         float3 push(float3 c, float a) { return a >= 0.0 ? c + a * (1.0 - c) : c + a * c; }
+        // New luma [to] for [c] (luma [L]), colour scaled by [q].
+        float3 relight(float3 c, float L, float to, float q) { return saturate(to + (c - L) * q); }
+        // Factor of the one measured end: 1 at v = 0, [end] at |v| = 1.
+        float q(float v, float minus, float plus) { return 1.0 + abs(v) * ((v < 0.0 ? minus : plus) - 1.0); }
 
         half4 main(float2 p) {
             float3 c = image.eval(p).rgb;
@@ -80,38 +86,60 @@ object Renderer {
                               + image.eval(p + float2(0, r)).rgb + image.eval(p - float2(0, r)).rgb) * 0.25;
                 c += (c - soft) * sharpness * 1.5;
             }
+            c = saturate(c);
 
-            // Warmth and tint in linear light.
-            float3 l = toLinear(saturate(c)) * float3(1.0 + 0.15 * warmth, 1.0 - 0.15 * tint, 1.0 - 0.15 * warmth);
-            c = toSrgb(l);
-
-            // White and black point.
-            float bp = 0.15 * blackPoint, wp = 1.0 - 0.15 * whitePoint;
-            c = saturate((c - bp) / (wp - bp));
-
-            // Brightness: midtones, ends stay.
-            c = pow(c, float3(exp2(-brightness)));
-
-            // Highlights and shadows by luminance.
+            // Warmth and tint: a shift strongest in the midtones, black and white stay.
             float L = luma(c);
-            c = push(c, 0.35 * shadows * (1.0 - smoothstep(0.0, 0.6, L)));
-            c = push(c, 0.35 * highlights * smoothstep(0.4, 1.0, L));
+            float w = pow(L, 1.55) * pow(1.0 - L, 1.19) / 0.1533;
+            c = saturate(c + w * (warmth * float3(0.147, -0.021, -0.223) + tint * float3(0.143, -0.056, 0.13)));
 
-            // Contrast: S-curve (more) or toward the middle (less).
-            c = contrast >= 0.0 ? mix(c, c * c * (3.0 - 2.0 * c), contrast) : 0.5 + (c - 0.5) * (1.0 + 0.6 * contrast);
-
-            // Saturation; blue tones only around the blue hue.
+            // Black point: lifts (< 0) or cuts (> 0) the shadows, white stays.
             L = luma(c);
-            c = mix(float3(L), c, 1.0 + saturation);
-            float nearBlue = saturate(1.0 - abs(hue(c) - 0.6) * 8.0);
-            c = mix(float3(luma(c)), c, 1.0 + blueTones * nearBlue);
+            c = relight(c, L, L - blackPoint * (blackPoint < 0.0 ? 0.16 * pow(1.0 - L, 2.07) : 0.504 * pow(1.0 - L, 1.63)),
+                        q(blackPoint, 0.768, 1.499));
+            // White point: > 0 a straight gain that clips, < 0 dims the highlights, black stays.
+            L = luma(c);
+            c = relight(c, L, whitePoint >= 0.0 ? L * (1.0 + 0.328 * whitePoint) : L + 0.224 * whitePoint * pow(L, 1.975),
+                        q(whitePoint, 0.746, 1.328));
+
+            // Brightness: exposure in linear light, ±2.4 / 2.8 stops; brighter rolls off toward white.
+            L = luma(c);
+            float y = toLinear(float3(L)).x, e = exp2(brightness * (brightness < 0.0 ? 2.419 : 2.796));
+            y = brightness < 0.0 ? y * e : y * e / (1.0 + y * (e - 1.0));
+            c = relight(c, L, toSrgb(float3(y)).x, q(brightness, 0.681, 1.202));
+
+            // Shadows and highlights: a bump in the dark or the bright tones, added to all channels.
+            L = luma(c);
+            c = saturate(c + shadows * 2.661 * L * pow(1.0 - L, 4.46));
+            L = luma(c);
+            c = saturate(c + highlights * 1.638 * pow(L, 4.525) * (1.0 - L));
+
+            // Contrast: power curves on either side of 0.356, black and white stay.
+            L = luma(c);
+            float g = pow(contrast < 0.0 ? 0.793 : 1.843, abs(contrast));
+            float to = L < 0.356 ? 0.356 * pow(L / 0.356, g) : 1.0 - 0.644 * pow((1.0 - L) / 0.644, g);
+            c = relight(c, L, to, q(contrast, 0.898, 1.241));
+
+            // Saturation: less toward the gray of the same luminance (linear light); more lifts
+            // the dull colours more than the saturated ones.
+            float gray = toSrgb(float3(luma(toLinear(c)))).x;
+            float k = 1.0 + saturation * (saturation < 0.0 ? 1.0 : 1.27 * (1.0 - (max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b)))));
+            c = saturate(gray + (c - gray) * k);
+
+            // Blue tones: cyan to azure (184° ± 58°), saturation at the same maximum.
+            float band = saturate((0.162 - abs(hue(c) - 0.511)) / 0.09);
+            float mx = max(c.r, max(c.g, c.b));
+            c = saturate(mx + (c - mx) * (1.0 + blueTones * (blueTones < 0.0 ? 0.5 : 0.72) * band));
 
             // Filter: a look over the adjusted image; the vignette stays on top.
             if (lutStrength > 0.0) c = mix(c, applyLut(saturate(c)), lutStrength);
 
-            // Vignette: corners darker (> 0) or lighter (< 0).
-            float d = length((p / size - 0.5) * 2.0) / 1.41421356;
-            c = push(c, -0.8 * vignette * smoothstep(0.35, 1.0, d));
+            // Vignette: round in pixels, from the center over the half diagonal; darker (> 0) or
+            // lighter (< 0). The strength mainly moves where it starts.
+            float v = abs(vignette);
+            float d = length(p - size * 0.5) / length(size * 0.5);
+            float amount = 0.95 * (1.0 - pow(1.0 - v, 4.0)) * smoothstep(0.39 - 0.155 * v, 1.0, d);
+            c = push(c, vignette < 0.0 ? amount : -amount);
 
             return half4(half3(saturate(c)), 1.0);
         }

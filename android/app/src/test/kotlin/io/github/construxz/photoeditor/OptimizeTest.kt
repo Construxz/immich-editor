@@ -30,7 +30,7 @@ class OptimizeTest {
 
     @Test fun aGreenCastGetsTint() {
         val a = Optimize.adjustments(image { Triple(it * 0.9, it, it * 0.9) })
-        assertTrue("$a", a.getValue("tint") > 0.2)
+        assertTrue("$a", a.getValue("tint") > 0.1)
     }
 
     @Test fun aWarmEveningStaysWarm() {

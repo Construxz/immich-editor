@@ -9,9 +9,9 @@ import kotlin.math.roundToInt
 
 /**
  * "Optimieren" (D-70): reads a photo and sets the existing adjustments — nothing generated.
- * The formulas mirror [Renderer]: black and white point stretch the tones, brightness is a gamma
- * on the midtones, warmth and tint scale R/B and G in linear light. A well exposed, neutral photo
- * gets nothing.
+ * The formulas mirror [Renderer] (D-73): black point bends the shadows, white point is a gain,
+ * brightness an exposure in linear light, warmth and tint shift the midtones in sRGB. A well
+ * exposed, neutral photo gets nothing.
  */
 object Optimize {
     /** Adjustments (recipe key → −1 … 1) for sRGB pixels [argb] (a downscaled photo is enough). */
@@ -35,28 +35,35 @@ object Optimize {
         val lo = luma[(n * 0.005).toInt()]
         val hi = luma[min(n - 1, (n * 0.995).toInt())]
 
-        // Levels: the darkest and brightest 0.5 % halfway toward black and white (Renderer:
-        // 0.15 × value) — a flat but fine photo stays close, a dark one still gets the full range.
-        val blackPoint = ((lo - 0.02) / 0.15 * 0.5).coerceIn(0.0, 1.0)
-        val whitePoint = ((0.98 - hi) / 0.15 * 0.5).coerceIn(0.0, 1.0)
-        val bp = 0.15 * blackPoint
-        val wp = 1 - 0.15 * whitePoint
+        // Levels: the darkest and brightest 0.5 % halfway toward black and white — a flat but
+        // fine photo stays close, a dark one still gets the full range.
+        val blackPoint = ((lo - 0.02) / 2 / (0.504 * (1 - lo).pow(1.63))).coerceIn(0.0, 1.0)
+        val whitePoint = ((0.98 - hi) / 2 / (0.328 * max(black(hi, blackPoint), 0.01))).coerceIn(0.0, 1.0)
 
-        // Brightness (Renderer: c^(2^−b)): only a median outside 0.35 … 0.6 moves, halfway-ish.
-        val m = ((luma[n / 2] - bp) / (wp - bp)).coerceIn(0.01, 0.99)
-        val target = m.coerceIn(0.35, 0.6)
-        val brightness = (-log2(ln(target) / ln(m)) * 0.7).coerceIn(-0.6, 0.6)
+        // Brightness: only a median outside 0.35 … 0.6 moves, most of the way.
+        val m = (black(luma[n / 2], blackPoint) * (1 + 0.328 * whitePoint)).coerceIn(0.01, 0.99)
+        val y = linear(m)
+        val t = linear(m.coerceIn(0.35, 0.6))
+        val brightness = (0.7 * when {
+            t < y -> -log2(y / t) / 2.419
+            t > y -> log2(t * (1 - y) / (y * (1 - t))) / 2.796
+            else -> 0.0
+        }).coerceIn(-0.6, 0.6)
 
         // White balance over the gray pixels, only outside a natural range: R/B 1.0 … 1.25
         // (neutral to sunny warm), G 0.95 … 1.1 of the R-B mean — plain gray world would cool a
-        // warm evening. Beyond the range, back to its edge (Renderer: R × (1 + 0.15 w),
-        // B × (1 − 0.15 w), G × (1 − 0.15 t)). Fewer than 5 % gray pixels: colours stay.
+        // warm evening. Beyond the range, back to its edge. Fewer than 5 % gray pixels: colours stay.
         var warmth = 0.0; var tint = 0.0
         if (grays >= n * 0.05) {
-            val k = (r / b).coerceIn(1.0, 1.25) * b / r // R/B must change by this factor
-            warmth = ((k - 1) / (0.15 * (1 + k))).coerceIn(-0.6, 0.6)
-            val green = g / ((r + b) / 2)
-            tint = ((1 - green.coerceIn(0.95, 1.1) / green) / 0.15).coerceIn(-0.6, 0.6)
+            val gray = doubleArrayOf(srgb(r / grays), srgb(g / grays), srgb(b / grays))
+            fun shifted(w: Double, t: Double) = shift(gray, w, t).map(::linear)
+            fun redBlue(w: Double) = shifted(w, 0.0).let { it[0] / it[2] }
+            val k = redBlue(0.0)
+            if (k !in 1.0..1.25) warmth = solve { redBlue(it) - k.coerceIn(1.0, 1.25) }
+            fun green(t: Double) = shifted(warmth, t).let { it[1] / ((it[0] + it[2]) / 2) }
+            val gr = green(0.0)
+            if (gr !in 0.95..1.1) tint = solve { green(it) - gr.coerceIn(0.95, 1.1) }
+            warmth = warmth.coerceIn(-0.6, 0.6); tint = tint.coerceIn(-0.6, 0.6)
         }
 
         return mapOf(
@@ -65,6 +72,26 @@ object Optimize {
         ).mapValues { (it.value * 100).roundToInt() / 100.0 }.filterValues { abs(it) >= 0.03 }
     }
 
+    /** Renderer's black point on luma [l]. */
+    private fun black(l: Double, v: Double) = l - v * 0.504 * (1 - l).pow(1.63)
+
+    /** Renderer's warmth [w] and tint [t] on the sRGB colour [c]. */
+    private fun shift(c: DoubleArray, w: Double, t: Double): List<Double> {
+        val l = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]).coerceIn(0.0, 1.0)
+        val weight = l.pow(1.55) * (1 - l).pow(1.19) / 0.1533
+        val d = doubleArrayOf(0.147 * w + 0.143 * t, -0.021 * w - 0.056 * t, -0.223 * w + 0.13 * t)
+        return c.indices.map { (c[it] + weight * d[it]).coerceIn(0.0, 1.0) }
+    }
+
+    /** v in −1 … 1 where the monotone [f] crosses 0 (bisection; the nearer end if it does not). */
+    private fun solve(f: (Double) -> Double): Double {
+        var a = -1.0; var b = 1.0
+        val rising = f(b) > f(a)
+        repeat(30) { val m = (a + b) / 2; if ((f(m) < 0) == rising) a = m else b = m }
+        return (a + b) / 2
+    }
+
     private fun linear(c: Double) = if (c <= 0.04045) c / 12.92 else ((c + 0.055) / 1.055).pow(2.4)
+    private fun srgb(c: Double) = if (c <= 0.0031308) c * 12.92 else 1.055 * c.pow(1 / 2.4) - 0.055
     private fun log2(x: Double) = ln(x) / ln(2.0)
 }

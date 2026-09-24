@@ -41,7 +41,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal), „Anpassen" (12 Regler als runde Knöpfe;
     einer gewählt: Kategorienleiste, Regler als Pille mit Zahl, Zurücksetzen und „Fertig", D-72) und „Filter" (acht eigene Looks als 3D-LUT mit Vorschaubild und Stärke; Presets
     nehmen den Filter mit, D-62); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
-    Renderer (AGSL, `Renderer.kt`); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
+    Renderer (AGSL, `Renderer.kt`), die Regler bei ±100 nach Google Fotos kalibriert (D-73); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
     D-20). Das Lineal rastet nahe 0 ein; die Null ist bernsteinfarben markiert (D-41). Server-Fotos öffnen mit Immichs Vorschaubild, das
     Original (und damit HDR) kommt im Hintergrund nach; Speichern wartet darauf (D-29).
   - Speichern: volle Auflösung rendern, per Systemkodierer als JPEG (Qualität 95, D-13), EXIF
@@ -69,13 +69,16 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/photo.dart`; nativ in
   `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometry.kt`, `Optimize.kt`, `Lut.kt` (Filter aus `assets/luts`, erzeugt von
   `tool/make_luts.py`), `Preview.kt` (Sitzung, Ansicht),
+  Kalibrierung mit `tool/testchart.py`, `tool/readchart.py`, `tool/chartdump.sh` (D-73),
   `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
   Englisch** (D-42). Anzeigesprache Deutsch oder Englisch nach dem Gerät, in den Einstellungen
   umstellbar (D-43); Texte in `lib/l10n/app_{de,en}.arb`. Keine Google-Play-Dienste, kein Firebase.
 - Tests: `test/` (27 — Ordnerreihenfolge, Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange, Zoom im Betrachter,
   Prüfsummen-Abgleich, Start),
   `android/app/src/test/` (18 — Geometrie, `.cube`-Filter, Optimieren, JVM, auch in der CI) und `android/app/src/androidTest/`
-  (13 — Renderer samt Filter auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).
+  (14 — Renderer samt Filter und Messpunkten von Google Fotos auf der GPU, nur im Emulator:
+  `gradlew connectedDebugAndroidTest`; dort liefert der Renderer ab und zu ein leeres Bild, dann
+  schlagen 1–3 Tests zufällig fehl — einzeln wiederholen, D-73).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,
   analyze, test, Debug-APK.
 - **Release** ([release.yml](../.github/workflows/release.yml)) bei Tag `v*`: signierte Split-

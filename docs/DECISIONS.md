@@ -7,6 +7,96 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-73: Regler nach Google Fotos kalibriert
+
+Befund D-71 (Besitzer): unsere Regler wirken bei ±100 viel schwächer als bei Google Fotos.
+
+**Messweg.** Der Besitzer hat in Google Fotos auf dem Pixel (24.09.2026, 22:59–23:12) vom
+unveränderten `Pictures/Testtafel/testchart.png` (`tool/testchart.py`, 132 Felder) je Regler
+−100 und +100 als Kopie gespeichert (`testchart~4.jpg` … `~29.jpg`, sRGB, 1200 × 1600, JPEG).
+Die Nummern hat er zugeordnet, die Richtung ist an der Wirkung geprüft (jeweils zuerst −100).
+Unsere Seite: `tool/chartdump.sh` rendert die Tafel im Emulator durch `Renderer.kt` auf der GPU.
+`python tool/readchart.py --distance unsere.png google.jpg` gibt das Mittel von |unser − Google|
+über alle Felder und Kanäle aus, **relativ zu Googles eigener Änderung** der Tafel. Das
+JPEG-Rauschen liegt bei 0,2 Stufen (Kopien, die das SDR-Bild nicht ändern: Ultra HDR, „Scharf
+stellen"). Die Formeln wurden an einem Python-Nachbau des Shaders angepasst (Nelder-Mead, Abstand
+zur GPU ≤ 0,6 Stufen), das Ergebnis ist auf der GPU gemessen.
+
+**Was Google rechnet** und was deshalb jetzt in `Renderer.kt` steht:
+- **Tonregler** biegen die Luminanz L (Rec. 709 auf den sRGB-Werten) und tragen die Farbe als
+  c − L mit, nicht je Kanal (je Kanal lagen Schatten und Spitzlichter bei 45 %, so bei 4 %).
+  Schatten +: `L + 2,66 · L · (1 − L)^4,46`, Spitzlichter: `L + 1,64 · L^4,53 · (1 − L)`, beide
+  gleich auf alle Kanäle. Schwarzpunkt −: `L + 0,16 · (1 − L)^2,07`, +: `L − 0,50 · (1 − L)^1,63`.
+  Weißpunkt +: Verstärkung × 1,33, die abschneidet, −: `L − 0,22 · L^1,98`. Helligkeit:
+  Belichtung im linearen Licht, −2,4 / +2,8 Blenden, nach oben mit weicher Schulter. Kontrast:
+  Potenzkurven beiderseits von 0,356, Schwarz und Weiß bleiben (bisher wanderte Schwarz bei −100
+  auf 77). Die Buntheit skaliert je Regler mit einem eigenen Faktor (0,68 … 1,5).
+- **Sättigung −** mischt zum Grau der *linearen* Luminanz (Rot 178 → 82). **+** hebt matte
+  Farben stärker als gesättigte: × (1 + 1,27 · (1 − (max − min))).
+- **Wärme und Färbung** sind keine Verstärkung im linearen Licht, sondern eine Verschiebung in
+  sRGB, am stärksten in den Mitteltönen (`L^1,55 · (1 − L)^1,19`). Schwarz und Weiß bleiben, an
+  gesättigten Farben ist sie kaum zu sehen. Grau 133 wird bei Wärme +100 zu 172/127/72.
+- **Blautöne** wirken auf Cyan bis Azur (184° ± 58°), nicht auf Reinblau, als Sättigung bei
+  gleichem Maximum.
+- **Vignette** ist rund in Pixeln, nicht elliptisch wie bei uns bisher. Die Stärke verschiebt vor
+  allem, wo sie beginnt (100: ab 0,24 der halben Diagonale, 50: ab 0,31), die Tiefe bleibt
+  (0,95 / 0,90).
+
+Gemessen ist nur ±100 (Vignette 100 und 50). Dazwischen gehen Faktoren und Exponenten glatt von
+der Mitte zum Rand; die Vignette unter 50 ist geschätzt.
+
+| Regler | vorher −100 / +100 | nachher −100 / +100 |
+|---|---|---|
+| Helligkeit | 47 % / 36 % | 2 % / 7 % |
+| Kontrast | 413 % / 68 % | **26 % / 16 %** (2,1 / 3,0 Stufen) |
+| Weißpunkt | 36 % / 40 % | 3 % / 4 % |
+| Schwarzpunkt | 39 % / 41 % | 4 % / 7 % |
+| Spitzlichter | 96 % / 55 % | 5 % / 8 % |
+| Schatten | 65 % / 59 % | 4 % / 5 % |
+| Sättigung | 18 % / 45 % | 4 % / **13 %** |
+| Wärme | 76 % / 77 % | 6 % / 6 % |
+| Färbung | 91 % / 90 % | 5 % / 6 % |
+| Blautöne | 126 % / 116 % | 11 % / **32 %** (1,2 Stufen) |
+| Vignette 100 / 50 | 35 % / – | 5 % / 7 % |
+
+Die Abnahme (≤ 10 %) ist damit für 8 von 11 Reglern erfüllt. Noch nicht erfüllt:
+- **Kontrast:** Auf Grau passt die Kurve, der Rest liegt in gesättigten Farben. Google dunkelt bei
+  −100 etwa Rot 255 auf 227 ab. Freie Luminanz-Gewichte, Oklab und Mischformen kamen nicht unter
+  26 %.
+- **Sättigung +:** Grün wird zu stark.
+- **Blautöne +:** Google dunkelt Azur ab und dreht es leicht zu Blau. Auch ein Modell mit Drehung
+  und Abdunkeln blieb bei 28 %.
+
+**Nur bei Google**, nicht gebaut (Befund): Ton (`~10`/`~11`), Hautton (`~26`/`~27`, nur
+Hauttöne, 2,7 Stufen), Pop (`~33`/`~34`), Dynamisch (`~3`), Ultra HDR (`~8`/`~9`, das SDR-Bild
+bleibt, nur eine Gain-Map), Scharfzeichnen (`~32`), Scharf stellen (`~35`), Porträtlicht „Licht
+angleichen" (`~36`/`~37`). „Licht hinzufügen" hat der Besitzer weggelassen, weil es Gesichter
+erkennt. Einen Schärfe-Regler hat Google nicht, unserer bleibt.
+
+**Optimieren** spiegelt die neuen Formeln: Schwarzpunkt, Weißpunkt und Helligkeit sind direkt
+aufgelöst, der Weißabgleich per Bisektion auf dem mittleren grauen Pixel. Es bleibt zielgesteuert,
+wirkt auf Fotos also so stark wie vorher, und „kaum sichtbar" (D-71) ist damit **nicht behoben**.
+Auf der Tafel setzt es nichts, weil sie voll ausgesteuert und neutral ist. Googles „Optimieren"
+ändert sie im Mittel um 4,8 Stufen, „Dynamisch" um 10,4. Vergleichen lässt sich das nur an echten
+Fotos.
+
+**Rezept** bleibt `v: 1`: Die Spec verspricht Rückwärts-Kompatibilität erst ab dem ersten
+Release. Gespeicherte Testkopien und eigene Presets wirken beim erneuten Öffnen stärker.
+
+**Befund im Emulator:** Der Renderer liefert ab und zu ein leeres, durchsichtiges Bild. Beim
+Tafel-Rendern waren es 4 von etwa 30, bei `RendererTest` fallen 1–3 von 13 Tests je Lauf zufällig,
+auch mit dem Stand vor dieser Änderung. Einzeln wiederholt ist jeder Test grün. Auf den Fence des
+`ImageReader`-Bildes zu warten half nicht. Bei vielen Renderings in einem Lauf stürzte der
+Emulator zweimal ab. Auf dem Pixel ist es nicht beobachtet; ob auch eine gespeicherte Kopie leer
+werden kann, ist offen.
+
+**Geprüft** 24.09.2026: die Tabelle oben (GPU im Emulator). `RendererTest` hat einen Test mehr,
+`matchesGooglePhotosOnGray`: zehn Graupunkte aus den Google-Kopien auf ±5 Stufen. Alle 14 Tests
+sind einzeln dreimal grün. `OptimizeTest` ist grün; die Schwelle für die Färbung sank von 0,2 auf
+0,1, weil die neue Färbung stärker wirkt. App-Version `0.1.0-dev.73`.
+
+---
+
 ## 2026-09-24 · D-72: „Anpassen" zweistufig wie Google Fotos
 
 Wunsch des Besitzers (D-71, mit Bildschirmfotos von Google Fotos): erst die Knöpfe; ein Tipp

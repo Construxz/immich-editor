@@ -119,6 +119,29 @@ class RendererTest {
         assertTrue("$before → $after", after > before)
     }
 
+    /** Gray patches of the test chart as Google Photos' copies show them at ±1 (D-73). */
+    @Test fun matchesGooglePhotosOnGray() {
+        val cases = listOf(
+            Triple("brightness" to -1, 255, intArrayOf(124, 124, 124)),
+            Triple("brightness" to 1, 111, intArrayOf(200, 200, 200)),
+            Triple("contrast" to 1, 55, intArrayOf(35, 35, 35)),
+            Triple("shadows" to -1, 89, intArrayOf(55, 55, 55)),
+            Triple("shadows" to 1, 22, intArrayOf(61, 61, 61)),
+            Triple("highlights" to -1, 200, intArrayOf(170, 170, 170)),
+            Triple("blackPoint" to -1, 0, intArrayOf(41, 41, 41)),
+            Triple("whitePoint" to 1, 111, intArrayOf(147, 147, 147)),
+            Triple("warmth" to 1, 133, intArrayOf(172, 127, 72)),
+            Triple("tint" to -1, 133, intArrayOf(95, 147, 98)),
+        )
+        for ((adjustment, gray, google) in cases) {
+            val patch = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.rgb(gray, gray, gray)) }
+            val b = Renderer.render(patch, Geometry(), JSONObject("""{"${adjustment.first}":${adjustment.second}}"""))
+                .copy(Bitmap.Config.ARGB_8888, false)
+            val ours = channels(b, 4, 4)
+            for (i in 0..2) assertEquals("$adjustment on $gray", google[i].toDouble(), ours[i].toDouble(), 5.0)
+        }
+    }
+
     @Test fun geometrySwapsWidthAndHeight() {
         val b = Renderer.render(source, Geometry(quarterTurns = 1, crop = listOf(0.0, 0.0, 1.0, 0.5)), JSONObject("{}"))
         assertEquals(64, b.width); assertEquals(32, b.height)
