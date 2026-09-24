@@ -7,8 +7,23 @@ An open-source Android photo library and editor for Immich.
 
 ## Status
 
-Milestones M0–M1 done: the storage path works end to end (log in, change brightness, upload a
-copy with the recipe in XMP, stack it in front of the original). No real editor or gallery yet.
+Early development, not yet feature-complete (milestone M2 of [docs/ROADMAP.md](docs/ROADMAP.md)).
+What works today:
+
+- **Gallery:** one timeline over device and server photos, library and device folders, a
+  viewer with stacks and HDR, multiple selection.
+- **Editor** in the style of Google Photos: crop and rotate, 13 adjustments calibrated against
+  Google Photos (including Pop), filters, presets, "Optimize", pinch zoom, HDR (Ultra HDR) kept.
+- **Saving** a non-destructive copy with the recipe in XMP, stacked in front of the original —
+  on the device or on the server.
+
+Details and the current version: [docs/STATUS.md](docs/STATUS.md).
+
+## Install
+
+Pre-release APKs are on the [Releases](https://github.com/Construxz/immich-editor/releases)
+page (Android 14 or newer; `arm64-v8a` for current phones, `universal` if unsure). Check the
+download against `SHA256SUMS.txt`. Test with a separate Immich user first.
 
 ## Idea
 
