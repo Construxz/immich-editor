@@ -7,6 +7,54 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-57: Bibliothek springt beim Hochscrollen nicht mehr
+
+Befund des Besitzers am Pixel: nach unten flüssig, nach oben springt die Liste — das angeschnittene
+Vorschaubild hüpft ganz ins Bild. Ursache: Eine Ordnerzeile war beim Laden einzeilig und wurde
+mit „30 Fotos · …" zweizeilig; beim Hochscrollen luden die Zeilen oberhalb neu, wuchsen und
+schoben die Liste. Jetzt ist die Zeile von Anfang an zweizeilig (leere zweite Zeile) und bleibt
+geladen, wenn sie aus dem Bild scrollt (`AutomaticKeepAliveClientMixin`) — auch das Zählen über
+alle Fotos eines Ordners (Camera: 7.519) geschieht nur einmal. Auf dem Pixel installiert
+(`0e967f9`); ob es flüssig ist, sagt der Besitzer.
+
+---
+
+## 2026-09-24 · D-54: HDR im Betrachter; Objektiv; M2-Abnahme HDR auf dem Pixel
+
+Gebaut:
+- **Betrachter:** Solange eine Seite ruht und nicht gezoomt ist, liegt über Flutters Bild eine
+  native Ansicht (`HdrImageView`, `immich_editor/hdr`), die das lokale Original per
+  `ImageDecoder` samt Gain-Map und EXIF-Drehung zeichnet; trägt es eine Gain-Map und ist „HDR"
+  an, geht das Fenster auf HDR, beim Verlassen zurück (Zähler über alle solchen Ansichten, damit
+  Editor und Betrachter sich nicht gegenseitig abschalten). Quelle: Gerätefotos, und Server-Fotos,
+  deren Original auch auf dem Gerät liegt (Prüfsumme). Reine Server-Fotos bleiben SDR — der
+  Betrachter lädt keine Originale.
+- Befund beim Bauen: Entsteht die native Ansicht mitten im Wischen (`onPageChanged` feuert auf
+  halbem Weg), bleibt die Seite zwischen zwei Fotos hängen (Hybrid Composition). Jetzt verschwindet
+  sie mit dem Beginn des Wischens und kommt erst, wenn die Seite ruht (`ScrollEndNotification`).
+- **HDR sanft hochfahren** (ab Android 15): `desiredHdrHeadroom` steigt in 0,5 s von 1 auf das
+  Maximum des Displays, danach ohne Grenze — für Editor und Betrachter.
+- **Objektiv** bei Gerätefotos: AndroidX `ExifInterface` statt der des Frameworks (liefert
+  `LensModel`); schon über `photo_manager` in der App (LICENSES.md).
+
+**Geprüft** 24.09.2026 auf dem Pixel (Release `0e967f9`), Testfoto A (Ultra HDR) in einem
+Ordner, den die Immich-App nicht sichert, danach gelöscht:
+- Betrachter: Fenster `COLOR_MODE_HDR`, `currentHdrSdrRatio=4.99999` (desired 5).
+- Editor: nach Drehen und Zuschnitt Quadrat weiter `COLOR_MODE_HDR`, Faktor 5. Gespeichert („Nur
+  auf dem Gerät"): libvips 8.18.6 lädt die Kopie mit **`uhdrload`**, 3072 × 3072, Content-Boost
+  4,6525 wie das Original (4,6525) — **Ultra HDR mit passender Gain-Map**. Mit „HDR aus" eine
+  weitere Kopie: `jpegload`, kein `hdrgm` — **SDR**. Damit ist der HDR-Teil der M2-Abnahme bis auf
+  das Urteil des Auges erfüllt.
+- Infos (Emulator, dieselbe Datei): „Google Pixel 7 Pro / Pixel 7 Pro back camera 6.81mm f/1.85 /
+  f/1,9 · 1/231 s · ISO 47 · 6,8 mm".
+- Im Emulator: Wischen vor und zurück über mehrere Seiten ohne Hängen.
+
+Stolperstein: Nach einem Neustart des `system_server` im Emulator (Grafik-Compositor meldete
+„Binder buffer full") hing der Launcher; neu starten half. Der Emulator hat kein HDR — dort zeigt
+`dumpsys` den Farbmodus nicht.
+
+---
+
 ## 2026-09-24 · D-56: Noodle Gallery als Server — geprüft
 
 Ein Noodle-Server lokal in Docker, ohne die Bibliothek des Besitzers zu berühren: Compose aus

@@ -27,7 +27,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden) und
     **Einstellungen** als Karten: Bearbeiten (HDR), Speichern (Online-Fotos übers Gerät), Netzwerk
     (mobile Daten, D-30), Stapeln („Jetzt stapeln") — D-32, D-35. Antippen öffnet den **Betrachter**
-    (D-33): wischen, auch über Monatsgrenzen (D-47), zoomen, Stapel wie bei Google Fotos (Original, V1, V2; Hauptfoto festlegen,
+    (D-33): wischen, auch über Monatsgrenzen (D-47), HDR aus dem lokalen Original (D-54), zoomen, Stapel wie bei Google Fotos (Original, V1, V2; Hauptfoto festlegen,
     eines behalten und den Rest löschen, D-34), hochwischen für Infos, „Bearbeiten" → Editor →
     zurück zum Ergebnis. Zwei Reiter: „Gerät" (Fotos auf dem Gerät,
     neueste zuerst, D-26) und „Immich": Server-Fotos nach Monaten über Immichs Timeline,
@@ -84,7 +84,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Stand `5038b06` (Release-Build, Debug-Schlüssel), installiert
+- **Pixel des Besitzers:** App-Stand `0e967f9` (Release-Build, Debug-Schlüssel), installiert
   24.09.2026 nachmittags, als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung
