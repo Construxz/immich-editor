@@ -27,8 +27,9 @@ Gebaut:
   dazwischen.
 
 **Geprüft** 24.09.2026 im Emulator: in Ruhe volle Breite; mitten im Wischen (Bildschirmfoto)
-Spalt rechts und das nächste Foto schon geladen. Tests grün (27). Nachmessung auf dem Pixel steht
-aus. App-Version `0.1.0-dev.68`.
+Spalt rechts und das nächste Foto schon geladen. Tests grün (27). Auf dem Pixel das Urteil des
+Besitzers: „jetzt ist es top" (24.09.2026); damit gilt auch D-67 als bestätigt. App-Version
+`0.1.0-dev.68`.
 
 ---
 
@@ -48,8 +49,8 @@ Geändert: Jede Seite hat ihre feste Markierung und immer denselben Rahmen (`Zoo
 `ValueListenableBuilder`); die Seiten, die nicht vorn sind, hängen an `noZoom` (immer 1).
 
 **Geprüft:** Widget-Test `zoom_test.dart` zählt, wie oft der Inhalt einer Seite entsteht — vorher
-3 bei zwei Seiten und einem Wechsel, jetzt 2. Nachmessung auf dem Pixel steht aus (der Besitzer
-blätterte in den Aufnahmen nicht). App-Version `0.1.0-dev.67`.
+3 bei zwei Seiten und einem Wechsel, jetzt 2. Auf dem Pixel bestätigt mit D-68. App-Version
+`0.1.0-dev.67`.
 
 ---
 
