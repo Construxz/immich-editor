@@ -7,6 +7,22 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-64: Betrachter zeigt Ultra HDR an; HDR-Knopf nur, wo es HDR gibt
+
+Befund des Besitzers: In der Pixel-Kamera war „Ultra HDR" aus; mit einem Ultra-HDR-Foto wirkt der
+Knopf (D-63). Wunsch: In den Infos sehen, ob ein Foto Ultra HDR ist, und bei anderen Fotos keinen
+HDR-Knopf. Gebaut mit derselben Prüfung wie D-63 (Gain-Map des Originals auf dem Gerät, sobald
+die Seite ruht): Die Infos hängen „Ultra HDR" an Auflösung und Größe, der Knopf im Betrachter
+erscheint nur dann — auch wenn HDR aus ist, damit man es wieder einschalten kann. Reine
+Server-Fotos gelten als unbekannt (kein Hinweis, kein Knopf), bis der Betrachter ihre Originale
+lädt (ROADMAP). Galerie und Editor behalten ihren Knopf.
+
+**Geprüft** 24.09.2026 im Emulator: `preset-10.edit.jpg` (Kopie mit Gain-Map, auf dem Gerät) —
+„12.5 MP · 3072 × 4080 · 2.9 MB · Ultra HDR" und Knopf „HDR on"; das Original `preset-10.jpg`
+(nur auf dem Server) — ohne Hinweis und ohne Knopf. App-Version `0.1.0-dev.64`.
+
+---
+
 ## 2026-09-24 · D-63: Betrachter — HDR nur bei Gain-Map, Infos beim Blättern offen
 
 Befund des Besitzers auf dem Pixel (`0.1.0-dev.62`): Der HDR-Knopf im Betrachter ändert nichts

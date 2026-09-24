@@ -323,6 +323,8 @@ class _PageState extends State<_Page> {
             ? const <(Photo, String)>[]
             : _versions(stack, l.original);
         final shown = photos.where((f) => f.$1.id == _shown).firstOrNull;
+        // Checked once the page rests (D-63): the device ID if the photo carries a gain map.
+        final ultraHdr = widget.active ? _hdrId(shown?.$1.checksum) : null;
         final time = widget.entry.onDevice
             ? _deviceAsset?.createDateTime
             : shown?.$1.localTime;
@@ -410,7 +412,13 @@ class _PageState extends State<_Page> {
                   constraints: BoxConstraints(
                     maxHeight: MediaQuery.sizeOf(context).height * 0.4,
                   ),
-                  child: SingleChildScrollView(child: _Info(_photoInfo)),
+                  child: SingleChildScrollView(
+                    child: FutureBuilder(
+                      future: ultraHdr,
+                      builder: (context, s) =>
+                          _Info(_photoInfo, ultraHdr: s.data != null),
+                    ),
+                  ),
                 ),
               if (photos.length > 1) _thumbnails(stack!, photos),
               Padding(
@@ -423,7 +431,12 @@ class _PageState extends State<_Page> {
                       isSelected: widget.info,
                       onPressed: () => widget.onInfo(!widget.info),
                     ),
-                    const HdrButton(),
+                    // Only for a photo that has HDR to switch (D-64).
+                    FutureBuilder(
+                      future: ultraHdr,
+                      builder: (context, s) =>
+                          s.data == null ? const SizedBox() : const HdrButton(),
+                    ),
                     const Spacer(),
                     FilledButton.icon(
                       icon: const Icon(Icons.tune),
@@ -556,9 +569,12 @@ String _size(int bytes, String locale) => bytes >= 1 << 20
 
 /// The photo's info, as Google Photos shows it when swiping up — without a map.
 class _Info extends StatelessWidget {
-  const _Info(this.info);
+  const _Info(this.info, {this.ultraHdr = false});
 
   final Future<PhotoInfo> info;
+
+  /// The photo carries a gain map (known only for photos on this device).
+  final bool ultraHdr;
 
   @override
   Widget build(BuildContext context) => FutureBuilder(
@@ -585,6 +601,7 @@ class _Info extends StatelessWidget {
       final details = [
         ?mp,
         if (i.bytes != null) _size(i.bytes!, locale),
+        if (ultraHdr) AppLocalizations.of(context).viewerUltraHdr,
       ].join(' · ');
       return SafeArea(
         child: Padding(

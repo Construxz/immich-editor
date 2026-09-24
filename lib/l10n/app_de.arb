@@ -105,6 +105,7 @@
   "viewerKeepText": "{count, plural, =1{Das andere Foto des Stapels geht in Immichs Papierkorb — dort lässt es sich wiederherstellen.} other{Die anderen {count} Fotos des Stapels gehen in Immichs Papierkorb — dort lassen sie sich wiederherstellen.}}",
   "viewerDeleteRest": "Rest löschen",
   "viewerInfo": "Infos",
+  "viewerUltraHdr": "Ultra HDR",
   "viewerEdit": "Bearbeiten",
   "viewerStack": "Stapel",
   "viewerSetPrimary": "Als Hauptfoto festlegen",

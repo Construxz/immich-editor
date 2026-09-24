@@ -728,6 +728,12 @@ abstract class AppLocalizations {
   /// **'Info'**
   String get viewerInfo;
 
+  /// No description provided for @viewerUltraHdr.
+  ///
+  /// In en, this message translates to:
+  /// **'Ultra HDR'**
+  String get viewerUltraHdr;
+
   /// No description provided for @viewerEdit.
   ///
   /// In en, this message translates to:

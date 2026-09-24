@@ -404,6 +404,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get viewerInfo => 'Infos';
 
   @override
+  String get viewerUltraHdr => 'Ultra HDR';
+
+  @override
   String get viewerEdit => 'Bearbeiten';
 
   @override

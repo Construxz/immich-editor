@@ -403,6 +403,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewerInfo => 'Info';
 
   @override
+  String get viewerUltraHdr => 'Ultra HDR';
+
+  @override
   String get viewerEdit => 'Edit';
 
   @override
