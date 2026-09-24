@@ -7,6 +7,31 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-66: Eigener Zoom im Betrachter statt `InteractiveViewer`
+
+Befund des Besitzers nach D-65: Wischen tadellos, aber Zwei-Finger-Zoom geht nicht mehr. Ursache
+(im Widget-Test nachgestellt): Der erste Finger driftet, bevor der zweite landet; ab 18 px nimmt
+ihn das Blättern, dem Zoom fehlt ein Finger. Und der zweite Finger erreicht die Seite gar nicht —
+während eine Liste scrollt, schaltet Flutter die Berührungen ihrer Kinder ab (`Scrollable`,
+`IgnorePointer`). Mit Schwellen ist der Wettlauf nicht zu lösen; vor D-65 gewann der Zoom den
+ersten Finger meist, dafür stahl er die Wischer.
+
+Gebaut: `PinchZoom` (`lib/gallery/zoom.dart`) umschließt die Seiten und arbeitet auf rohen
+Berührungen (`Listener`), außerhalb des Gestenwettstreits: Die Seiten behalten jeden Wischer;
+landet ein zweiter Finger, halten die Seiten an (eine begonnene Bewegung federt zurück) und der
+Pinch zoomt, auch mit einem Finger, den das Blättern schon hatte. Gezoomt verschiebt ein Finger
+(das Bild deckt die Fläche, kein schwarzer Rand), ungezoomt öffnet/schließt senkrechtes Wischen
+auf dem Bild die Infos. Die Seite zeigt die Vergrößerung über `Zoomed`; nur die aktuelle Seite
+zoomt, beim Blättern zurück auf 1. `InteractiveViewer` und die Schwelle aus D-65 sind raus.
+
+**Geprüft** 24.09.2026: Widget-Test `zoom_test.dart` — ein Finger blättert, ein Pinch zoomt
+(> 1,5×) auch nachdem der erste Finger 40 px in eine Seitenbewegung driftete, die Seite federt
+zurück; hoch-/runterwischen meldet die Richtung. Emulator: Hochwischen öffnet die Infos, 3 von 3
+schnellen Wischern über dem Bild blättern. Pinch auf dem Pixel: prüft der Besitzer. App-Version
+`0.1.0-dev.66`.
+
+---
+
 ## 2026-09-24 · D-65: Blättern im Betrachter — der Zoom nimmt keine Wischer mehr
 
 Befund des Besitzers auf dem Pixel: Ohne Infos sträubt sich das Blättern, ein Wischer reicht

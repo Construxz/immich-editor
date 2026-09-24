@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/gestures.dart' show DeviceGestureSettings;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -15,6 +14,7 @@ import '../photo.dart';
 import '../server/immich.dart';
 import '../theme.dart';
 import 'device.dart';
+import 'zoom.dart';
 
 /// One photo large: swipe to the next, zoom, switch within the stack, swipe up for the info;
 /// "Bearbeiten" opens the editor, afterwards the result shows here (ROADMAP, viewer).
@@ -45,10 +45,13 @@ class ViewerPage extends StatefulWidget {
 class _ViewerPageState extends State<ViewerPage> {
   late final _pages = PageController(initialPage: widget.start);
   var _entries = <int, Future<Entry>>{};
-  var _zoomed = false;
+  var _zoomed = false; // zoomed or pinching: the pages hold still
   late var _count = widget.count;
   var _loading = false;
   late var _current = widget.start; // only this page shows HDR (D-54)
+  late var _page = widget.start; // the page on screen: it zooms (D-65)
+  final _zoom = ValueNotifier(Matrix4.identity());
+  final _zoomArea = GlobalKey();
   Timer? _rest; // HDR only once a page has rested a moment — fast swiping creates no view (D-63)
 
   /// Info below the photo, open across pages so photos can be compared (D-63).
@@ -86,6 +89,7 @@ class _ViewerPageState extends State<ViewerPage> {
   void dispose() {
     _rest?.cancel();
     _pages.dispose();
+    _zoom.dispose();
     super.dispose();
   }
 
@@ -128,29 +132,41 @@ class _ViewerPageState extends State<ViewerPage> {
           }
           return false;
         },
-        child: PageView.builder(
-          controller: _pages,
-          physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
-          itemCount: _count,
-          onPageChanged: _nearEnd,
-          itemBuilder: (context, i) => FutureBuilder(
-            future: _entries[i] ??= widget.entryAt(i),
-            builder: (context, s) {
-              final e = s.data;
-              if (e == null) return const SizedBox();
-              return _Page(
-                key: ValueKey(e),
-                immich: widget.immich,
-                entry: e,
-                active: i == _current,
-                info: _info,
-                onInfo: (open) => setState(() => _info = open),
-                onZoom: (z) {
-                  if (z != _zoomed) setState(() => _zoomed = z);
-                },
-                onEdit: (shown) => _edit(i, shown),
-              );
+        child: PinchZoom(
+          target: _zoomArea,
+          matrix: _zoom,
+          onHold: (held) {
+            if (held != _zoomed) setState(() => _zoomed = held);
+          },
+          onSwipe: (up) => setState(() => _info = up),
+          child: PageView.builder(
+            controller: _pages,
+            physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+            itemCount: _count,
+            onPageChanged: (i) {
+              _zoom.value = Matrix4.identity();
+              setState(() => _page = i);
+              _nearEnd(i);
             },
+            itemBuilder: (context, i) => FutureBuilder(
+              future: _entries[i] ??= widget.entryAt(i),
+              builder: (context, s) {
+                final e = s.data;
+                if (e == null) return const SizedBox();
+                return _Page(
+                  key: ValueKey(e),
+                  immich: widget.immich,
+                  entry: e,
+                  active: i == _current,
+                  info: _info,
+                  onInfo: (open) => setState(() => _info = open),
+                  zoomed: _zoomed,
+                  zoomKey: i == _page ? _zoomArea : null,
+                  zoom: i == _page ? _zoom : null,
+                  onEdit: (shown) => _edit(i, shown),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -168,7 +184,9 @@ class _Page extends StatefulWidget {
     required this.active,
     required this.info,
     required this.onInfo,
-    required this.onZoom,
+    required this.zoomed,
+    this.zoomKey,
+    this.zoom,
     required this.onEdit,
   });
 
@@ -181,7 +199,13 @@ class _Page extends StatefulWidget {
   /// Info open below the photo; [onInfo] opens or closes it for all pages.
   final bool info;
   final ValueChanged<bool> onInfo;
-  final ValueChanged<bool> onZoom;
+
+  /// Zoomed or pinching: no HDR view (it would not zoom along).
+  final bool zoomed;
+
+  /// Only the page on screen: marks and zooms its image area (D-65).
+  final GlobalKey? zoomKey;
+  final ValueNotifier<Matrix4>? zoom;
   final ValueChanged<Entry> onEdit;
 
   @override
@@ -189,13 +213,10 @@ class _Page extends StatefulWidget {
 }
 
 class _PageState extends State<_Page> {
-  final _zoom = TransformationController();
   late Future<PhotoStack> _stack = _load();
   late String _shown = widget.entry.id;
   AssetEntity? _deviceAsset;
   Future<Uint8List?>? _deviceImage;
-  var _zoomed = false;
-
   final _hdrIds = <String, Future<String?>>{};
 
   /// The shown photo's ID on the device, if it lives here and carries a gain map — kept per
@@ -234,17 +255,6 @@ class _PageState extends State<_Page> {
         return a?.thumbnailDataWithSize(const ThumbnailSize.square(1440));
       });
     }
-    _zoom.addListener(() {
-      final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
-      widget.onZoom(zoomed);
-      if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
-    });
-  }
-
-  @override
-  void dispose() {
-    _zoom.dispose();
-    super.dispose();
   }
 
   Entry get _entry => (id: _shown, onDevice: widget.entry.onDevice);
@@ -369,51 +379,32 @@ class _PageState extends State<_Page> {
                   ),
                 ),
               Expanded(
-                // Not zoomed, one finger must travel 120 px before the zoom takes it (default
-                // 36) — otherwise it wins swipes whose moves arrive in coarse steps and the
-                // page does not turn; pinching stays immediate (D-65).
-                child: MediaQuery(
-                  data: MediaQuery.of(context).copyWith(
-                    gestureSettings: _zoomed
-                        ? null
-                        : const DeviceGestureSettings(touchSlop: 60),
-                  ),
-                  child: InteractiveViewer(
-                    transformationController: _zoom,
-                    maxScale: 8,
-                    panEnabled: _zoom.value.getMaxScaleOnAxis() > 1.01,
-                    // Swiping up shows the info, down hides it, as in Google Photos. The zoom
-                    // catches the gesture, hence here instead of in a GestureDetector.
-                    onInteractionEnd: (d) {
-                      final dy = d.velocity.pixelsPerSecond.dy;
-                      if (_zoom.value.getMaxScaleOnAxis() > 1.01) return;
-                      if (dy < -300) widget.onInfo(true);
-                      if (dy > 300) widget.onInfo(false);
-                    },
-                    child: SizedBox.expand(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          image,
-                          // HDR from the local original: device photos, or server photos that
-                          // also live here (D-54). Server-only ones stay SDR — no download here.
-                          if (widget.active && !_zoomed)
-                            ValueListenableBuilder(
-                              valueListenable: hdrOn,
-                              builder: (context, on, _) => !on
-                                  ? const SizedBox()
-                                  : FutureBuilder(
-                                      future: _hdrId(shown?.$1.checksum),
-                                      builder: (context, s) => s.data == null
-                                          ? const SizedBox()
-                                          : HdrImage(
-                                              key: ValueKey(s.data),
-                                              id: s.data!,
-                                            ),
-                                    ),
-                            ),
-                        ],
-                      ),
+                child: Zoomed(
+                  zoomKey: widget.zoomKey,
+                  matrix: widget.zoom,
+                  child: SizedBox.expand(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        image,
+                        // HDR from the local original: device photos, or server photos that
+                        // also live here (D-54). Server-only ones stay SDR — no download here.
+                        if (widget.active && !widget.zoomed)
+                          ValueListenableBuilder(
+                            valueListenable: hdrOn,
+                            builder: (context, on, _) => !on
+                                ? const SizedBox()
+                                : FutureBuilder(
+                                    future: _hdrId(shown?.$1.checksum),
+                                    builder: (context, s) => s.data == null
+                                        ? const SizedBox()
+                                        : HdrImage(
+                                            key: ValueKey(s.data),
+                                            id: s.data!,
+                                          ),
+                                  ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
