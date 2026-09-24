@@ -51,6 +51,17 @@ class Immich {
   /// Major version of the server, e.g. 3.
   Future<int> majorVersion() async => (await version()).major;
 
+  /// Tested against: Immich 3, or Noodle Gallery 5 — a fork with Immich's API that counts its
+  /// own versions; it names its repository in `/server/about` (D-56). Needs the login.
+  Future<bool> isKnownServer() async {
+    final major = await majorVersion();
+    if (knownMajorVersions.contains(major)) return true;
+    final about = _json(
+      await _await(_http.get(_uri('/server/about'), headers: headers), _short),
+    );
+    return about['repository'] == 'open-noodle/gallery' && major == 5;
+  }
+
   /// Version of the server, e.g. 3.2.2.
   Future<({int major, int minor, int patch})> version() async {
     final v = _json(

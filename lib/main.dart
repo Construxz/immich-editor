@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
         _password.text,
       );
       final version = await immich.majorVersion();
-      if (!Immich.knownMajorVersions.contains(version)) {
+      if (!await immich.isKnownServer()) {
         messenger.showSnackBar(
           SnackBar(content: Text(l.loginUntestedVersion(version))),
         );

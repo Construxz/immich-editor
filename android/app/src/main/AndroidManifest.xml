@@ -8,6 +8,7 @@
     <!-- Ohne sie schwärzt Android den Ort im EXIF: andere Bytes, andere Prüfsumme, Kopie ohne Ort -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION"/>
     <application
+        android:usesCleartextTraffic="true"
         android:label="Editor for Immich"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
