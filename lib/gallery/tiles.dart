@@ -30,7 +30,7 @@ final _dir = rendererChannel
     .then((d) => Directory('$d/thumbnails')..createSync(recursive: true));
 final _memory = <String, Future<Uint8List>>{};
 
-Future<Uint8List> _thumbnail(Immich immich, String id) {
+Future<Uint8List> serverThumbnail(Immich immich, String id) {
   final known = _memory.remove(id);
   if (known != null) return _memory[id] = known; // now the newest
   if (_memory.length >= 1000) _memory.remove(_memory.keys.first);
@@ -52,7 +52,7 @@ Future<Uint8List> _thumbnail(Immich immich, String id) {
 }
 
 class _ServerThumbnailState extends State<ServerThumbnail> {
-  late var _bytes = _thumbnail(widget.immich, widget.id);
+  late var _bytes = serverThumbnail(widget.immich, widget.id);
   var _attempt = 0;
 
   @override
@@ -65,7 +65,7 @@ class _ServerThumbnailState extends State<ServerThumbnail> {
           if (!mounted) return;
           setState(() {
             _attempt++;
-            _bytes = _thumbnail(widget.immich, widget.id);
+            _bytes = serverThumbnail(widget.immich, widget.id);
           });
         });
       }

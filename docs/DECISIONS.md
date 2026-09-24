@@ -7,6 +7,31 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-68: Blättern wie Google Fotos — Nachbarn vorgeladen, Platzhalter, Spalt
+
+Befund des Besitzers: Man wischt schneller, als das nächste Foto lädt, und sieht kurz Schwarz;
+bei Google Fotos sind vorige und nächste Seite schon geladen, beim Wischen liegt ein schmaler
+schwarzer Spalt zwischen den Fotos, erst bei extrem schnellem Wischen kommt ein unscharfes Bild.
+Gemessen 24.09.2026 auf dem Pixel (`0.1.0-dev.67`, Aufnahme wie D-67, 35 s, der Besitzer blätterte
+etwa 5 Fotos je Sekunde): **71 Einbrüche**; im Einzelbild zeigt die hereinkommende Seite den
+Ladekreis — ihr Foto lädt erst, wenn sie ins Bild kommt (`PageView` baut nur sichtbare Seiten).
+
+Gebaut:
+- `allowImplicitScrolling`: die Seite davor und danach bleiben gebaut, ihre Fotos laden vorher.
+- Unter dem großen Bild ein kleines, das sofort da ist: bei Gerätefotos 160 px
+  (`photo_manager`), bei Server-Fotos das Vorschaubild der Galerie (Platte, D-55; dafür
+  `serverThumbnail` aus `tiles.dart` öffentlich). Ist man schneller als das große, sieht man das
+  Foto unscharf statt Schwarz.
+- Spalt 16 pt: jede Seite ist um den Spalt breiter als der Bildschirm (`OverflowBox`), das Foto
+  um den halben Spalt eingerückt — in Ruhe füllt es die Breite, beim Wischen liegt Schwarz
+  dazwischen.
+
+**Geprüft** 24.09.2026 im Emulator: in Ruhe volle Breite; mitten im Wischen (Bildschirmfoto)
+Spalt rechts und das nächste Foto schon geladen. Tests grün (27). Nachmessung auf dem Pixel steht
+aus. App-Version `0.1.0-dev.68`.
+
+---
+
 ## 2026-09-24 · D-67: Betrachter flackert beim Blättern nicht mehr
 
 Befund des Besitzers nach D-66: Beim schnellen Blättern flackert das Bild — erst Vorschau, kurz

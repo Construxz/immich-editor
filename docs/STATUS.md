@@ -29,7 +29,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden) und
     **Einstellungen** als Karten: Bearbeiten (HDR), Speichern (Online-Fotos übers Gerät), Netzwerk
     (mobile Daten, D-30), Stapeln („Jetzt stapeln") — D-32, D-35. Antippen öffnet den **Betrachter**
-    (D-33): wischen, auch über Monatsgrenzen (D-47), HDR aus dem lokalen Original, nur bei Fotos mit Gain-Map und erst, wenn die Seite ruht; dort auch der HDR-Knopf und „Ultra HDR" in den Infos (D-54, D-63, D-64), zoomen mit zwei Fingern — ein Finger blättert, eigener Zoom auf rohen Berührungen (D-65, D-66), Stapel wie bei Google Fotos (Original, V1, V2; Hauptfoto festlegen,
+    (D-33): wischen, auch über Monatsgrenzen (D-47), HDR aus dem lokalen Original, nur bei Fotos mit Gain-Map und erst, wenn die Seite ruht; dort auch der HDR-Knopf und „Ultra HDR" in den Infos (D-54, D-63, D-64), zoomen mit zwei Fingern — ein Finger blättert, eigener Zoom auf rohen Berührungen (D-65, D-66), Nachbarn vorgeladen, kleiner Platzhalter, Spalt beim Wischen (D-68), Stapel wie bei Google Fotos (Original, V1, V2; Hauptfoto festlegen,
     eines behalten und den Rest löschen, D-34), hochwischen für Infos unter dem Foto, beim Blättern offen (D-63), „Bearbeiten" → Editor →
     zurück zum Ergebnis. Zwei Reiter: „Gerät" (Fotos auf dem Gerät,
     neueste zuerst, D-26) und „Immich": Server-Fotos nach Monaten über Immichs Timeline,
@@ -88,7 +88,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Version `0.1.0-dev.67` (Release-Build, Debug-Schlüssel), installiert
+- **Pixel des Besitzers:** App-Version `0.1.0-dev.68` (Release-Build, Debug-Schlüssel), installiert
   24.09.2026 abends, als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung

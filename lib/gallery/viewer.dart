@@ -14,6 +14,7 @@ import '../photo.dart';
 import '../server/immich.dart';
 import '../theme.dart';
 import 'device.dart';
+import 'tiles.dart' show serverThumbnail;
 import 'zoom.dart';
 
 /// One photo large: swipe to the next, zoom, switch within the stack, swipe up for the info;
@@ -45,6 +46,8 @@ class ViewerPage extends StatefulWidget {
 class _ViewerPageState extends State<ViewerPage> {
   late final _pages = PageController(initialPage: widget.start);
   var _entries = <int, Future<Entry>>{};
+  static const _gap =
+      16.0; // black between photos while swiping, as in Google Photos
   var _zoomed = false; // zoomed or pinching: the pages hold still
   late var _count = widget.count;
   var _loading = false;
@@ -142,33 +145,46 @@ class _ViewerPageState extends State<ViewerPage> {
             if (held != _zoomed) setState(() => _zoomed = held);
           },
           onSwipe: (up) => setState(() => _info = up),
-          child: PageView.builder(
-            controller: _pages,
-            physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
-            itemCount: _count,
-            onPageChanged: (i) {
-              _zoom.value = Matrix4.identity();
-              setState(() => _page = i);
-              _nearEnd(i);
-            },
-            itemBuilder: (context, i) => FutureBuilder(
-              future: _entries[i] ??= widget.entryAt(i),
-              builder: (context, s) {
-                final e = s.data;
-                if (e == null) return const SizedBox();
-                return _Page(
-                  key: ValueKey(e),
-                  immich: widget.immich,
-                  entry: e,
-                  active: i == _current,
-                  info: _info,
-                  onInfo: (open) => setState(() => _info = open),
-                  zoomed: _zoomed,
-                  zoomKey: _zoomAreas.putIfAbsent(i, GlobalKey.new),
-                  zoom: i == _page ? _zoom : noZoom,
-                  onEdit: (shown) => _edit(i, shown),
-                );
-              },
+          // Each page a gap wider than the screen, the photo padded by half the gap on each
+          // side: at rest it fills the screen, while swiping a black gap shows between photos;
+          // the neighbours stay built, so they are loaded before they come in (D-68).
+          child: LayoutBuilder(
+            builder: (context, box) => OverflowBox(
+              minWidth: box.maxWidth + _gap,
+              maxWidth: box.maxWidth + _gap,
+              child: PageView.builder(
+                controller: _pages,
+                allowImplicitScrolling: true,
+                physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+                itemCount: _count,
+                onPageChanged: (i) {
+                  _zoom.value = Matrix4.identity();
+                  setState(() => _page = i);
+                  _nearEnd(i);
+                },
+                itemBuilder: (context, i) => FutureBuilder(
+                  future: _entries[i] ??= widget.entryAt(i),
+                  builder: (context, s) {
+                    final e = s.data;
+                    if (e == null) return const SizedBox();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: _gap / 2),
+                      child: _Page(
+                        key: ValueKey(e),
+                        immich: widget.immich,
+                        entry: e,
+                        active: i == _current,
+                        info: _info,
+                        onInfo: (open) => setState(() => _info = open),
+                        zoomed: _zoomed,
+                        zoomKey: _zoomAreas.putIfAbsent(i, GlobalKey.new),
+                        zoom: i == _page ? _zoom : noZoom,
+                        onEdit: (shown) => _edit(i, shown),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         ),
@@ -220,6 +236,8 @@ class _PageState extends State<_Page> {
   late String _shown = widget.entry.id;
   AssetEntity? _deviceAsset;
   Future<Uint8List?>? _deviceImage;
+  Future<Uint8List?>?
+  _deviceSmall; // there at once; below the large one while it loads (D-68)
   final _hdrIds = <String, Future<String?>>{};
 
   /// The shown photo's ID on the device, if it lives here and carries a gain map — kept per
@@ -253,7 +271,11 @@ class _PageState extends State<_Page> {
   void initState() {
     super.initState();
     if (widget.entry.onDevice) {
-      _deviceImage = AssetEntity.fromId(widget.entry.id).then((a) {
+      final asset = AssetEntity.fromId(widget.entry.id);
+      _deviceSmall = asset.then(
+        (a) => a?.thumbnailDataWithSize(const ThumbnailSize.square(160)),
+      );
+      _deviceImage = asset.then((a) {
         if (mounted) setState(() => _deviceAsset = a);
         return a?.thumbnailDataWithSize(const ThumbnailSize.square(1440));
       });
@@ -315,20 +337,29 @@ class _PageState extends State<_Page> {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final l = AppLocalizations.of(context);
-    final image = widget.entry.onDevice
-        ? FutureBuilder(
-            future: _deviceImage,
-            builder: (context, s) => s.data == null
-                ? const Center(child: CircularProgressIndicator())
-                : Image.memory(s.data!, fit: BoxFit.contain),
-          )
-        : Image.network(
-            widget.immich.previewUri(_shown).toString(),
-            key: ValueKey(_shown),
-            headers: widget.immich.headers,
-            fit: BoxFit.contain,
-            gaplessPlayback: true,
-          );
+    // A small image at once, the large one over it once loaded — swiping faster than the large
+    // one loads shows the photo blurred instead of black, as in Google Photos (D-68).
+    Widget bytes(Future<Uint8List?>? future) => FutureBuilder(
+      future: future,
+      builder: (context, s) => s.data == null
+          ? const SizedBox()
+          : Image.memory(s.data!, fit: BoxFit.contain, gaplessPlayback: true),
+    );
+    final image = Stack(
+      fit: StackFit.expand,
+      children: widget.entry.onDevice
+          ? [bytes(_deviceSmall), bytes(_deviceImage)]
+          : [
+              bytes(serverThumbnail(widget.immich, _shown)),
+              Image.network(
+                widget.immich.previewUri(_shown).toString(),
+                key: ValueKey(_shown),
+                headers: widget.immich.headers,
+                fit: BoxFit.contain,
+                gaplessPlayback: true,
+              ),
+            ],
+    );
     return FutureBuilder(
       future: _stack,
       builder: (context, s) {
