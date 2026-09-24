@@ -7,6 +7,26 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-72: „Anpassen" zweistufig wie Google Fotos
+
+Wunsch des Besitzers (D-71, mit Bildschirmfotos von Google Fotos): erst die Knöpfe; ein Tipp
+öffnet den Regler, darüber die Kategorien zum Wechseln, links die Zahl, Striche bis zum Wert
+gefüllt (jeder 50er länger, erreicht gelb, sonst grau), Zurücksetzen, „Fertig" eine Stufe höher —
+alles unten, und mit unseren Punkten für Verändertes. Gebaut:
+- „Anpassen" zeigt ohne gewählten Regler nur die runden Knöpfe (mit Punkt, wenn verändert).
+- Gewählt: Kategorienleiste (die gewählte gelb, in die Mitte gescrollt, Punkt bei veränderten),
+  darunter `Ruler` als **Pille** (`pill: true`): Zahl links (gelb, sobald ≠ 0), Striche von 0 bis
+  zum Wert gelb, jeder 10. Strich (= 50) lang, rechts Zurücksetzen; darunter „Fertig" (gelb)
+  statt der Reiter. Doppeltippen auf das Lineal setzt weiter auf 0.
+- Das Winkel-Lineal beim Zuschneiden und die Filterstärke bleiben wie bisher.
+
+**Geprüft** 24.09.2026 im Emulator (Bildschirmfotos): Übersicht mit Knöpfen und Reitern;
+„Shadows" → Leiste, Pille, „Done"; gezogen bis 100 — alle Striche bis zum Wert gelb, der 50er
+lang, Punkt an „Shadows"; Zurücksetzen → 0, Punkt weg; „Done" → Übersicht mit Reitern.
+App-Version `0.1.0-dev.72`.
+
+---
+
 ## 2026-09-24 · D-71: „Optimieren" als Schalter und in der Mehrfachauswahl; Presets-Leiste
 
 Befund des Besitzers auf dem Pixel (Vergleich mit Google Fotos, 24.09.2026): „Optimieren" zeigt

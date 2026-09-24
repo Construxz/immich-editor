@@ -19,10 +19,6 @@ Reihenfolge:
   Fotos je Regler −100 und +100 und „Optimieren" als Kopien, ich lese sie aus und passe die
   Formeln in `Renderer.kt` an. *Abnahme:* je Regler bei ±100 auf der Tafel höchstens 10 % Abstand
   zu Google (Graustufen und Farbfelder), „Optimieren" in derselben Größenordnung.
-- ⬜ **„Anpassen" zweistufig wie Google:** Übersicht der runden Knöpfe (mit unseren Punkten für
-  Verändertes); ein Tipp öffnet die Reglerzeile: darüber die Kategorien zum Wechseln, links die
-  Zahl, Striche bis zum Wert gefüllt (jeder 50er länger, erreicht gelb, sonst grau),
-  Zurücksetzen, „Fertig" zurück zur Übersicht.
 - ⬜ **Meine Presets:** bearbeiten und umbenennen, eine Seite „Meine Presets", sichern und laden
   als `.json` je Preset auf dem Telefon (Vorstufe der Idee „Presets teilen").
 - ⬜ Perspektive (Vier-Punkt).

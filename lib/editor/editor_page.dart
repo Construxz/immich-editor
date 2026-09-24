@@ -64,6 +64,25 @@ class _EditorPageState extends State<EditorPage> {
   var _section = _Section.adjust;
   String? _tool; // selected adjustment in the adjust section
   var _presets = <Preset>[];
+  final _activeTool = GlobalKey(); // the chosen category, scrolled into view
+
+  /// Opens the slider of adjustment [key]; its name in the categories scrolls to the middle.
+  void _pick(String key) {
+    setState(() => _tool = key);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final c = _activeTool.currentContext;
+      if (c != null) {
+        Scrollable.ensureVisible(
+          c,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 200),
+        );
+      }
+    });
+  }
+
+  /// Google's accent in the slider view (D-72), the same as the zero mark of the ruler.
+  static const _amber = Color(0xFFFFB300);
 
   /// The adjustments "Optimieren" may set; a second tap starts from 0 for them, not on top.
   Future<Map<String, double>>?
@@ -456,7 +475,9 @@ class _EditorPageState extends State<EditorPage> {
                       if (_section == _Section.crop) _cropButtons(l),
                       Expanded(child: _imageArea()),
                       _tools(l),
-                      _tabs(l),
+                      // A slider open: "Fertig" instead of the tabs (D-72).
+                      if (_section != _Section.adjust || _tool == null)
+                        _tabs(l),
                     ],
                   ),
           ),
@@ -745,38 +766,95 @@ class _EditorPageState extends State<EditorPage> {
       );
     }
     final active = _tool;
+    // Two levels as in Google Photos (D-72): the round buttons; one tapped, the slider with
+    // the categories above it to switch, and "Fertig" back up.
+    if (active == null) {
+      return SizedBox(
+        height: 96,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          children: [
+            for (final t in tools)
+              _ToolButton(
+                label: toolName(l, t.key),
+                icon: t.icon,
+                selected: false,
+                changed: _recipe.value(t.key) != 0,
+                onTap: () => _pick(t.key),
+              ),
+          ],
+        ),
+      );
+    }
+    final colors = Theme.of(context).colorScheme;
     return Column(
       children: [
-        if (active != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Ruler(
-              value: _recipe.value(active),
-              min: -1,
-              max: 1,
-              onChanged: (v) =>
-                  _change(_recipe.withValue(active, v), remember: false),
-              onEnd: _remember,
-            ),
-          ),
         SizedBox(
-          height: 96,
+          height: 36,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
               for (final t in tools)
-                _ToolButton(
-                  label: toolName(l, t.key),
-                  icon: t.icon,
+                Semantics(
                   selected: t.key == active,
-                  changed: _recipe.value(t.key) != 0,
-                  onTap: () =>
-                      setState(() => _tool = t.key == active ? null : t.key),
+                  child: InkWell(
+                    key: t.key == active ? _activeTool : null,
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => _pick(t.key),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Center(
+                        child: Row(
+                          spacing: 4,
+                          children: [
+                            Text(
+                              toolName(l, t.key),
+                              style: TextStyle(
+                                color: t.key == active
+                                    ? _amber
+                                    : colors.onSurfaceVariant,
+                              ),
+                            ),
+                            // Our dot for changed ones, here too (D-72).
+                            if (_recipe.value(t.key) != 0)
+                              CircleAvatar(
+                                radius: 3,
+                                backgroundColor: colors.primary,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Ruler(
+            pill: true,
+            value: _recipe.value(active),
+            min: -1,
+            max: 1,
+            onChanged: (v) =>
+                _change(_recipe.withValue(active, v), remember: false),
+            onEnd: _remember,
+            resetLabel: l.editorReset,
+            onReset: () => _change(_recipe.withValue(active, 0)),
+          ),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: _amber,
+            foregroundColor: Colors.black,
+          ),
+          onPressed: () => setState(() => _tool = null),
+          child: Text(l.editorDone),
+        ),
+        const SizedBox(height: 12),
       ],
     );
   }

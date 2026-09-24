@@ -28,7 +28,16 @@ class Ruler extends StatefulWidget {
     this.tick = 5,
     this.step = 1,
     this.snapRange = 2,
+    this.pill = false,
+    this.onReset,
+    this.resetLabel,
   });
+
+  /// As in Google Photos (D-72): a pill with the value on the left, the ticks from zero to the
+  /// value filled amber, every 50 longer, a reset button on the right ([onReset]).
+  final bool pill;
+  final VoidCallback? onReset;
+  final String? resetLabel;
 
   final double value, min, max;
   final ValueChanged<double> onChanged;
@@ -84,30 +93,32 @@ class _RulerState extends State<Ruler> {
         w.onChanged(0);
         w.onEnd?.call();
       },
-      child: SizedBox(
-        height: 64,
-        child: Column(
-          children: [
-            Text(
-              '${(w.value * w.scale).toStringAsFixed(w.step < 1 ? 1 : 0)}${w.unit}',
-              style: TextStyle(color: colors.primary, fontSize: 13),
-            ),
-            const SizedBox(height: 6),
-            Expanded(
-              child: CustomPaint(
-                size: Size.infinite,
-                painter: _Ticks(
-                  offset: w.value * w._pixelsPerValue,
-                  from: w.min * w._pixelsPerValue,
-                  to: w.max * w._pixelsPerValue,
-                  color: colors.onSurface,
-                  center: colors.primary,
-                ),
+      child: w.pill
+          ? _pill(colors)
+          : SizedBox(
+              height: 64,
+              child: Column(
+                children: [
+                  Text(
+                    _shown,
+                    style: TextStyle(color: colors.primary, fontSize: 13),
+                  ),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: CustomPaint(
+                      size: Size.infinite,
+                      painter: _Ticks(
+                        offset: w.value * w._pixelsPerValue,
+                        from: w.min * w._pixelsPerValue,
+                        to: w.max * w._pixelsPerValue,
+                        color: colors.onSurface,
+                        center: colors.primary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -119,10 +130,16 @@ class _Ticks extends CustomPainter {
     required this.to,
     required this.color,
     required this.center,
+    this.filled = false,
+    this.longEvery = 5,
   });
 
   final double offset, from, to;
   final Color color, center;
+
+  /// Ticks between zero and the value amber (D-72); every [longEvery]th tick long.
+  final bool filled;
+  final int longEvery;
 
   /// The zero point, conspicuous and unlike the center: you see where it snaps.
   static const _zero = Color(0xFFFFB300);
@@ -155,8 +172,13 @@ class _Ticks extends CustomPainter {
           ..drawCircle(Offset(px, size.height * 0.08), 3, zero);
         continue;
       }
-      final long = (x / Ruler._pixelsPerTick).round() % 5 == 0;
-      pen.color = color.withValues(alpha: long ? 0.7 : 0.35);
+      final long = (x / Ruler._pixelsPerTick).round() % longEvery == 0;
+      final reached =
+          filled &&
+          (offset >= 0
+              ? x > 0 && x <= offset + 0.01
+              : x < 0 && x >= offset - 0.01);
+      pen.color = reached ? _zero : color.withValues(alpha: long ? 0.7 : 0.35);
       final h = long ? size.height * 0.7 : size.height * 0.4;
       canvas.drawLine(
         Offset(px, (size.height - h) / 2),
@@ -168,4 +190,54 @@ class _Ticks extends CustomPainter {
 
   @override
   bool shouldRepaint(_Ticks old) => old.offset != offset || old.color != color;
+}
+
+extension on _RulerState {
+  String get _shown =>
+      '${(widget.value * widget.scale).toStringAsFixed(widget.step < 1 ? 1 : 0)}${widget.unit}';
+
+  Widget _pill(ColorScheme colors) {
+    final w = widget;
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.only(left: 20, right: 4),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 44,
+            child: Text(
+              _shown,
+              style: TextStyle(
+                color: w.value == 0 ? colors.onSurface : _Ticks._zero,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Expanded(
+            child: CustomPaint(
+              size: Size.infinite,
+              painter: _Ticks(
+                offset: w.value * w._pixelsPerValue,
+                from: w.min * w._pixelsPerValue,
+                to: w.max * w._pixelsPerValue,
+                color: colors.onSurface,
+                center: _Ticks._zero,
+                filled: true,
+                longEvery: 10,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.restart_alt),
+            tooltip: w.resetLabel,
+            onPressed: w.value == 0 ? null : w.onReset,
+          ),
+        ],
+      ),
+    );
+  }
 }

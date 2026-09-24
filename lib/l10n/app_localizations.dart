@@ -362,6 +362,18 @@ abstract class AppLocalizations {
   /// **'Adjust'**
   String get editorTabAdjust;
 
+  /// No description provided for @editorDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get editorDone;
+
+  /// No description provided for @editorReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get editorReset;
+
   /// No description provided for @editorTabFilter.
   ///
   /// In en, this message translates to:

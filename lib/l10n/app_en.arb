@@ -44,6 +44,8 @@
   "editorTabPresets": "Presets",
   "editorTabCrop": "Crop",
   "editorTabAdjust": "Adjust",
+  "editorDone": "Done",
+  "editorReset": "Reset",
   "editorTabFilter": "Filters",
   "filterNone": "None",
   "filterVivid": "Vivid",

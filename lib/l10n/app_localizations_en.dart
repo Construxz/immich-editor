@@ -142,6 +142,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorTabAdjust => 'Adjust';
 
   @override
+  String get editorDone => 'Done';
+
+  @override
+  String get editorReset => 'Reset';
+
+  @override
   String get editorTabFilter => 'Filters';
 
   @override
