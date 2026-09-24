@@ -91,7 +91,13 @@ class _FolderRow extends StatefulWidget {
   State<_FolderRow> createState() => _FolderRowState();
 }
 
-class _FolderRowState extends State<_FolderRow> {
+/// Kept alive when scrolled out, and always two lines high — otherwise rows above grew while
+/// loading and scrolling up jumped (D-57).
+class _FolderRowState extends State<_FolderRow>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late final Future<List<AssetEntity>> _photos = widget.folder.assetCountAsync
       .then(
         (n) => n == 0 ? [] : widget.folder.getAssetListRange(start: 0, end: n),
@@ -103,57 +109,62 @@ class _FolderRowState extends State<_FolderRow> {
   );
 
   @override
-  Widget build(BuildContext context) => FutureBuilder(
-    future: _photos,
-    builder: (context, s) {
-      final photos = s.data ?? const [];
-      final backedUp = photos
-          .where((a) => widget.backup.deviceBackedUp.contains(a.id))
-          .length;
-      return ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: SizedBox.square(
-            dimension: 56,
-            child: FutureBuilder(
-              future: _cover,
-              builder: (context, b) => b.data == null
-                  ? ColoredBox(
-                      color: Theme.of(context).colorScheme.surfaceContainer,
-                    )
-                  : Image.memory(b.data!, fit: BoxFit.cover),
-            ),
-          ),
-        ),
-        title: Text(widget.folder.name),
-        subtitle: s.data == null
-            ? null
-            : Text(
-                backedUp == 0
-                    ? AppLocalizations.of(context)
-                          .libraryNotInImmich(photos.length)
-                    : backedUp == photos.length
-                    ? AppLocalizations.of(context)
-                          .libraryBackedUp(photos.length)
-                    : AppLocalizations.of(context)
-                          .libraryPartlyBackedUp(photos.length, backedUp),
+  Widget build(BuildContext context) {
+    super.build(context);
+    return FutureBuilder(
+      future: _photos,
+      builder: (context, s) {
+        final photos = s.data ?? const [];
+        final backedUp = photos
+            .where((a) => widget.backup.deviceBackedUp.contains(a.id))
+            .length;
+        return ListTile(
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox.square(
+              dimension: 56,
+              child: FutureBuilder(
+                future: _cover,
+                builder: (context, b) => b.data == null
+                    ? ColoredBox(
+                        color: Theme.of(context).colorScheme.surfaceContainer,
+                      )
+                    : Image.memory(b.data!, fit: BoxFit.cover),
               ),
-        trailing: Icon(
-          backedUp == 0 ? Icons.cloud_off_outlined : Icons.cloud_done_outlined,
-          size: 20,
-        ),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => FolderPage(
-              folder: widget.folder,
-              immich: widget.immich,
-              backup: widget.backup,
             ),
           ),
-        ),
-      );
-    },
-  );
+          title: Text(widget.folder.name),
+          subtitle: s.data == null
+              ? const Text('')
+              : Text(
+                  backedUp == 0
+                      ? AppLocalizations.of(context)
+                            .libraryNotInImmich(photos.length)
+                      : backedUp == photos.length
+                      ? AppLocalizations.of(context)
+                            .libraryBackedUp(photos.length)
+                      : AppLocalizations.of(context)
+                            .libraryPartlyBackedUp(photos.length, backedUp),
+                ),
+          trailing: Icon(
+            backedUp == 0
+                ? Icons.cloud_off_outlined
+                : Icons.cloud_done_outlined,
+            size: 20,
+          ),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => FolderPage(
+                folder: widget.folder,
+                immich: widget.immich,
+                backup: widget.backup,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// The photos of a device folder; tapping opens the viewer.
