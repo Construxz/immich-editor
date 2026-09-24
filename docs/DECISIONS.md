@@ -7,6 +7,60 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-74: „Optimieren" nach Google Fotos abgestimmt
+
+Befund D-71: „Optimieren" ist kaum sichtbar. Nach D-73 wirkte es auf dunkle Fotos dagegen viel
+zu stark: Es zog den Median auf mindestens 0,35, und die Helligkeit ist jetzt kräftig.
+
+**Messweg.** Der Besitzer hat in Google Fotos von fünf eigenen Kamerafotos „Optimieren" als
+Kopie gespeichert (`DCIM/Camera/PXL_…~2.jpg`, 25.09.2026): Pilz im Wald, Abendhimmel, warmer
+Dunst, Haus in der Sonne, dunkler Wald im Gegenlicht. Die Fotos liegen nur zum Messen im
+Arbeitsordner, nicht im Repo. Unsere Seite: `SOURCE=foto.png bash tool/chartdump.sh … optimize
+'{}'`, also unser Optimize und der Renderer im Emulator. Verglichen werden Median, 1. und
+99. Perzentil der Helligkeit, R/B und G über fast graue Pixel (lineares Licht, wie Optimize) und
+die mittlere Buntheit, dazu die mittlere Änderung in Stufen.
+
+**Was Googles „Optimieren" macht:** Es hebt den Median etwa ein Viertel des Weges (in Blenden)
+Richtung 0,6. Das sind 0,26 bis 1,0 Blenden, beim Abendhimmel 0,47, beim gut belichteten Pilz
+0,26. Es gibt etwa 10–15 % mehr Buntheit. Starke Farbstiche korrigiert es bis R/B ≈ 1,1 und
+G ≈ 1,0–1,04 (Dunst 1,47 → 1,14), blaue Stunde (0,77 → 0,80) und leicht warme Fotos lässt es
+stehen. Weiß und Schwarz bewegt es kaum.
+
+**Gebaut** (`Optimize.kt`):
+- Helligkeit: Median um ein Viertel des Weges in Blenden Richtung 0,6, statt 70 % des Weges bis
+  mindestens 0,35.
+- Weißpunkt: ein Viertel des Weges statt der Hälfte.
+- Weißabgleich: Bereich R/B 0,8 … 1,1 und G 0,95 … 1,04 statt 1,0 … 1,25 und 0,95 … 1,1.
+- Sättigung +0,1, außer bei grauen oder schon kräftigen Fotos (mittlere Buntheit 0,02 … 0,2).
+
+Damit gilt der Satz aus D-70 „ein gut belichtetes, neutrales Foto bekommt nichts" nicht mehr.
+Wie bei Google bekommt es eine leichte Anhebung.
+
+| Foto | Änderung Google | unsere vorher / jetzt | Abstand zu Google vorher / jetzt |
+|---|---|---|---|
+| Pilz | 6,9 | 4,7 / 8,6 | 3,9 / 2,9 |
+| Abendhimmel | 8,4 | 32,0 / 20,2 | 23,6 / 12,0 |
+| Dunst | 7,3 | 4,5 / 4,6 | 6,5 / 6,1 |
+| Haus | 11,0 | 8,4 / 14,0 | 4,4 / 3,7 |
+| Wald | 16,7 | 34,1 / 20,4 | 17,3 / 4,7 |
+
+(Mittel über alle Pixel in 8-Bit-Stufen, 512 px.) Die Stärke liegt damit in derselben
+Größenordnung wie bei Google. Übrig bleiben drei Unterschiede:
+- Den Abendhimmel lässt Google bewusst dunkler als den ähnlich dunklen Wald. Median und
+  Perzentile unterscheiden die beiden nicht, und fünf Fotos reichen nicht, um das sicher
+  einzustellen.
+- Den Dunst korrigieren wir nur auf R/B 1,21, weil die Verschiebung im hellen Himmel schwächer
+  wirkt.
+- Google gibt dem Wald mehr lokalen Kontrast und hält die Schatten satt. Das kann ein globaler
+  Regler nicht, es gehört zu Pop/Dynamisch (ROADMAP).
+
+**Geprüft** 25.09.2026: die Tabelle oben, und im Bildvergleich (Original, Google, wir) liegen alle
+fünf sichtbar nah an Google. `OptimizeTest` (6, grün) an die gemessenen Grenzen angepasst: Ein
+neutrales Foto bekommt nur Helligkeit ≤ 0,1, ein warmer Abend (R/B 1,2) nur Wärme −0,15 … 0, ein
+Blaustich Wärme > 0,2. App-Version `0.1.0-dev.74`.
+
+---
+
 ## 2026-09-24 · D-73: Regler nach Google Fotos kalibriert
 
 Befund D-71 (Besitzer): unsere Regler wirken bei ±100 viel schwächer als bei Google Fotos.

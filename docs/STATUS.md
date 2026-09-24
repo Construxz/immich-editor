@@ -37,7 +37,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     per langem Druck; die Auswahl bekommt ein **Preset** (D-40).
   - Editor im Aufbau von Google Fotos (D-22): schwarz; oben Schließen, Rückgängig/Wiederholen,
     HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Presets" (vorn „Optimieren", das die
-    Regler aus dem Bild setzt — ein Schalter, auch in der Mehrfachauswahl, D-70, D-71; Regler sichern, anwenden, D-40), „Zuschneiden" (Rahmen mit Anfassern,
+    Regler aus dem Bild setzt — ein Schalter, auch in der Mehrfachauswahl, nach Google abgestimmt, D-70, D-71, D-74; Regler sichern, anwenden, D-40), „Zuschneiden" (Rahmen mit Anfassern,
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal), „Anpassen" (12 Regler als runde Knöpfe;
     einer gewählt: Kategorienleiste, Regler als Pille mit Zahl, Zurücksetzen und „Fertig", D-72) und „Filter" (acht eigene Looks als 3D-LUT mit Vorschaubild und Stärke; Presets
     nehmen den Filter mit, D-62); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
@@ -69,7 +69,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/photo.dart`; nativ in
   `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometry.kt`, `Optimize.kt`, `Lut.kt` (Filter aus `assets/luts`, erzeugt von
   `tool/make_luts.py`), `Preview.kt` (Sitzung, Ansicht),
-  Kalibrierung mit `tool/testchart.py`, `tool/readchart.py`, `tool/chartdump.sh` (D-73),
+  Kalibrierung mit `tool/testchart.py`, `tool/readchart.py`, `tool/chartdump.sh` (D-73, auch für Fotos: D-74),
   `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
   Englisch** (D-42). Anzeigesprache Deutsch oder Englisch nach dem Gerät, in den Einstellungen
   umstellbar (D-43); Texte in `lib/l10n/app_{de,en}.arb`. Keine Google-Play-Dienste, kein Firebase.

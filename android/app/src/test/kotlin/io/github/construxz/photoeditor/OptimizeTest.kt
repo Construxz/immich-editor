@@ -12,8 +12,11 @@ class OptimizeTest {
         (255 shl 24) or (c(r) shl 16) or (c(g) shl 8) or c(b)
     }
 
-    @Test fun aGoodNeutralPhotoGetsNothing() {
-        assertEquals(emptyMap<String, Double>(), Optimize.adjustments(image { Triple(it, it, it) }))
+    @Test fun aGoodNeutralPhotoGetsAtMostALittleLift() {
+        // Like Google's "Optimieren" on a well exposed photo (D-74): a touch brighter, nothing else.
+        val a = Optimize.adjustments(image { Triple(it, it, it) })
+        assertEquals("$a", setOf("brightness"), a.keys)
+        assertTrue("$a", a.getValue("brightness") in 0.0..0.1)
     }
 
     @Test fun aDarkPhotoGetsBrighter() {
@@ -25,7 +28,7 @@ class OptimizeTest {
 
     @Test fun aBlueCastGetsWarmer() {
         val a = Optimize.adjustments(image { Triple(it * 0.85, it, minOf(1.0, it * 1.15)) })
-        assertTrue("$a", a.getValue("warmth") > 0.3)
+        assertTrue("$a", a.getValue("warmth") > 0.2)
     }
 
     @Test fun aGreenCastGetsTint() {
@@ -34,9 +37,9 @@ class OptimizeTest {
     }
 
     @Test fun aWarmEveningStaysWarm() {
-        // R/B about 1.2 in linear light: sunny warm, within the natural range.
+        // R/B about 1.2 in linear light: only back to 1.1, as Google does (D-74).
         val a = Optimize.adjustments(image { Triple(minOf(1.0, it * 1.04), it, it * 0.96) })
-        assertTrue("$a", "warmth" !in a && "tint" !in a)
+        assertTrue("$a", a.getOrDefault("warmth", 0.0) in -0.15..0.0 && "tint" !in a)
     }
 
     @Test fun aColourfulPhotoKeepsItsColours() {

@@ -14,18 +14,20 @@ import kotlin.math.roundToInt
  * exposed, neutral photo gets nothing.
  */
 object Optimize {
+    private const val SATURATION = 0.1
     /** Adjustments (recipe key → −1 … 1) for sRGB pixels [argb] (a downscaled photo is enough). */
     fun adjustments(argb: IntArray): Map<String, Double> {
         val n = argb.size
         if (n == 0) return emptyMap()
         val luma = DoubleArray(n)
-        var r = 0.0; var g = 0.0; var b = 0.0; var grays = 0
+        var r = 0.0; var g = 0.0; var b = 0.0; var grays = 0; var chroma = 0.0
         for ((i, p) in argb.withIndex()) {
             val red = (p shr 16 and 255) / 255.0
             val green = (p shr 8 and 255) / 255.0
             val blue = (p and 255) / 255.0
             val l = 0.2126 * red + 0.7152 * green + 0.0722 * blue
             luma[i] = l
+            chroma += max(red, max(green, blue)) - min(red, min(green, blue))
             // White balance only from nearly gray pixels, so a red sunset stays red.
             if (l in 0.15..0.9 && max(red, max(green, blue)) - min(red, min(green, blue)) < 0.2) {
                 r += linear(red); g += linear(green); b += linear(blue); grays++
@@ -35,40 +37,45 @@ object Optimize {
         val lo = luma[(n * 0.005).toInt()]
         val hi = luma[min(n - 1, (n * 0.995).toInt())]
 
-        // Levels: the darkest and brightest 0.5 % halfway toward black and white — a flat but
-        // fine photo stays close, a dark one still gets the full range.
+        // Levels: the darkest 0.5 % halfway toward black, the brightest a quarter of the way
+        // toward white — measured on Google's "Optimieren" (D-74), which barely moves white itself.
         val blackPoint = ((lo - 0.02) / 2 / (0.504 * (1 - lo).pow(1.63))).coerceIn(0.0, 1.0)
-        val whitePoint = ((0.98 - hi) / 2 / (0.328 * max(black(hi, blackPoint), 0.01))).coerceIn(0.0, 1.0)
+        val whitePoint = ((0.98 - hi) / 4 / (0.328 * max(black(hi, blackPoint), 0.01))).coerceIn(0.0, 1.0)
 
-        // Brightness: only a median outside 0.35 … 0.6 moves, most of the way.
+        // Brightness: the median a quarter of the way (in stops) toward 0.6, like Google — a dark
+        // photo gets lighter, a dusk stays a dusk.
         val m = (black(luma[n / 2], blackPoint) * (1 + 0.328 * whitePoint)).coerceIn(0.01, 0.99)
         val y = linear(m)
-        val t = linear(m.coerceIn(0.35, 0.6))
-        val brightness = (0.7 * when {
+        val t = y.pow(0.75) * linear(0.6).pow(0.25)
+        val brightness = (when {
             t < y -> -log2(y / t) / 2.419
             t > y -> log2(t * (1 - y) / (y * (1 - t))) / 2.796
             else -> 0.0
         }).coerceIn(-0.6, 0.6)
 
-        // White balance over the gray pixels, only outside a natural range: R/B 1.0 … 1.25
-        // (neutral to sunny warm), G 0.95 … 1.1 of the R-B mean — plain gray world would cool a
-        // warm evening. Beyond the range, back to its edge. Fewer than 5 % gray pixels: colours stay.
+        // White balance over the gray pixels, only outside a range: R/B 0.8 … 1.1, G 0.95 … 1.04
+        // of the R-B mean — where Google's "Optimieren" leaves them (D-74); plain gray world would
+        // also cool a blue hour. Beyond the range, back to its edge. Fewer than 5 % gray pixels:
+        // colours stay.
         var warmth = 0.0; var tint = 0.0
         if (grays >= n * 0.05) {
             val gray = doubleArrayOf(srgb(r / grays), srgb(g / grays), srgb(b / grays))
             fun shifted(w: Double, t: Double) = shift(gray, w, t).map(::linear)
             fun redBlue(w: Double) = shifted(w, 0.0).let { it[0] / it[2] }
             val k = redBlue(0.0)
-            if (k !in 1.0..1.25) warmth = solve { redBlue(it) - k.coerceIn(1.0, 1.25) }
+            if (k !in 0.8..1.1) warmth = solve { redBlue(it) - k.coerceIn(0.8, 1.1) }
             fun green(t: Double) = shifted(warmth, t).let { it[1] / ((it[0] + it[2]) / 2) }
             val gr = green(0.0)
-            if (gr !in 0.95..1.1) tint = solve { green(it) - gr.coerceIn(0.95, 1.1) }
+            if (gr !in 0.95..1.04) tint = solve { green(it) - gr.coerceIn(0.95, 1.04) }
             warmth = warmth.coerceIn(-0.6, 0.6); tint = tint.coerceIn(-0.6, 0.6)
         }
 
+        // A little more colour, like Google — not for a gray or an already vivid photo.
+        val saturation = if (chroma / n in 0.02..0.2) SATURATION else 0.0
+
         return mapOf(
             "blackPoint" to blackPoint, "whitePoint" to whitePoint, "brightness" to brightness,
-            "warmth" to warmth, "tint" to tint,
+            "warmth" to warmth, "tint" to tint, "saturation" to saturation,
         ).mapValues { (it.value * 100).roundToInt() / 100.0 }.filterValues { abs(it) >= 0.03 }
     }
 

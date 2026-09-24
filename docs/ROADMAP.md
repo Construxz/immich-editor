@@ -10,17 +10,28 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** 🔶
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über Gerät und Server,
-Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server, Filter, Optimieren, Betrachter wie Google Fotos, Regler nach Google kalibriert (D-17 bis D-73). Offen, in dieser
+Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server, Filter, Optimieren, Betrachter wie Google Fotos, Regler und Optimieren nach Google kalibriert (D-17 bis D-74). Offen, in dieser
 Reihenfolge:
 - ⬜ **Noodle:** bei Noodle anfragen, ob ihr Editor das Rezept-Format übernimmt (D-27, D-56).
 - 🔶 **Regler kalibrieren nach Google Fotos:** 8 von 11 Reglern liegen bei ±100 unter 10 % zu
-  Google (D-73, Messweg dort). Offen:
+  Google (D-73), „Optimieren" in derselben Größenordnung (D-74). Offen:
   - Kontrast (26 % / 16 %), Sättigung + (13 %) und Blautöne + (32 %) unter 10 % bringen.
-  - „Optimieren" in derselben Größenordnung wie bei Google: Das ist nur an echten Fotos messbar.
-    Der Besitzer speichert von ein paar Fotos Googles „Optimieren" als Kopie.
   - Leere Bilder des Renderers im Emulator: Ursache finden und klären, ob Kopien betroffen sein
     können.
-  - Google-Werkzeuge ohne Gegenstück (Ton, Hautton, Pop, Dynamisch …): beim Besitzer nachfragen.
+- ⬜ **Werkzeuge wie in Google Fotos** (Wunsch des Besitzers, 25.09.2026; Messungen an der
+  Testtafel D-73). In dieser Reihenfolge:
+  - **Pop** (nutzt der Besitzer oft; Kopien `testchart~33`/`~34`): lokaler Kontrast und Farbe.
+  - **Ton** (`~10`/`~11`).
+  - **Hautton** (`~26`/`~27`): wirkt nur auf Hauttöne.
+  - **Dynamisch** (`~3`): wohl lokale Tonwerte; D-74 zeigt, dass es auch in „Optimieren" steckt.
+  - **Scharfzeichnen** (`~32`) und **Scharf stellen** (`~35`): Den Unterschied klärt erst eine
+    Messung an einem echten Foto.
+  - **Ultra HDR** (`~8`/`~9`): Das SDR-Bild bleibt, dazu kommt eine Gain-Map. Ziel: einem Foto
+    ohne HDR nachträglich die Anmutung geben, als hätte die Kamera Ultra HDR aufgenommen.
+  - **Porträtlicht „Licht angleichen"** (`~36`/`~37`): braucht Gesichtserkennung auf dem Gerät
+    mit offenem Modell (D-6). „Licht hinzufügen" (virtuelle Lichtquelle) kommt danach.
+  Nicht vorrangig: Entrauschen. Das von Google wirkt laut Besitzer eher wie ein Weichzeichner;
+  der Maßstab sind KI-Entrauscher vom Desktop (Lightroom, Topaz).
 - ⬜ **Meine Presets:** bearbeiten und umbenennen, eine Seite „Meine Presets", sichern und laden
   als `.json` je Preset auf dem Telefon (Vorstufe der Idee „Presets teilen").
 - ⬜ Perspektive (Vier-Punkt).
