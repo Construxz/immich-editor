@@ -66,6 +66,23 @@ class _EditorPageState extends State<EditorPage> {
   var _presets = <Preset>[];
   final _activeTool = GlobalKey(); // the chosen category, scrolled into view
 
+  // Pinch zoom of the preview: scale and shift in logical pixels, and where the gesture began.
+  var _zoom = 1.0;
+  var _pan = Offset.zero;
+  var _zoomStart = 1.0;
+  var _focalStart =
+      Offset.zero; // the focal point in unzoomed image coordinates
+
+  /// Zoom [scale] (1 … 4) with shift [pan], kept so the image area stays covered.
+  void _setZoom(double scale, Offset pan, Size area) {
+    _zoom = scale.clamp(1.0, 4.0);
+    _pan = Offset(
+      pan.dx.clamp(area.width * (1 - _zoom), 0.0),
+      pan.dy.clamp(area.height * (1 - _zoom), 0.0),
+    );
+    showZoom(_zoom, _pan * MediaQuery.devicePixelRatioOf(context));
+  }
+
   /// Opens the slider of adjustment [key]; its name in the categories scrolls to the middle.
   void _pick(String key) {
     setState(() => _tool = key);
@@ -228,6 +245,8 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   void _switchSection(_Section s) {
+    // Cropping has its own gestures on the frame: back to the whole image.
+    if (s == _Section.crop) _setZoom(1, Offset.zero, Size.zero);
     setState(() {
       _section = s;
       _tool = null;
@@ -555,11 +574,22 @@ class _EditorPageState extends State<EditorPage> {
           onEnd: _remember,
         )
       else
-        // Long press shows the original.
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onLongPressStart: (_) => showRecipe(const Recipe()),
-          onLongPressEnd: (_) => _show(),
+        // Long press shows the original; two fingers zoom and move, double tap resets.
+        LayoutBuilder(
+          builder: (context, box) => GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onLongPressStart: (_) => showRecipe(const Recipe()),
+            onLongPressEnd: (_) => _show(),
+            onScaleStart: (d) {
+              _zoomStart = _zoom;
+              _focalStart = (d.localFocalPoint - _pan) / _zoom;
+            },
+            onScaleUpdate: (d) {
+              final s = (_zoomStart * d.scale).clamp(1.0, 4.0);
+              _setZoom(s, d.localFocalPoint - _focalStart * s, box.biggest);
+            },
+            onDoubleTap: () => _setZoom(1, Offset.zero, box.biggest),
+          ),
         ),
       if (_saving)
         Center(
@@ -790,46 +820,50 @@ class _EditorPageState extends State<EditorPage> {
     final colors = Theme.of(context).colorScheme;
     return Column(
       children: [
+        // All built at once (not a ListView): coming from the buttons, the chosen one must
+        // exist to be scrolled to the middle.
         SizedBox(
           height: 36,
-          child: ListView(
+          child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              for (final t in tools)
-                Semantics(
-                  selected: t.key == active,
-                  child: InkWell(
-                    key: t.key == active ? _activeTool : null,
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => _pick(t.key),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Center(
-                        child: Row(
-                          spacing: 4,
-                          children: [
-                            Text(
-                              toolName(l, t.key),
-                              style: TextStyle(
-                                color: t.key == active
-                                    ? _amber
-                                    : colors.onSurfaceVariant,
+            child: Row(
+              children: [
+                for (final t in tools)
+                  Semantics(
+                    selected: t.key == active,
+                    child: InkWell(
+                      key: t.key == active ? _activeTool : null,
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => _pick(t.key),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Center(
+                          child: Row(
+                            spacing: 4,
+                            children: [
+                              Text(
+                                toolName(l, t.key),
+                                style: TextStyle(
+                                  color: t.key == active
+                                      ? _amber
+                                      : colors.onSurfaceVariant,
+                                ),
                               ),
-                            ),
-                            // Our dot for changed ones, here too (D-72).
-                            if (_recipe.value(t.key) != 0)
-                              CircleAvatar(
-                                radius: 3,
-                                backgroundColor: colors.primary,
-                              ),
-                          ],
+                              // Our dot for changed ones, here too (D-72).
+                              if (_recipe.value(t.key) != 0)
+                                CircleAvatar(
+                                  radius: 3,
+                                  backgroundColor: colors.primary,
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
         Padding(
@@ -837,7 +871,7 @@ class _EditorPageState extends State<EditorPage> {
           child: Ruler(
             pill: true,
             value: _recipe.value(active),
-            min: -1,
+            min: oneSided.contains(active) ? 0 : -1,
             max: 1,
             onChanged: (v) =>
                 _change(_recipe.withValue(active, v), remember: false),

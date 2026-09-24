@@ -52,6 +52,10 @@ Future<List<Uint8List>> filterThumbs(List<String> ids) async =>
       'ids': ids,
     }))!;
 
+/// Pinch zoom of the preview: [scale] ≥ 1, then shifted by [offset] (physical pixels).
+Future<void> showZoom(double scale, Offset offset) => rendererChannel
+    .invokeMethod('zoom', {'scale': scale, 'x': offset.dx, 'y': offset.dy});
+
 Future<void> showHdr(bool on) =>
     rendererChannel.invokeMethod('hdr', {'on': on});
 

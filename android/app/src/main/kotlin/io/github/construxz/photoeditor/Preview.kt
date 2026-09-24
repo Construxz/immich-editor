@@ -36,6 +36,15 @@ object Session {
         private set
     var view: View? = null
 
+    /** Pinch zoom of the view: scale, then shift in view pixels (from Flutter's gesture). */
+    var zoom = floatArrayOf(1f, 0f, 0f)
+        private set
+
+    fun setZoom(scale: Float, x: Float, y: Float) {
+        zoom = floatArrayOf(scale, x, y)
+        view?.invalidate()
+    }
+
     /** Loads the original with [recipeJson]; the preview works on a downscaled version. */
     fun load(bytes: ByteArray, hdrOn: Boolean, recipeJson: String): Map<String, Any> {
         orientation = Renderer.orientation(bytes)
@@ -104,6 +113,7 @@ object Session {
     fun end() {
         source = null
         image = null
+        zoom = floatArrayOf(1f, 0f, 0f)
     }
 
     /** Renders in the background; if changes come faster, only the last one counts. */
@@ -138,6 +148,11 @@ class PreviewView(context: Context) : View(context) {
         val h = b.height * s
         val x = (width - w) / 2
         val y = (height - h) / 2
+        // ponytail: zoom enlarges the preview (≤ 2048 px); render the visible part sharp if it
+        // looks soft at high zoom.
+        val (scale, dx, dy) = Session.zoom
+        canvas.translate(dx, dy)
+        canvas.scale(scale, scale)
         canvas.drawBitmap(b, null, RectF(x, y, x + w, y + h), null)
     }
 }

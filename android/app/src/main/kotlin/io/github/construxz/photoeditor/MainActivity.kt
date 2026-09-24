@@ -83,6 +83,14 @@ class MainActivity : FlutterActivity() {
                         Session.setRecipe(call.argument<String>("recipe")!!)
                         result.success(null)
                     }
+                    "zoom" -> {
+                        Session.setZoom(
+                            call.argument<Double>("scale")!!.toFloat(),
+                            call.argument<Double>("x")!!.toFloat(),
+                            call.argument<Double>("y")!!.toFloat(),
+                        )
+                        result.success(null)
+                    }
                     "export" -> {
                         val recipe = JSONObject(call.argument<String>("recipe")!!)
                         val quality = call.argument<Int>("quality")!!

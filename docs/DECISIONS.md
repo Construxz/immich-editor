@@ -7,6 +7,37 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-76: Pop nur 0 … 100, Leiste springt zum Regler, Zoom im Editor
+
+Befunde des Besitzers auf dem Pixel mit `0.1.0-dev.75`:
+- **Pop hat bei Google kein Minus** (0 = aus, 100 = voll). Jetzt geht das Lineal für Pop von 0
+  bis 100 (`oneSided` in `recipe.dart`). Der Renderer nimmt weiter −1 … 1 an, falls ein Rezept
+  das enthält.
+- **Die Kategorienleiste sprang nicht zum gewählten Regler**, wenn man von den Knöpfen kam; aus
+  der Leiste heraus ging es. Ursache: Die Leiste war eine `ListView`, die nur Sichtbares baut.
+  Pop ganz rechts gab es beim Öffnen also noch nicht, und `ensureVisible` fand nichts. Jetzt baut
+  sie alle 13 Einträge.
+- **Kein Pinch-Zoom im Editor.** Den gab es bisher nicht; die Vorschau ist eine native Ansicht
+  ohne Gesten. Jetzt erkennt Flutter die Geste über dem Bild (Pinch und Verschieben 1 … 4×,
+  Doppeltippen setzt zurück) und schickt Maßstab und Verschiebung an die native Ansicht
+  (`zoom`). Die zeichnet ihr Vorschaubild damit, deshalb ist das Bild bei starkem Zoom nur so
+  scharf wie die Vorschau (≤ 2048 px). Beim Zuschneiden ist der Zoom aus, beim Schließen wird er
+  zurückgesetzt.
+
+**Geprüft** 25.09.2026 im Emulator: Von den Knöpfen zu Pop steht „Pop" gelb in der Mitte der
+Leiste. Das Lineal beginnt bei 0, nach unten gezogen bleibt es bei 0, nach oben geht es bis 100.
+Den Pinch-Zoom konnte ich im Emulator **nicht** auslösen: `adb input` kennt nur einen Finger, und
+Mehrfinger-Ereignisse per `sendevent` (mit `adb root`) kamen auf keinem der elf virtuellen
+Touchscreens an. Die Prüfung macht der Besitzer auf dem Pixel. `flutter analyze` sauber,
+`flutter test` grün.
+
+**Befund:** Nach schnellem Wischen am Lineal (drei Züge in drei Sekunden) zeigte die Vorschau im
+Emulator in 3 von 12 Fällen nur einen Streifen des Bildes, bei Pop wie bei der Vignette; langsam
+verstellt 0 von 12. Das gehört wohl zu den leeren Bildern aus D-73 (ROADMAP). App-Version
+`0.1.0-dev.76`.
+
+---
+
 ## 2026-09-25 · D-75: Pop — lokaler Kontrast mit Guided Filter, kein Relief
 
 Wunsch des Besitzers: Pop nutzt er oft. Sein Eindruck von Googles Pop 100 auf der Testtafel war

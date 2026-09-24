@@ -40,7 +40,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Regler aus dem Bild setzt — ein Schalter, auch in der Mehrfachauswahl, nach Google abgestimmt, D-70, D-71, D-74; Regler sichern, anwenden, D-40), „Zuschneiden" (Rahmen mit Anfassern,
     Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal), „Anpassen" (13 Regler als runde Knöpfe, darunter Pop, D-75;
     einer gewählt: Kategorienleiste, Regler als Pille mit Zahl, Zurücksetzen und „Fertig", D-72) und „Filter" (acht eigene Looks als 3D-LUT mit Vorschaubild und Stärke; Presets
-    nehmen den Filter mit, D-62); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
+    nehmen den Filter mit, D-62); Gedrückthalten zeigt das Original, zwei Finger zoomen (D-76). Vorschau und Export rechnet der native
     Renderer (AGSL, `Renderer.kt`), die Regler bei ±100 nach Google Fotos kalibriert (D-73); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
     D-20). Das Lineal rastet nahe 0 ein; die Null ist bernsteinfarben markiert (D-41). Server-Fotos öffnen mit Immichs Vorschaubild, das
     Original (und damit HDR) kommt im Hintergrund nach; Speichern wartet darauf (D-29).
@@ -90,7 +90,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Version `0.1.0-dev.75` (Release-Build, Debug-Schlüssel, arm64), installiert
+- **Pixel des Besitzers:** App-Version `0.1.0-dev.76` (Release-Build, Debug-Schlüssel, arm64), installiert
   25.09.2026 nachts mit `adb install -r`, als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung

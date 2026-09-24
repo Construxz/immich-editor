@@ -25,6 +25,9 @@ const tools = <Tool>[
   (key: 'sharpness', icon: Icons.details),
 ];
 
+/// Adjustments that only go up, as in Google Photos: Pop is 0 … 100 there (D-75).
+const oneSided = {'pop'};
+
 /// Display name of the adjustment [key].
 String toolName(AppLocalizations l, String key) => switch (key) {
   'brightness' => l.toolBrightness,

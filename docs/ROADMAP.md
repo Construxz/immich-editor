@@ -16,8 +16,8 @@ Reihenfolge:
 - 🔶 **Regler kalibrieren nach Google Fotos:** 8 von 11 Reglern liegen bei ±100 unter 10 % zu
   Google (D-73), „Optimieren" in derselben Größenordnung (D-74). Offen:
   - Kontrast (26 % / 16 %), Sättigung + (13 %) und Blautöne + (32 %) unter 10 % bringen.
-  - Leere Bilder des Renderers im Emulator: Ursache finden und klären, ob Kopien betroffen sein
-    können.
+  - Leere Bilder des Renderers im Emulator, und Teilbilder in der Vorschau nach schnellem
+    Wischen (D-76): Ursache finden und klären, ob Kopien betroffen sein können.
 - 🔶 **Werkzeuge wie in Google Fotos** (Wunsch des Besitzers, 25.09.2026; Messungen an der
   Testtafel D-73). Pop ist gebaut (D-75); offen, in dieser Reihenfolge:
   - **Ton** (`~10`/`~11`).
