@@ -51,7 +51,8 @@ class _ViewerPageState extends State<ViewerPage> {
   late var _current = widget.start; // only this page shows HDR (D-54)
   late var _page = widget.start; // the page on screen: it zooms (D-65)
   final _zoom = ValueNotifier(Matrix4.identity());
-  final _zoomArea = GlobalKey();
+  final _zoomAreas =
+      <int, GlobalKey>{}; // per page, fixed: a moving key rebuilds the image
   Timer? _rest; // HDR only once a page has rested a moment — fast swiping creates no view (D-63)
 
   /// Info below the photo, open across pages so photos can be compared (D-63).
@@ -76,6 +77,8 @@ class _ViewerPageState extends State<ViewerPage> {
       _count += n;
       if (!older) {
         _entries = {for (final e in _entries.entries) e.key + n: e.value};
+        _zoomAreas
+            .clear(); // the pages moved; fresh keys rather than crossed ones
       }
     });
     if (!older) {
@@ -133,7 +136,7 @@ class _ViewerPageState extends State<ViewerPage> {
           return false;
         },
         child: PinchZoom(
-          target: _zoomArea,
+          target: _zoomAreas.putIfAbsent(_page, GlobalKey.new),
           matrix: _zoom,
           onHold: (held) {
             if (held != _zoomed) setState(() => _zoomed = held);
@@ -161,8 +164,8 @@ class _ViewerPageState extends State<ViewerPage> {
                   info: _info,
                   onInfo: (open) => setState(() => _info = open),
                   zoomed: _zoomed,
-                  zoomKey: i == _page ? _zoomArea : null,
-                  zoom: i == _page ? _zoom : null,
+                  zoomKey: _zoomAreas.putIfAbsent(i, GlobalKey.new),
+                  zoom: i == _page ? _zoom : noZoom,
                   onEdit: (shown) => _edit(i, shown),
                 );
               },
@@ -185,8 +188,8 @@ class _Page extends StatefulWidget {
     required this.info,
     required this.onInfo,
     required this.zoomed,
-    this.zoomKey,
-    this.zoom,
+    required this.zoomKey,
+    required this.zoom,
     required this.onEdit,
   });
 
@@ -204,8 +207,8 @@ class _Page extends StatefulWidget {
   final bool zoomed;
 
   /// Only the page on screen: marks and zooms its image area (D-65).
-  final GlobalKey? zoomKey;
-  final ValueNotifier<Matrix4>? zoom;
+  final GlobalKey zoomKey;
+  final ValueNotifier<Matrix4> zoom;
   final ValueChanged<Entry> onEdit;
 
   @override

@@ -13,13 +13,13 @@ class _Pages extends StatefulWidget {
 class _PagesState extends State<_Pages> {
   final pages = PageController();
   final zoom = ValueNotifier(Matrix4.identity());
-  final area = GlobalKey();
+  final areas = [GlobalKey(), GlobalKey()];
   var held = false;
   var page = 0;
   @override
   Widget build(BuildContext context) => MaterialApp(
     home: PinchZoom(
-      target: area,
+      target: areas[page],
       matrix: zoom,
       onHold: (h) => setState(() => held = h),
       onSwipe: widget.swipes.add,
@@ -30,14 +30,35 @@ class _PagesState extends State<_Pages> {
         children: [
           for (final (i, c) in [Colors.red, Colors.blue].indexed)
             Zoomed(
-              zoomKey: i == page ? area : null,
-              matrix: i == page ? zoom : null,
-              child: ColoredBox(color: c),
+              zoomKey: areas[i],
+              matrix: i == page ? zoom : noZoom,
+              child: _Counted(color: c),
             ),
         ],
       ),
     ),
   );
+}
+
+/// Counts how often a page's content is built from scratch — each time an image would reload.
+var inits = 0;
+
+class _Counted extends StatefulWidget {
+  const _Counted({required this.color});
+  final Color color;
+  @override
+  State<_Counted> createState() => _CountedState();
+}
+
+class _CountedState extends State<_Counted> {
+  @override
+  void initState() {
+    super.initState();
+    inits++;
+  }
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(color: widget.color);
 }
 
 void main() {
@@ -46,13 +67,20 @@ void main() {
   double scale(WidgetTester t) => state(t).zoom.value.entry(0, 0);
   double page(WidgetTester t) => state(t).pages.page!;
 
-  testWidgets('one finger turns the page', (t) async {
+  testWidgets('one finger turns the page, the pages keep their content', (
+    t,
+  ) async {
+    inits = 0;
     await t.pumpWidget(_Pages([]));
     await t.fling(find.byType(PageView), const Offset(-300, 0), 1500);
     await t.pumpAndSettle();
     expect(page(t), 1);
     expect(scale(t), 1);
     expect(state(t).held, isFalse);
+    expect(
+      inits,
+      2,
+    ); // each page once — no rebuild when the zoom moves to the new page
   });
 
   testWidgets(

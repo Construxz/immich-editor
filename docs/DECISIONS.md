@@ -7,6 +7,27 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-67: Betrachter flackert beim Blättern nicht mehr
+
+Befund des Besitzers nach D-66: Beim schnellen Blättern flackert das Bild — erst Vorschau, kurz
+schwarz, dann wieder da. Gemessen 24.09.2026 auf dem Pixel (`0.1.0-dev.66`): Bildschirm per
+`adb shell screenrecord` aufgenommen (25 s, 540 × 1170), mit PyAV jedes Einzelbild ausgewertet —
+ein Streifen der Bildmitte zu > 85 % schwarz, davor und danach nicht: **17 Einbrüche von 30 bis
+120 ms in 9 s Blättern, einer je Wischer**; im Einzelbild ist die hereinkommende Seite schwarz,
+die vorige noch zu sehen. Ursache (D-66): Die Markierung der Bildfläche (`GlobalKey`) wanderte
+beim Seitenwechsel zur neuen Seite, und nur die aktuelle Seite bekam den Zoom-Rahmen — beides
+lässt Flutter den Inhalt der Seite neu aufbauen; das Gerätefoto lädt dann neu
+(`FutureBuilder`, `Image.memory`).
+
+Geändert: Jede Seite hat ihre feste Markierung und immer denselben Rahmen (`Zoomed` mit
+`ValueListenableBuilder`); die Seiten, die nicht vorn sind, hängen an `noZoom` (immer 1).
+
+**Geprüft:** Widget-Test `zoom_test.dart` zählt, wie oft der Inhalt einer Seite entsteht — vorher
+3 bei zwei Seiten und einem Wechsel, jetzt 2. Nachmessung auf dem Pixel steht aus (der Besitzer
+blätterte in den Aufnahmen nicht). App-Version `0.1.0-dev.67`.
+
+---
+
 ## 2026-09-24 · D-66: Eigener Zoom im Betrachter statt `InteractiveViewer`
 
 Befund des Besitzers nach D-65: Wischen tadellos, aber Zwei-Finger-Zoom geht nicht mehr. Ursache

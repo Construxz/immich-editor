@@ -144,24 +144,31 @@ class _PinchZoomState extends State<PinchZoom> {
   }
 }
 
-/// The image area of a page: [matrix] zooms it; [zoomKey] marks it for [PinchZoom].
-class Zoomed extends StatelessWidget {
-  const Zoomed({super.key, this.zoomKey, this.matrix, required this.child});
+/// Never zoomed: for the pages not on screen.
+final noZoom = ValueNotifier(Matrix4.identity());
 
-  final GlobalKey? zoomKey;
-  final ValueNotifier<Matrix4>? matrix;
+/// The image area of a page: [matrix] zooms it; [zoomKey] marks it for [PinchZoom]. Key and
+/// widget tree stay the same when the page becomes current or stops being it — otherwise
+/// Flutter rebuilds the image and it flickers (D-66).
+class Zoomed extends StatelessWidget {
+  const Zoomed({
+    super.key,
+    required this.zoomKey,
+    required this.matrix,
+    required this.child,
+  });
+
+  final GlobalKey zoomKey;
+  final ValueNotifier<Matrix4> matrix;
   final Widget child;
 
   @override
   Widget build(BuildContext context) => ClipRect(
     key: zoomKey,
-    child: matrix == null
-        ? child
-        : ValueListenableBuilder(
-            valueListenable: matrix!,
-            builder: (context, m, child) =>
-                Transform(transform: m, child: child),
-            child: child,
-          ),
+    child: ValueListenableBuilder(
+      valueListenable: matrix,
+      builder: (context, m, child) => Transform(transform: m, child: child),
+      child: child,
+    ),
   );
 }
