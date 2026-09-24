@@ -56,6 +56,17 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
   deinstalliert die App: immer mit `ANDROID_SERIAL=emulator-5554`. `adb` in einer
   `while read`-Schleife verschluckt deren Eingabe — `adb … </dev/null`. Hängt `git push`, mit
   `GIT_TERMINAL_PROMPT=0 timeout 90 git push` wiederholen.
+- **Bauen aus Git Bash:** `flutter` und `java` fehlen dort im PATH. Flutter liegt unter
+  `$HOME/develop/flutter/bin/`, für `gradlew` gilt `JAVA_HOME` = JBR aus STATUS
+  (*Entwicklungsumgebung*). `gradlew` bricht mit `MSYS_NO_PATHCONV=1` ab („GradleWrapperMain"),
+  und `tool/emu.sh` setzt genau das — also nicht in derselben Shell bauen. **Nach jedem
+  Aufspielen `dumpsys package … | grep versionName` prüfen:** Scheitert der Build in einer Kette,
+  installiert `adb install` sonst die alte APK aus `build/` (so kam einmal 0.0.1 aufs Pixel).
+  Aufs Pixel: `flutter build apk --release --split-per-abi`, dann die arm64-APK mit
+  `install -r`, das behält die Anmeldung. Release-APKs von GitHub sind anders signiert und
+  gehen nur nach Deinstallieren (Anmeldung weg).
+- Zwei-Finger-Gesten lassen sich im Emulator nicht auslösen: `input` kennt einen Finger,
+  `sendevent` wirkt auch mit `adb root` nicht. Pinch prüft der Besitzer auf dem Pixel (D-76).
 - **Auf dem Pixel messen, ohne zu steuern** (der Besitzer bedient, der Agent liest): `adb logcat`
   mit vorübergehenden Logzeilen (D-65), `adb shell screenrecord` und die Einzelbilder mit PyAV
   auswerten (D-67), `dumpsys window`/`display` für den HDR-Zustand (D-63). Vorher ansagen, wann
