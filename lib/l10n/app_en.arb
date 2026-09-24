@@ -57,6 +57,8 @@
   "presetSaveTitle": "Save as preset",
   "presetName": "Name",
   "presetSave": "Save",
+  "presetOptimize": "Enhance",
+  "presetOptimizeNothing": "The photo is already balanced.",
   "presetDeleteTitle": "Delete preset “{name}”?",
   "@presetDeleteTitle": {
     "placeholders": {

@@ -57,6 +57,8 @@
   "presetSaveTitle": "Als Preset sichern",
   "presetName": "Name",
   "presetSave": "Sichern",
+  "presetOptimize": "Optimieren",
+  "presetOptimizeNothing": "Das Foto ist schon ausgewogen.",
   "presetDeleteTitle": "Preset „{name}\" löschen?",
   "presetDelete": "Löschen",
   "saveReplaceCopy": "Kopie ersetzen",

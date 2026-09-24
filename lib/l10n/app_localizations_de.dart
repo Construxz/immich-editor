@@ -181,6 +181,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get presetSave => 'Sichern';
 
   @override
+  String get presetOptimize => 'Optimieren';
+
+  @override
+  String get presetOptimizeNothing => 'Das Foto ist schon ausgewogen.';
+
+  @override
   String presetDeleteTitle(String name) {
     return 'Preset „$name\" löschen?';
   }

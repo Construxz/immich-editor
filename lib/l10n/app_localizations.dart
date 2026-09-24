@@ -440,6 +440,18 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get presetSave;
 
+  /// No description provided for @presetOptimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhance'**
+  String get presetOptimize;
+
+  /// No description provided for @presetOptimizeNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo is already balanced.'**
+  String get presetOptimizeNothing;
+
   /// No description provided for @presetDeleteTitle.
   ///
   /// In en, this message translates to:

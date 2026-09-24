@@ -7,6 +7,42 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-70: „Optimieren"
+
+Nach der ROADMAP (Idee des Besitzers, D-62): erster Eintrag unter „Presets", wie „Automatisch"
+bei Google Fotos; setzt nur vorhandene Regler, danach unter „Anpassen" veränderbar, Rückgängig
+nimmt es zurück. `Optimize.kt` liest die Vorschau des Editors auf 256 px verkleinert, die
+Formeln spiegeln `Renderer.kt`:
+- **Schwarz-/Weißpunkt:** die dunkelsten und hellsten 0,5 % halb zum Rand — ein flaues, gutes
+  Foto bleibt nah, ein dunkles bekommt den vollen Ausschlag.
+- **Helligkeit:** nur wenn der Median (nach dem Spreizen) außerhalb 0,35 … 0,6 liegt, zu 70 %.
+- **Wärme/Färbung:** über fast graue Pixel (Helligkeit 0,15 … 0,9, Farbabstand < 0,2; mindestens
+  5 % des Bildes), im linearen Licht, **nur außerhalb eines natürlichen Bereichs** — R/B 1,0 …
+  1,25, G 0,95 … 1,1 des Rot-Blau-Mittels — bis an dessen Rand. Befund beim Abstimmen: reine
+  Grauwelt (erster Wurf, gedämpft) hätte das gute, warme Testfoto um Wärme −0,38 gekühlt.
+
+Ein zweiter Tipp rechnet von 0 aus, nicht obendrauf. Setzt es nichts: Hinweis „Das Foto ist
+schon ausgewogen".
+
+**Geprüft** 24.09.2026: JVM-Test `OptimizeTest` (6: neutral → nichts, dunkel → heller, Blau-
+und Grünstich, warmer Abend bleibt warm, bunte Farben bleiben). Abnahme im Emulator mit dem
+Testfoto B (SDR) und zwei daraus gerechneten Fassungen (zwei Blenden dunkler; Blaustich R
+× 0,8, B × 1,25 linear), in der App optimiert und gespeichert, Werte aus den Kopien (Median der
+Helligkeit, R/B über graue Pixel):
+
+| Testbild | Rezept | Median | R/B |
+|---|---|---|---|
+| gut | Weißpunkt 0,12 | 0,368 → 0,375 | 1,22 → 1,21 |
+| zu dunkel | Weißpunkt 1,0, Helligkeit 0,39 | 0,183 → 0,304 | 1,03 → 1,13 |
+| blaustichig | Weißpunkt 0,16, Wärme 0,33, Färbung 0,07 | 0,363 → 0,371 | 0,90 → 0,96 |
+
+Grenzen: Der Weißpunkt-Regler spreizt höchstens 15 % — das dunkle Bild erreicht den Median des
+Originals (0,37) nicht ganz; die Wärme holt den Blaustich bis neutral (R/B 1,0 in den grauen
+Pixeln), nicht zurück zur ursprünglichen Wärme. Die Filter (D-62) passen dem Besitzer „erstmal
+so" (24.09.2026). App-Version `0.1.0-dev.70`.
+
+---
+
 ## 2026-09-24 · D-69: Griff am Infobereich des Betrachters
 
 Wunsch des Besitzers: Die Infos schließen wie bei Google Fotos an einem Griff, statt „auf gut

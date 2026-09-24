@@ -36,6 +36,14 @@ Future<void> showRecipe(Recipe recipe) => rendererChannel.invokeMethod(
   {'recipe': jsonEncode(recipe.toJson())},
 );
 
+/// "Optimieren" (D-70): adjustments for the loaded photo — only the ones it would change.
+Future<Map<String, double>> optimize() async => {
+  for (final MapEntry(:key, :value)
+      in (await rendererChannel.invokeMapMethod<String, double>('optimize'))!
+          .entries)
+    key: value,
+};
+
 /// Small JPEGs of the loaded photo with each filter in [ids], in that order.
 Future<List<Uint8List>> filterThumbs(List<String> ids) async =>
     (await rendererChannel.invokeListMethod<Uint8List>('filterThumbs', {

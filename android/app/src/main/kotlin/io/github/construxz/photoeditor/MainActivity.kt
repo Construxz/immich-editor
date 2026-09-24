@@ -65,6 +65,10 @@ class MainActivity : FlutterActivity() {
                         hdrWindow(on)
                         result.success(null)
                     }
+                    "optimize" -> Session.background.post {
+                        val values = Session.optimize()
+                        runOnUiThread { result.success(values) }
+                    }
                     "filterThumbs" -> {
                         val ids = call.argument<List<String>>("ids")!!
                         Session.background.post {

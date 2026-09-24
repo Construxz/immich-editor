@@ -64,6 +64,15 @@ class _EditorPageState extends State<EditorPage> {
   var _section = _Section.adjust;
   String? _tool; // selected adjustment in the adjust section
   var _presets = <Preset>[];
+
+  /// The adjustments "Optimieren" may set; a second tap starts from 0 for them, not on top.
+  static const _optimized = [
+    'blackPoint',
+    'whitePoint',
+    'brightness',
+    'warmth',
+    'tint',
+  ];
   List<Uint8List>? _thumbs; // filter thumbnails, in the order of [filters]
 
   // Undo/redo: the history and the position in it
@@ -661,6 +670,32 @@ class _EditorPageState extends State<EditorPage> {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           children: [
+            // First, as "Automatisch" in Google Photos: read the photo, set the adjustments
+            // (D-70). Adjustments it does not touch stay as they are.
+            _ToolButton(
+              label: l.presetOptimize,
+              icon: Icons.auto_fix_high,
+              selected: false,
+              changed: false,
+              onTap: () async {
+                final values = await optimize();
+                if (!mounted) return;
+                _change(
+                  _recipe.copyWith(
+                    adjustments: {
+                      ..._recipe.adjustments,
+                      for (final k in _optimized) k: 0.0,
+                      ...values,
+                    },
+                  ),
+                );
+                if (values.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l.presetOptimizeNothing)),
+                  );
+                }
+              },
+            ),
             _ToolButton(
               label: l.presetSave,
               icon: Icons.add,

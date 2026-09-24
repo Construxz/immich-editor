@@ -66,6 +66,16 @@ object Session {
         rerender()
     }
 
+    /** "Optimieren" (D-70): adjustments for the loaded photo, read from a 256 px version. */
+    fun optimize(): Map<String, Double> {
+        val q = source ?: return emptyMap()
+        val s = 256f / maxOf(q.width, q.height)
+        val small = Bitmap.createScaledBitmap(q, maxOf(1, (q.width * s).toInt()), maxOf(1, (q.height * s).toInt()), true)
+        val pixels = IntArray(small.width * small.height)
+        small.getPixels(pixels, 0, small.width, 0, 0, small.width, small.height)
+        return Optimize.adjustments(pixels)
+    }
+
     /** Small JPEGs of the photo, upright, with each filter in [ids] — for the filter tab. */
     fun filterThumbs(ids: List<String>): List<ByteArray> {
         val q = source ?: return emptyList()
