@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -5,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../editor/editor_page.dart';
-import '../editor/preview.dart' show HdrImage;
+import '../editor/preview.dart' show HdrImage, hasGainmap;
 import '../hdr.dart';
 import 'checksums.dart' show deviceIdWithChecksum;
 import '../l10n/app_localizations.dart';
@@ -47,6 +48,10 @@ class _ViewerPageState extends State<ViewerPage> {
   late var _count = widget.count;
   var _loading = false;
   late var _current = widget.start; // only this page shows HDR (D-54)
+  Timer? _rest; // HDR only once a page has rested a moment — fast swiping creates no view (D-63)
+
+  /// Info below the photo, open across pages so photos can be compared (D-63).
+  var _info = false;
 
   @override
   void initState() {
@@ -78,6 +83,7 @@ class _ViewerPageState extends State<ViewerPage> {
 
   @override
   void dispose() {
+    _rest?.cancel();
     _pages.dispose();
     super.dispose();
   }
@@ -107,13 +113,17 @@ class _ViewerPageState extends State<ViewerPage> {
       body: NotificationListener<ScrollNotification>(
         onNotification: (n) {
           if (n.depth != 0) return false;
-          if (n is ScrollStartNotification && _current != -1) {
-            setState(() => _current = -1);
+          if (n is ScrollStartNotification) {
+            _rest?.cancel();
+            if (_current != -1) setState(() => _current = -1);
           } else if (n is ScrollEndNotification) {
-            final page = _pages.page?.round();
-            if (page != null && page != _current) {
-              setState(() => _current = page);
-            }
+            _rest?.cancel();
+            _rest = Timer(const Duration(milliseconds: 300), () {
+              final page = _pages.page?.round();
+              if (mounted && page != null && page != _current) {
+                setState(() => _current = page);
+              }
+            });
           }
           return false;
         },
@@ -132,6 +142,8 @@ class _ViewerPageState extends State<ViewerPage> {
                 immich: widget.immich,
                 entry: e,
                 active: i == _current,
+                info: _info,
+                onInfo: (open) => setState(() => _info = open),
                 onZoom: (z) {
                   if (z != _zoomed) setState(() => _zoomed = z);
                 },
@@ -153,6 +165,8 @@ class _Page extends StatefulWidget {
     required this.immich,
     required this.entry,
     required this.active,
+    required this.info,
+    required this.onInfo,
     required this.onZoom,
     required this.onEdit,
   });
@@ -162,6 +176,10 @@ class _Page extends StatefulWidget {
 
   /// The page on screen: only it lays the HDR image over (D-54).
   final bool active;
+
+  /// Info open below the photo; [onInfo] opens or closes it for all pages.
+  final bool info;
+  final ValueChanged<bool> onInfo;
   final ValueChanged<bool> onZoom;
   final ValueChanged<Entry> onEdit;
 
@@ -179,13 +197,22 @@ class _PageState extends State<_Page> {
 
   final _hdrIds = <String, Future<String?>>{};
 
-  /// The shown photo's ID on the device, if HDR is on and it lives here — kept per photo so the
-  /// native view isn't rebuilt.
+  /// The shown photo's ID on the device, if it lives here and carries a gain map — kept per
+  /// photo so the native view isn't rebuilt. SDR photos get no native view (D-63).
   Future<String?> _hdrId(String? checksum) =>
       _hdrIds['$_shown/$checksum'] ??= () async {
-        if (widget.entry.onDevice) return _shown;
-        return checksum == null ? null : await deviceIdWithChecksum(checksum);
+        final id = widget.entry.onDevice
+            ? _shown
+            : checksum == null
+            ? null
+            : await deviceIdWithChecksum(checksum);
+        return id != null && await hasGainmap(id) ? id : null;
       }();
+
+  final _infos = <String, Future<PhotoInfo>>{};
+  Future<PhotoInfo> get _photoInfo => _infos[_shown] ??= _entry.onDevice
+      ? deviceInfo(_shown, widget.immich.placeAt)
+      : widget.immich.info(_shown);
 
   Future<PhotoStack> _load() => widget.entry.onDevice
       ? Future.value((
@@ -220,17 +247,6 @@ class _PageState extends State<_Page> {
   }
 
   Entry get _entry => (id: _shown, onDevice: widget.entry.onDevice);
-
-  void _info() => showModalBottomSheet<void>(
-    context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    builder: (_) => _Info(
-      _entry.onDevice
-          ? deviceInfo(_shown, widget.immich.placeAt)
-          : widget.immich.info(_shown),
-    ),
-  );
 
   Future<bool> _confirm(String title, String text, String yes) async =>
       await showDialog<bool>(
@@ -354,13 +370,13 @@ class _PageState extends State<_Page> {
                   transformationController: _zoom,
                   maxScale: 8,
                   panEnabled: _zoom.value.getMaxScaleOnAxis() > 1.01,
-                  // Swiping up shows the info, as in Google Photos. The zoom catches the
-                  // gesture, hence here instead of in a GestureDetector.
+                  // Swiping up shows the info, down hides it, as in Google Photos. The zoom
+                  // catches the gesture, hence here instead of in a GestureDetector.
                   onInteractionEnd: (d) {
-                    if (_zoom.value.getMaxScaleOnAxis() <= 1.01 &&
-                        d.velocity.pixelsPerSecond.dy < -300) {
-                      _info();
-                    }
+                    final dy = d.velocity.pixelsPerSecond.dy;
+                    if (_zoom.value.getMaxScaleOnAxis() > 1.01) return;
+                    if (dy < -300) widget.onInfo(true);
+                    if (dy > 300) widget.onInfo(false);
                   },
                   child: SizedBox.expand(
                     child: Stack(
@@ -389,6 +405,13 @@ class _PageState extends State<_Page> {
                   ),
                 ),
               ),
+              if (widget.info)
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.4,
+                  ),
+                  child: SingleChildScrollView(child: _Info(_photoInfo)),
+                ),
               if (photos.length > 1) _thumbnails(stack!, photos),
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 4, 16, 8),
@@ -397,7 +420,8 @@ class _PageState extends State<_Page> {
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       tooltip: l.viewerInfo,
-                      onPressed: _info,
+                      isSelected: widget.info,
+                      onPressed: () => widget.onInfo(!widget.info),
                     ),
                     const HdrButton(),
                     const Spacer(),

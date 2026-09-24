@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import androidx.exifinterface.media.ExifInterface
 import android.net.ConnectivityManager
 import android.os.Handler
@@ -106,6 +107,21 @@ class MainActivity : FlutterActivity() {
                     "appVersion" -> {
                         val p = packageManager.getPackageInfo(packageName, 0)
                         result.success("${p.versionName} build.${p.longVersionCode}")
+                    }
+                    "hasGainmap" -> {
+                        // Decoded at 1/16: Android reports the gain map as it would at full size (D-63).
+                        val id = call.argument<String>("id")!!.toLong()
+                        Thread {
+                            val found = try {
+                                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                                ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, uri)) { d, _, _ ->
+                                    d.setTargetSampleSize(16)
+                                }.hasGainmap()
+                            } catch (_: Exception) {
+                                false
+                            }
+                            runOnUiThread { result.success(found) }
+                        }.start()
                     }
                     "checksums" -> {
                         // SHA-1 of the device photos, read straight from the file (unchanged, with location —

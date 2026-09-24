@@ -111,6 +111,10 @@ class Preview extends StatelessWidget {
   );
 }
 
+/// Whether device photo [id] is Ultra HDR (carries a gain map); decoded small, a few ms.
+Future<bool> hasGainmap(String id) async =>
+    await rendererChannel.invokeMethod<bool>('hasGainmap', {'id': id}) == true;
+
 /// A device photo drawn by Android, so its gain map shows in HDR — the viewer lays it over its
 /// Flutter image while not zoomed (D-54). Gestures pass through to Flutter.
 class HdrImage extends StatelessWidget {

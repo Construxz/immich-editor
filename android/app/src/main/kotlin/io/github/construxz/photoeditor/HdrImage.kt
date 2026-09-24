@@ -26,6 +26,7 @@ fun Activity.hdrMode(on: Boolean) {
     val mode = if (on) ActivityInfo.COLOR_MODE_HDR else ActivityInfo.COLOR_MODE_DEFAULT
     if (window.colorMode == mode) return
     window.colorMode = mode
+    android.util.Log.i("immich_editor", "hdr window ${if (on) "on" else "off"}") // measured in D-63
     if (on && Build.VERSION.SDK_INT >= 35) {
         val top = display?.highestHdrSdrRatio ?: return
         ValueAnimator.ofFloat(1f, top).apply {

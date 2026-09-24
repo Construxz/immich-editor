@@ -7,6 +7,44 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-63: Betrachter — HDR nur bei Gain-Map, Infos beim Blättern offen
+
+Befund des Besitzers auf dem Pixel (`0.1.0-dev.62`): Der HDR-Knopf im Betrachter ändert nichts
+Sichtbares, nur „wie Schärfen"; gezoomt gar nichts. Blättern geht nur Bild für Bild mit Pause.
+Mit offenen Infos lässt sich nicht blättern.
+
+Gemessen (per `adb` nur gelesen): Das Fenster unserer App stand im Betrachter auf Standard, nicht
+HDR, Display `hdrSdrRatio 1.0`. Das gezeigte Foto und **alle 61 neuesten JPEGs** im Kameraordner
+tragen keine Gain-Map (`grep -c hdrgm` auf dem Telefon, das Werkzeug gegengeprüft an einer
+Ultra-HDR-Kopie: 12 Treffer) — die Kamera speichert zurzeit kein Ultra HDR, vermutlich ist dort
+„Ultra HDR" aus. Der „Schärfe"-Unterschied war die native Ansicht (D-54), die auch SDR-Fotos in
+voller Auflösung über Flutters 1440er-Vorschau legte; gezoomt verschwindet sie absichtlich. Sie
+entstand über **jedem** ruhenden Foto und dekodierte es ganz — naheliegende Ursache der Pause
+beim Blättern.
+
+Geändert:
+- Die native Ansicht nur noch bei Fotos **mit Gain-Map**. Geprüft nativ (`hasGainmap`):
+  `ImageDecoder` auf 1/16 verkleinert — Android meldet die Gain-Map dabei wie in voller Größe.
+  Ein Blick in den Dateikopf nach `hdrgm` reicht nicht: Dateien nach ISO 21496-1 tragen es erst
+  im zweiten Bild (Testfoto `geraet-preset.jpg`: MPF bei Byte 638, `hdrgm` erst bei 2,4 MB; libvips
+  liest es als Ultra HDR, Android erkennt dort keine Gain-Map — auch voll dekodiert nicht).
+- Die native Ansicht erst, wenn die Seite **300 ms ruht** — schnelles Blättern erzeugt keine.
+- **Infos in der Seite** statt als modales Blatt: hochwischen oder ⓘ öffnet sie unter dem Foto
+  (höchstens 40 % der Höhe, scrollbar), runterwischen oder ⓘ schließt; sie bleiben beim
+  Blättern offen und zeigen das jeweilige Foto — zum Vergleichen.
+- Log `immich_editor: hdr window on/off`, um HDR auf dem Pixel mitzulesen.
+
+**Geprüft** 24.09.2026 im Emulator: Gerätefotos mit Gain-Map melden `true`, Kopien ohne `false`;
+nur bei ersteren „hdr window on", Knopf „aus" → „off", „an" → „on". Mit offenen Infos geblättert:
+`preset-10` → `-09` → `-08` → `-07`, Infos wechseln mit. Befund dabei: Sehr schnelle
+`adb`-Wischer (120 ms) über dem Bild blättern nicht, über der Kopfzeile schon — der
+`InteractiveViewer` (Zoom) gewinnt den Gestenwettstreit, wenn die Bewegung in wenigen großen
+Schritten ankommt; mit 400 ms blättert es. Ob das auf dem Pixel mit dem Finger stört, sagt der
+Besitzer. Die Gain-Map-Prüfung dauert im Emulator 1,8 s je Foto (im Hintergrund, erst nach der
+Ruhe). App-Version `0.1.0-dev.63`.
+
+---
+
 ## 2026-09-24 · D-62: Filter (3D-LUT), eigene Looks
 
 Abgestimmt mit dem Besitzer (24.09.2026): **eigene Looks** statt fremder LUTs; im Rezept nur
