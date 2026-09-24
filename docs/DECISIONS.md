@@ -7,6 +7,19 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-69: Griff am Infobereich des Betrachters
+
+Wunsch des Besitzers: Die Infos schließen wie bei Google Fotos an einem Griff, statt „auf gut
+Glück" aufs Bild zu wischen. Gebaut: oben am Infobereich der Griff des Material-3-Blatts
+(32 × 4 pt, `onSurfaceVariant` mit 40 %); der Bereich folgt dem Finger nach unten (wird
+niedriger, das Foto größer), schließt ab 60 pt oder bei schnellem Zug (> 300 pt/s), sonst springt
+er zurück. Für Bildschirmleser ein Knopf „Schließen".
+
+**Geprüft** 24.09.2026 im Emulator: langsam 24 pt gezogen — Infos bleiben; 160 pt — Infos zu.
+App-Version `0.1.0-dev.69`.
+
+---
+
 ## 2026-09-24 · D-68: Blättern wie Google Fotos — Nachbarn vorgeladen, Platzhalter, Spalt
 
 Befund des Besitzers: Man wischt schneller, als das nächste Foto lädt, und sieht kurz Schwarz;

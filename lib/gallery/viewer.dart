@@ -253,6 +253,7 @@ class _PageState extends State<_Page> {
       }();
 
   final _infos = <String, Future<PhotoInfo>>{};
+  var _infoDrag = 0.0; // how far the info's handle is pulled down
   Future<PhotoInfo> get _photoInfo => _infos[_shown] ??= _entry.onDevice
       ? deviceInfo(_shown, widget.immich.placeAt)
       : widget.immich.info(_shown);
@@ -443,10 +444,50 @@ class _PageState extends State<_Page> {
                   ),
                 ),
               ),
+              // Handle as in Google Photos: the info follows the finger down and closes past
+              // 60 pt or when flicked; otherwise it springs back (D-69).
+              if (widget.info)
+                Semantics(
+                  container: true,
+                  button: true,
+                  label: l.close,
+                  onTap: () => widget.onInfo(false),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragUpdate: (d) => setState(
+                      () => _infoDrag = (_infoDrag + d.delta.dy).clamp(0, 1e4),
+                    ),
+                    onVerticalDragEnd: (d) {
+                      final close =
+                          _infoDrag > 60 || d.velocity.pixelsPerSecond.dy > 300;
+                      setState(() => _infoDrag = 0);
+                      if (close) widget.onInfo(false);
+                    },
+                    child: SizedBox(
+                      height: 24,
+                      width: double.infinity,
+                      child: Center(
+                        child: Container(
+                          width: 32,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (widget.info)
                 ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(context).height * 0.4,
+                    maxHeight:
+                        (MediaQuery.sizeOf(context).height * 0.4 - _infoDrag)
+                            .clamp(0, double.infinity),
                   ),
                   child: SingleChildScrollView(
                     child: FutureBuilder(
