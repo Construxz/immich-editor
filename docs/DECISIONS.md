@@ -7,6 +7,42 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-56: Noodle Gallery als Server — geprüft
+
+Ein Noodle-Server lokal in Docker, ohne die Bibliothek des Besitzers zu berühren: Compose aus
+Noodles Release `v5.7.0`, eigener Projekt- und Containername, ohne Machine-Learning-Dienst,
+eigenes Datenbank-Passwort, Daten in `%USERPROFILE%\noodle-test` (STATUS). Admin und
+Testbenutzer per API angelegt, ein Testfoto (Testfoto A, Ultra HDR) hochgeladen.
+
+Befunde und Änderungen:
+- Noodle meldet `/server/version` **5.7.0**; `/server/about` nennt `repository:
+  open-noodle/gallery`. Die App warnte bisher bei jeder Hauptversion außer 3; jetzt gilt als
+  bekannt: Immich 3 oder Noodle 5 (`isKnownServer`) — ein künftiges Immich 5 warnt weiter.
+- Die App erlaubte kein unverschlüsseltes HTTP (Androids Vorgabe) — Server im Heimnetz ohne HTTPS
+  gingen gar nicht. Wie die Immich-App (`usesCleartextTraffic="true"`, v3.2.2) jetzt erlaubt.
+
+**Geprüft** 24.09.2026 im Emulator gegen Noodle (`http://10.0.2.2:2283`): Anmeldung ohne Warnung;
+Zeitleiste mit dem Server-Foto und den Gerätefotos; Konto-Fenster mit Speicherplatz, „5.7.0" und
+Adresse; Editor mit dem Original samt Gain-Map (HDR-Knopf); gedreht und direkt auf den Server
+gespeichert → Betrachter mit Stapel Original + V1. Per API: Kopie vorn im Stapel, Rezept im XMP,
+`hdrgm`, SHA-1 gleich. Danach wieder beim Immich-Testbenutzer angemeldet, Container angehalten.
+
+---
+
+## 2026-09-24 · D-55: Server-Miniaturen auf der Platte
+
+Server-Miniaturen lädt die Galerie über den Keep-Alive-Client (`Immich.thumbnail`) und legt sie
+in Androids Cache-Ordner (`cache/thumbnails`); die neuesten tausend bleiben im Speicher, damit
+Flutters Bild-Cache sie wiedererkennt. Scrollt man zurück oder öffnet die App neu, kommen sie von
+der Platte. Fehlgeschlagene Abrufe werden nicht gemerkt (neue Kopien bekommen ihre Miniatur erst
+Sekunden nach dem Hochladen, D-31).
+
+**Geprüft** 24.09.2026 im Emulator: nach dem Start 20 Dateien im Cache, die Galerie zeigt alle
+Miniaturen. Grenze: Ohne Netz bleibt die Zeitleiste leer — sie braucht Immichs Monatsliste; das
+merkt sich die App noch nicht.
+
+---
+
 ## 2026-09-24 · D-53: Wartende Bearbeitungen einzeln zeigen
 
 ROADMAP: Vorgemerktes, dessen Backup ausbleibt, obwohl die Datei da ist (Backup aus, Ordner nicht

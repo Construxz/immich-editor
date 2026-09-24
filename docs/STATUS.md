@@ -121,6 +121,15 @@ Zugriff über `x-api-key` gegen `IMMICH_SERVER/api/…`. Geprüft 21.09.2026: `G
 liefert „Editor Test", kein Admin. **Nur diesen Zugang verwenden**, nie einen Schlüssel des
 Admin-Kontos mit der echten Bibliothek.
 
+## Noodle-Testserver
+
+Lokal auf dem Entwicklungsrechner (Docker Desktop), getrennt von jeder echten Bibliothek:
+`%USERPROFILE%\noodle-test` (Compose-Projekt `noodle-test`, Noodle Gallery v5.7.0 ohne ML,
+Port 2283, Daten im Ordner). Zugang in `.env.local` dort (Admin, Testbenutzer „Editor Test").
+Starten: `docker compose up -d` in dem Ordner — endet der Server, weil er vor der Datenbank
+startete, `docker compose up -d immich-server` nachschieben. Der Emulator erreicht ihn unter
+`http://10.0.2.2:2283`.
+
 ## Gegen welche Immich-Version gebaut wird
 
 Der Server des Testbenutzers läuft mit **Immich 3.2.2** (seit 21.09.2026 abends; M1 wurde gegen

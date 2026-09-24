@@ -13,10 +13,7 @@ Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über G
 Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate (D-17 bis D-47). Offen, in dieser
 Reihenfolge:
 - ⬜ **Betrachter, Rest:** HDR im Betrachter; Objektiv bei Gerätefotos (das Framework-`ExifInterface` liefert `LensModel` nicht).
-- ⬜ **Noodle Gallery als Server** prüfen: gleiche API wie Immich 3.2.2, aber Hauptversion 5 —
-  die App warnt dann beim Anmelden (`bekannteHauptversionen`). Gegen einen Noodle-Server testen
-  und die Prüfung anpassen (D-27). Danach bei Noodle anfragen, ob ihr Editor das Rezept-Format
-  übernimmt.
+- ⬜ **Noodle:** bei Noodle anfragen, ob ihr Editor das Rezept-Format übernimmt (D-27, D-56).
 - ⬜ Filter (3D-LUT) mit Reiter „Filter"; Perspektive (Vier-Punkt); HDR-Spielraum sanft hochfahren
   (`setDesiredHdrHeadroom`, ab Android 15); Miniaturen auf der Platte zwischenspeichern; Blättern
   durch eine große Bibliothek messen.
