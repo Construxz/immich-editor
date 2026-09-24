@@ -979,6 +979,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log in'**
   String get loginButton;
+
+  /// No description provided for @settingsFoldersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device folders'**
+  String get settingsFoldersTitle;
+
+  /// No description provided for @settingsFoldersText.
+  ///
+  /// In en, this message translates to:
+  /// **'What shows under “Photos”, what the library hides'**
+  String get settingsFoldersText;
+
+  /// No description provided for @foldersInPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Show under “Photos”'**
+  String get foldersInPhotos;
+
+  /// No description provided for @foldersInPhotosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'“Photos” shows everything on the server and, from the device, only these folders — like the camera in Google Photos.'**
+  String get foldersInPhotosHint;
+
+  /// No description provided for @foldersHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide in the library'**
+  String get foldersHidden;
+
+  /// No description provided for @foldersHiddenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These folders don’t appear under “Library”.'**
+  String get foldersHiddenHint;
 }
 
 class _AppLocalizationsDelegate

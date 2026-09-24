@@ -383,5 +383,11 @@
   },
   "loginEmail": "Email",
   "loginPassword": "Password",
-  "loginButton": "Log in"
+  "loginButton": "Log in",
+  "settingsFoldersTitle": "Device folders",
+  "settingsFoldersText": "What shows under “Photos”, what the library hides",
+  "foldersInPhotos": "Show under “Photos”",
+  "foldersInPhotosHint": "“Photos” shows everything on the server and, from the device, only these folders — like the camera in Google Photos.",
+  "foldersHidden": "Hide in the library",
+  "foldersHiddenHint": "These folders don’t appear under “Library”."
 }

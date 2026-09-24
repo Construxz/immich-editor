@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'editor/preview.dart' show appVersion;
 import 'photo.dart';
 import 'gallery/checksums.dart' show checksumProgress;
+import 'gallery/folders.dart' show FolderSettings;
 import 'l10n/app_localizations.dart';
 import 'language.dart';
 import 'main.dart' show storage;
@@ -578,6 +579,7 @@ class _AccountDialogState extends State<_AccountDialog> {
 enum _Section {
   language(Icons.language),
   view(Icons.auto_awesome_mosaic_outlined),
+  folders(Icons.folder_outlined),
   edit(Icons.tune),
   save(Icons.cloud_upload_outlined),
   network(Icons.wifi),
@@ -590,6 +592,7 @@ enum _Section {
   String title(AppLocalizations l) => switch (this) {
     language => l.languageTitle,
     view => l.settingsViewTitle,
+    folders => l.settingsFoldersTitle,
     edit => l.settingsEditTitle,
     save => l.settingsSaveTitle,
     network => l.settingsNetworkTitle,
@@ -599,6 +602,7 @@ enum _Section {
   String text(AppLocalizations l) => switch (this) {
     language => l.settingsLanguageText,
     view => l.settingsViewText,
+    folders => l.settingsFoldersText,
     edit => l.settingsEditText,
     save => l.settingsSaveText,
     network => l.settingsNetworkText,
@@ -784,6 +788,7 @@ class _SectionPageState extends State<_SectionPage> {
             },
           ),
       ],
+      _Section.folders => [const FolderSettings()],
       _Section.view => [
         _toggle(
           'zusammen',

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -14,6 +15,7 @@ import '../stacking/stacking.dart';
 import 'backup_state.dart';
 import 'checksums.dart' show checksumProgress;
 import 'device.dart';
+import 'folders.dart';
 import 'library_view.dart';
 import 'tiles.dart';
 import 'viewer.dart';
@@ -60,6 +62,7 @@ class _GalleryPageState extends State<GalleryPage> {
   final _selection = <Entry>{};
   var _tab = 0;
   var _separate = false;
+  var _photoFolders = defaultPhotoFolders;
   BackupState _backup = emptyBackupState;
   late Future<int?> _deviceCount = _countDevice();
   final _devicePages = <int, Future<List<AssetEntity>>>{};
@@ -76,10 +79,18 @@ class _GalleryPageState extends State<GalleryPage> {
   Future<void> _readSettings() async {
     // persisted: do not rename
     final separate = await storage.read(key: 'zusammen') == 'getrennt';
-    if (mounted && separate != _separate) {
+    final folders = await photoFolders();
+    if (!mounted) return;
+    if (separate != _separate) {
       setState(() {
         _separate = separate;
         _tab = 0;
+      });
+    }
+    if (!setEquals(folders, _photoFolders)) {
+      setState(() {
+        _photoFolders = folders;
+        _mergedLoaded.clear();
       });
     }
   }
@@ -408,7 +419,10 @@ class _GalleryPageState extends State<GalleryPage> {
 
   List<_Month> _mergedMonths(List<Month> server) {
     final local = <String, List<AssetEntity>>{};
-    for (final a in _backup.deviceOnly) {
+    // From the device only the chosen folders, like the camera in Google Photos (D-48).
+    for (final a in _backup.deviceOnly.where(
+      (a) => _photoFolders.contains(a.relativePath),
+    )) {
       (local[_monthKey(a.createDateTime)] ??= []).add(a);
     }
     final months = <String, _Month>{

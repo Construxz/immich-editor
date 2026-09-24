@@ -7,6 +7,26 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-48: Welche Geräteordner unter „Fotos" und in der Bibliothek erscheinen
+
+Befund des Besitzers am Pixel: Unter „Fotos" stand alles vom Gerät durcheinander — Screenshots,
+Downloads, Messenger. Bei Google Fotos stehen dort die Kamerabilder. Gewünscht: wählen, welche
+Ordner unter „Fotos" erscheinen, und Ordner aus der Bibliothek ausblenden.
+
+- **Einstellungen → Geräteordner**: zwei Listen mit Häkchen, „Unter ‚Fotos' zeigen" (Vorgabe
+  `DCIM/Camera/`) und „In der Bibliothek ausblenden". Ein Ordner ist sein relativer Pfad, wie ihn
+  die App schon beim Speichern nutzt; gespeichert unter `photoFolders` und `hiddenFolders`.
+- „Fotos" zeigt weiter alles vom Server (Immichs Zeitleiste) und vom Gerät nur, was in den
+  gewählten Ordnern liegt und noch nicht gesichert ist. Die getrennte Ansicht „Gerät" bleibt
+  vollständig.
+
+**Geprüft** 24.09.2026 im Emulator: Ordner `Pictures/Screenshots` mit einem Foto ohne
+EXIF-Datum angelegt — unter „Fotos" nicht zu sehen; Einstellungen zeigen Privat, Camera,
+Screenshots, Camera angehakt. Screenshots unter „Fotos" an, Privat ausgeblendet → „Fotos" zeigt
+das Foto oben, die Bibliothek nur Camera und Screenshots.
+
+---
+
 ## 2026-09-23 · D-47: Im Betrachter über Monatsgrenzen wischen
 
 Bisher endete das Wischen am Rand des Monats, aus dem man ein Server-Foto öffnete. Jetzt lädt der

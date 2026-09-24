@@ -15,7 +15,8 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Galerie wie die Immich-App (D-36): „Fotos" ist eine Zeitleiste über Gerät und Server,
     über die Prüfsumme zusammengeführt (einmal gerechnet, zwischengespeichert; der erste Lauf
     erklärt sich in einem Fenster, danach Ring ums Profilbild und Stand im Konto-Fenster, D-39), mit Wolke unten
-    rechts (nur Gerät / nur Server / beides); „Bibliothek" mit allen Geräteordnern. Getrennte
+    rechts (nur Gerät / nur Server / beides); vom Gerät nur gewählte Ordner, Vorgabe die Kamera
+    (D-48); „Bibliothek" mit den Geräteordnern, einzelne ausblendbar (D-48). Getrennte
     Reiter per Einstellung „Ansicht". Fotos aus Ordnern, die Immich nicht sichert: nach dem
     Speichern auf Wunsch archiviert hochladen, Album „Editor for Immich", in Immich öffnen.
   - Anzeigesprache wie das Gerät (Deutsch, sonst Englisch) oder fest gewählt (D-43).

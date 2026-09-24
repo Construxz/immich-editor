@@ -146,5 +146,11 @@
   "loginFailed": "Anmeldung fehlgeschlagen: {error}",
   "loginEmail": "E-Mail",
   "loginPassword": "Passwort",
-  "loginButton": "Anmelden"
+  "loginButton": "Anmelden",
+  "settingsFoldersTitle": "Geräteordner",
+  "settingsFoldersText": "Was unter „Fotos“ erscheint, was die Bibliothek ausblendet",
+  "foldersInPhotos": "Unter „Fotos“ zeigen",
+  "foldersInPhotosHint": "Unter „Fotos“ stehen alle Fotos auf dem Server und vom Gerät nur diese Ordner — wie bei Google Fotos die Kamera.",
+  "foldersHidden": "In der Bibliothek ausblenden",
+  "foldersHiddenHint": "Diese Ordner erscheinen nicht unter „Bibliothek“."
 }

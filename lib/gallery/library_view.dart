@@ -7,7 +7,7 @@ import '../l10n/app_localizations.dart';
 import '../photo.dart' show Presence;
 import '../server/immich.dart';
 import 'backup_state.dart';
-import 'device.dart';
+import 'folders.dart';
 import 'tiles.dart';
 import 'viewer.dart';
 
@@ -24,13 +24,22 @@ class LibraryView extends StatefulWidget {
 }
 
 class _LibraryViewState extends State<LibraryView> {
-  late Future<List<AssetPathEntity>> _folders = deviceFolders();
+  late Future<List<AssetPathEntity>> _folders = _visible();
+
+  /// All device folders except those hidden in the settings (D-48).
+  static Future<List<AssetPathEntity>> _visible() async {
+    final hidden = await hiddenFolders();
+    return [
+      for (final (f, path) in await foldersWithPaths())
+        if (!hidden.contains(path)) f,
+    ];
+  }
 
   @override
   Widget build(BuildContext context) => RefreshIndicator(
     onRefresh: () async {
       setState(() {
-        _folders = deviceFolders();
+        _folders = _visible();
       });
       await _folders;
     },

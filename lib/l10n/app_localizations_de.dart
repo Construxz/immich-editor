@@ -580,4 +580,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get loginButton => 'Anmelden';
+
+  @override
+  String get settingsFoldersTitle => 'Geräteordner';
+
+  @override
+  String get settingsFoldersText =>
+      'Was unter „Fotos“ erscheint, was die Bibliothek ausblendet';
+
+  @override
+  String get foldersInPhotos => 'Unter „Fotos“ zeigen';
+
+  @override
+  String get foldersInPhotosHint =>
+      'Unter „Fotos“ stehen alle Fotos auf dem Server und vom Gerät nur diese Ordner — wie bei Google Fotos die Kamera.';
+
+  @override
+  String get foldersHidden => 'In der Bibliothek ausblenden';
+
+  @override
+  String get foldersHiddenHint =>
+      'Diese Ordner erscheinen nicht unter „Bibliothek“.';
 }
