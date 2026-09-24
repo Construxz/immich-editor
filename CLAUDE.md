@@ -33,6 +33,9 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
   README englisch.
 - **Commits:** Dateien einzeln benennen, nie `git add -A`; die Nachricht sagt, was jetzt anders
   ist. Pushen auf `origin` (privat) ist erlaubt; Tags und Releases nur nach Rückfrage.
+- **App-Version mit jedem Feature anheben** (Wunsch des Besitzers): in `pubspec.yaml`
+  `0.1.0-dev.N+N`, N = Nummer der jüngsten Entscheidung in DECISIONS (D-N), vor jedem Aufspielen
+  aufs Telefon. Das Konto-Fenster zeigt sie; STATUS nennt den Stand auf dem Pixel.
 
 ## Umgebung
 
