@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/gestures.dart' show DeviceGestureSettings;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -368,41 +369,51 @@ class _PageState extends State<_Page> {
                   ),
                 ),
               Expanded(
-                child: InteractiveViewer(
-                  transformationController: _zoom,
-                  maxScale: 8,
-                  panEnabled: _zoom.value.getMaxScaleOnAxis() > 1.01,
-                  // Swiping up shows the info, down hides it, as in Google Photos. The zoom
-                  // catches the gesture, hence here instead of in a GestureDetector.
-                  onInteractionEnd: (d) {
-                    final dy = d.velocity.pixelsPerSecond.dy;
-                    if (_zoom.value.getMaxScaleOnAxis() > 1.01) return;
-                    if (dy < -300) widget.onInfo(true);
-                    if (dy > 300) widget.onInfo(false);
-                  },
-                  child: SizedBox.expand(
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        image,
-                        // HDR from the local original: device photos, or server photos that
-                        // also live here (D-54). Server-only ones stay SDR — no download here.
-                        if (widget.active && !_zoomed)
-                          ValueListenableBuilder(
-                            valueListenable: hdrOn,
-                            builder: (context, on, _) => !on
-                                ? const SizedBox()
-                                : FutureBuilder(
-                                    future: _hdrId(shown?.$1.checksum),
-                                    builder: (context, s) => s.data == null
-                                        ? const SizedBox()
-                                        : HdrImage(
-                                            key: ValueKey(s.data),
-                                            id: s.data!,
-                                          ),
-                                  ),
-                          ),
-                      ],
+                // Not zoomed, one finger must travel 120 px before the zoom takes it (default
+                // 36) — otherwise it wins swipes whose moves arrive in coarse steps and the
+                // page does not turn; pinching stays immediate (D-65).
+                child: MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    gestureSettings: _zoomed
+                        ? null
+                        : const DeviceGestureSettings(touchSlop: 60),
+                  ),
+                  child: InteractiveViewer(
+                    transformationController: _zoom,
+                    maxScale: 8,
+                    panEnabled: _zoom.value.getMaxScaleOnAxis() > 1.01,
+                    // Swiping up shows the info, down hides it, as in Google Photos. The zoom
+                    // catches the gesture, hence here instead of in a GestureDetector.
+                    onInteractionEnd: (d) {
+                      final dy = d.velocity.pixelsPerSecond.dy;
+                      if (_zoom.value.getMaxScaleOnAxis() > 1.01) return;
+                      if (dy < -300) widget.onInfo(true);
+                      if (dy > 300) widget.onInfo(false);
+                    },
+                    child: SizedBox.expand(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          image,
+                          // HDR from the local original: device photos, or server photos that
+                          // also live here (D-54). Server-only ones stay SDR — no download here.
+                          if (widget.active && !_zoomed)
+                            ValueListenableBuilder(
+                              valueListenable: hdrOn,
+                              builder: (context, on, _) => !on
+                                  ? const SizedBox()
+                                  : FutureBuilder(
+                                      future: _hdrId(shown?.$1.checksum),
+                                      builder: (context, s) => s.data == null
+                                          ? const SizedBox()
+                                          : HdrImage(
+                                              key: ValueKey(s.data),
+                                              id: s.data!,
+                                            ),
+                                    ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

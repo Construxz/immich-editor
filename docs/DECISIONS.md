@@ -7,6 +7,33 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-65: Blättern im Betrachter — der Zoom nimmt keine Wischer mehr
+
+Befund des Besitzers auf dem Pixel: Ohne Infos sträubt sich das Blättern, ein Wischer reicht
+nicht, erst „halten und wischen"; läuft es einmal, geht es; mit offenen Infos flüssig.
+
+Gemessen 24.09.2026 auf dem Pixel (`0.1.0-dev.65` mit vorübergehenden Logzeilen, `adb logcat`
+nur gelesen, der Besitzer blätterte 90 s): **35 von 88 Wischern** nahm der `InteractiveViewer`
+(Zoom) als Ein-Finger-Geste (`onInteractionStart`, etwa 0,1 s, keine Seite), 53 blätterten. Mit
+aufliegender HDR-Ansicht (D-54) 20 geschluckt gegen 6 geblättert, ohne 15 gegen 47. Ursache:
+Der Zoom nimmt einen Finger ab 36 px Bewegung (`kPanSlop`), das Blättern ab 18 px; kommen die
+Bewegungen in groben Schritten an (bei nativer Ansicht offenbar öfter), überschreiten beide im
+selben Ereignis, und der tiefer liegende Zoom gewinnt. Läuft die Seitenanimation, fängt das
+Blättern den nächsten Wischer — daher „läuft es einmal, geht es". Mit offenen Infos wischt man
+auf den Infos, außerhalb des Zooms. Im Emulator nachgestellt mit `adb`-Wischern von 120 ms:
+über dem Bild blätterte keiner, über der Kopfzeile jeder.
+
+Geändert: Solange nicht gezoomt ist, bekommt der Zoom `touchSlop` 60 (Ein-Finger-Schwelle
+120 px statt 36); Zwei-Finger-Zoom (eigene Schwelle) und Hochwischen für die Infos bleiben.
+Gezoomt gelten die normalen Schwellen zum Verschieben.
+
+**Geprüft** 24.09.2026: Emulator — 4 von 4 schnellen Wischern über dem Bild blättern, kein
+Zoom; hoch-/runterwischen öffnet und schließt die Infos. Pixel, der Besitzer blätterte 75 s:
+**73 Seitenwechsel, 0 vom Zoom genommen** (3 davon bei aufliegender HDR-Ansicht). Die Logzeilen
+sind wieder entfernt.
+
+---
+
 ## 2026-09-24 · D-64: Betrachter zeigt Ultra HDR an; HDR-Knopf nur, wo es HDR gibt
 
 Befund des Besitzers: In der Pixel-Kamera war „Ultra HDR" aus; mit einem Ultra-HDR-Foto wirkt der
