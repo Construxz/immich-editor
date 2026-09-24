@@ -127,6 +127,42 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(sums) }
                         }
                     }
+                    "folderOwners" -> checksumThread.post {
+                        // Per folder the app that made most of its photos (MediaStore's owner), if
+                        // it made at least 60 % — groups e.g. all of Obsidian's attachment folders (D-61).
+                        val counts = mutableMapOf<String, MutableMap<String?, Int>>()
+                        contentResolver.query(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            arrayOf(MediaStore.MediaColumns.RELATIVE_PATH, MediaStore.MediaColumns.OWNER_PACKAGE_NAME),
+                            null, null, null,
+                        )?.use { c ->
+                            while (c.moveToNext()) {
+                                val path = c.getString(0) ?: continue
+                                counts.getOrPut(path) { mutableMapOf() }.merge(c.getString(1), 1, Int::plus)
+                            }
+                        }
+                        val owners = mutableMapOf<String, String>()
+                        for ((path, byOwner) in counts) {
+                            val (owner, n) = byOwner.maxBy { it.value }
+                            if (owner != null && n * 10 >= byOwner.values.sum() * 6) owners[path] = owner
+                        }
+                        runOnUiThread { result.success(owners) }
+                    }
+                    "appInfo" -> {
+                        // Name and icon (PNG, 96 px) of the given apps; unknown or invisible ones are left out.
+                        val pm = packageManager
+                        result.success(call.argument<List<String>>("packages")!!.mapNotNull { p ->
+                            try {
+                                val info = pm.getApplicationInfo(p, 0)
+                                val bitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+                                pm.getApplicationIcon(info).apply { setBounds(0, 0, 96, 96) }.draw(android.graphics.Canvas(bitmap))
+                                val png = ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                                mapOf("package" to p, "label" to pm.getApplicationLabel(info).toString(), "icon" to png.toByteArray())
+                            } catch (_: PackageManager.NameNotFoundException) {
+                                null
+                            }
+                        })
+                    }
                     "filesDir" -> result.success(filesDir.path)
                     "cacheDir" -> result.success(cacheDir.path)
                     "openUrl" -> try {

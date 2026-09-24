@@ -412,5 +412,19 @@
   "foldersHide": "Hide in library",
   "foldersPin": "Pin to top",
   "foldersUnpin": "Unpin",
-  "foldersMove": "Move"
+  "foldersMove": "Move",
+  "foldersByFolder": "Folders",
+  "foldersByApp": "Apps",
+  "foldersOtherApps": "Other and unknown",
+  "foldersAppCount": "{count, plural, =1{1 folder} other{{count} folders}}{hidden, plural, =0{} other{ · {hidden} hidden}}",
+  "@foldersAppCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "hidden": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -1111,6 +1111,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move'**
   String get foldersMove;
+
+  /// No description provided for @foldersByFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get foldersByFolder;
+
+  /// No description provided for @foldersByApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get foldersByApp;
+
+  /// No description provided for @foldersOtherApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Other and unknown'**
+  String get foldersOtherApps;
+
+  /// No description provided for @foldersAppCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 folder} other{{count} folders}}{hidden, plural, =0{} other{ · {hidden} hidden}}'**
+  String foldersAppCount(int count, int hidden);
 }
 
 class _AppLocalizationsDelegate

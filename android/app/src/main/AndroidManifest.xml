@@ -50,6 +50,11 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Apps with a launcher icon: names and icons for folders grouped by app (D-61) -->
+        <intent>
+            <action android:name="android.intent.action.MAIN"/>
+            <category android:name="android.intent.category.LAUNCHER"/>
+        </intent>
         <!-- Apps that open immich:// links, for "Open edits with" (D-52) -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>

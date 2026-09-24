@@ -18,7 +18,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     erklärt sich in einem Fenster, danach Ring ums Profilbild und Stand im Konto-Fenster, D-39), mit Wolke unten
     rechts (nur Gerät / nur Server / beides); vom Gerät nur gewählte Ordner, Vorgabe die Kamera
     (D-48); „Bibliothek" mit den Geräteordnern: angepinnte, dann selbst angeordnete, dann der
-    Rest nach neuestem Foto (wie die Immich-App) oder A–Z, einzelne ausblendbar (D-52, D-59).
+    Rest nach neuestem Foto (wie die Immich-App) oder A–Z, einzelne ausblendbar, auch alle Ordner einer App auf einmal (D-52, D-59, D-61).
   - HDR-Knopf in Galerie, Betrachter und Editor, ein gemeinsamer Zustand; in den Einstellungen
     ausblendbar (D-58). Getrennte
     Reiter per Einstellung „Ansicht". Fotos aus Ordnern, die Immich nicht sichert: nach dem
@@ -86,7 +86,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Version `0.1.0-dev.60` (Release-Build, Debug-Schlüssel), installiert
+- **Pixel des Besitzers:** App-Version `0.1.0-dev.61` (Release-Build, Debug-Schlüssel), installiert
   24.09.2026 nachmittags, als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung

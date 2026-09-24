@@ -7,6 +7,31 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-61: Geräteordner nach App
+
+Wunsch des Besitzers: Obsidian legt Bilder in vielen Anhang-Ordnern ab, jeder erscheint einzeln;
+besser für eine ganze App sagen „nicht zeigen" oder nur bestimmte Unterordner, mit Icon und Namen
+der App. Befund auf dem Pixel (`content query`, `owner_package_name`): Android merkt sich je Bild
+die App, die es anlegte — Google Kamera 9.347, eine Kamera-Begleit-App 3.148, Google Fotos 2.235,
+System (Screenshots) 964, WhatsApp 902, Obsidian (`md.obsidian`) 70, 467 ohne (per Kabel oder
+Sync kopiert).
+
+Gebaut: nativ `folderOwners` (je Ordner die App, die mindestens 60 % seiner Bilder anlegte, sonst
+keine) und `appInfo` (Name, Icon als PNG). Damit Android fremde Apps zeigt, im Manifest
+`<queries>` für Apps mit Startsymbol — nicht die breite Berechtigung „alle Apps abfragen".
+Einstellungen → Geräteordner → Bibliothek hat oben „Ordner | Apps": „Apps" zeigt jede App mit
+Icon, Namen und „3 Ordner · 1 ausgeblendet", ein Auge für alle ihre Ordner, aufgeklappt jeden
+Ordner mit eigenem Auge; Ordner ohne klare App unter „Andere und unbekannte". Es schreibt in
+dieselbe Ausblendliste wie das Auge der Ordneransicht (D-59). Die Bibliothek selbst gruppiert
+nicht — ausgeblendete Ordner fehlen dort schon. App-Version `0.1.0-dev.61`.
+
+**Geprüft** 24.09.2026 auf dem Pixel: Die App liest die Herkunft und bekommt Namen und Icons —
+Bimostitch Pro, Camera Connect, ChatGPT, Day One, eBay, Fotos (4 Ordner), Fotoscanner,
+Instagram, Kamera (2 Ordner) … alphabetisch. Obsidian liegt weiter unten; per `adb` scrollt dort
+nichts (D-50) — den Obsidian-Fall prüft der Besitzer.
+
+---
+
 ## 2026-09-24 · D-60: Geräteordner auf zwei Seiten
 
 Wunsch des Besitzers: „Unter ‚Fotos' zeigen" und „Bibliothek" nicht auf einer langen Seite

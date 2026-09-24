@@ -175,5 +175,19 @@
   "foldersHide": "In der Bibliothek ausblenden",
   "foldersPin": "Oben anpinnen",
   "foldersUnpin": "Nicht mehr anpinnen",
-  "foldersMove": "Verschieben"
+  "foldersMove": "Verschieben",
+  "foldersByFolder": "Ordner",
+  "foldersByApp": "Apps",
+  "foldersOtherApps": "Andere und unbekannte",
+  "foldersAppCount": "{count, plural, =1{1 Ordner} other{{count} Ordner}}{hidden, plural, =0{} other{ · {hidden} ausgeblendet}}",
+  "@foldersAppCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "hidden": {
+        "type": "int"
+      }
+    }
+  }
 }

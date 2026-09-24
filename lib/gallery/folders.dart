@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../editor/preview.dart' show rendererChannel;
 import '../l10n/app_localizations.dart';
 import '../main.dart' show storage;
 import 'checksums.dart' show lastListed;
@@ -84,6 +86,35 @@ List<String> orderAfterMove(
     if (keep.contains(q) && i > last) last = i;
   }
   return moved.take(last + 1).toList();
+}
+
+/// An app on the device: name and icon (PNG).
+typedef AppInfo = ({String label, Uint8List icon});
+
+/// Per folder the app that made most of its photos (MediaStore's owner), if clearly one (D-61).
+Future<Map<String, String>> folderOwners() async =>
+    (await rendererChannel.invokeMapMethod<String, String>('folderOwners'))!;
+
+final _appCache = <String, AppInfo?>{};
+
+/// Names and icons of [packages]; apps Android doesn't show us are left out.
+Future<Map<String, AppInfo>> appInfos(Iterable<String> packages) async {
+  final missing = packages.where((p) => !_appCache.containsKey(p)).toList();
+  if (missing.isNotEmpty) {
+    final found = await rendererChannel.invokeListMethod<Map>('appInfo', {
+      'packages': missing,
+    });
+    for (final p in missing) {
+      _appCache[p] = null;
+    }
+    for (final a in found!) {
+      _appCache[a['package'] as String] = (
+        label: a['label'] as String,
+        icon: a['icon'] as Uint8List,
+      );
+    }
+  }
+  return {for (final p in packages) p: ?_appCache[p]};
 }
 
 /// The device folders with their paths, newest photo first (as the Immich app sorts "on this
@@ -184,6 +215,10 @@ class _FolderListState extends State<_FolderList> {
   var _inPhotos = <String>{}, _hidden = <String>{}, _pinned = <String>{};
   var _order = <String>[];
   var _byName = false;
+  var _byApp =
+      false; // the library page: folders to order, or apps to hide (D-61)
+  var _owners = <String, String>{};
+  var _appInfo = <String, AppInfo>{};
 
   @override
   void initState() {
@@ -198,6 +233,8 @@ class _FolderListState extends State<_FolderList> {
     final pinned = await _read(_pinnedKey, const {});
     final order = await _readList(_orderKey, const []);
     final byName = await storage.read(key: _sortKey) == 'name';
+    final owners = widget.library ? await folderOwners() : <String, String>{};
+    final appInfo = await appInfos(owners.values.toSet());
     if (!mounted) return;
     setState(() {
       _folders = folders;
@@ -206,6 +243,8 @@ class _FolderListState extends State<_FolderList> {
       _pinned = pinned;
       _order = order;
       _byName = byName;
+      _owners = owners;
+      _appInfo = appInfo;
     });
   }
 
@@ -221,6 +260,86 @@ class _FolderListState extends State<_FolderList> {
     _pinned.contains(path) ? _pinned.remove(path) : _pinned.add(path);
     await _write(_pinnedKey, _pinned);
     await _load();
+  }
+
+  void _hide(Iterable<String> paths, bool hide) {
+    setState(() {
+      hide ? _hidden.addAll(paths) : _hidden.removeAll(paths);
+    });
+    _write(_hiddenKey, _hidden);
+  }
+
+  /// Folders grouped by the app that made their photos: an eye for the whole app, and each
+  /// folder unfolded — e.g. hide Obsidian's attachments but keep one of them (D-61).
+  List<Widget> _apps(
+    List<(AssetPathEntity, String)> folders,
+    AppLocalizations l,
+  ) {
+    final byApp = <String?, List<(AssetPathEntity, String)>>{};
+    for (final f in folders) {
+      final owner = _owners[f.$2];
+      (byApp[_appInfo.containsKey(owner) ? owner : null] ??= []).add(f);
+    }
+    final apps = byApp.keys.whereType<String>().toList()
+      ..sort(
+        (a, b) => _appInfo[a]!.label.toLowerCase().compareTo(
+          _appInfo[b]!.label.toLowerCase(),
+        ),
+      );
+    Widget eye(Iterable<String> paths) {
+      final shown = paths.any((p) => !_hidden.contains(p));
+      return IconButton(
+        tooltip: shown ? l.foldersHide : l.foldersShow,
+        icon: Icon(
+          shown ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+        ),
+        onPressed: () => _hide(paths, shown),
+      );
+    }
+
+    Widget group(String? app, List<(AssetPathEntity, String)> members) {
+      final paths = [for (final (_, p) in members) p];
+      final hidden = paths.where(_hidden.contains).length;
+      final info = _appInfo[app];
+      return Opacity(
+        opacity: hidden == paths.length ? 0.4 : 1,
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.only(left: 8, right: 12),
+          leading: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              eye(paths),
+              info == null
+                  ? const Icon(Icons.folder_copy_outlined, size: 32)
+                  : Image.memory(info.icon, width: 32, height: 32),
+            ],
+          ),
+          title: Text(info?.label ?? l.foldersOtherApps),
+          subtitle: Text(l.foldersAppCount(paths.length, hidden)),
+          children: [
+            for (final (f, p) in members)
+              Opacity(
+                opacity: _hidden.contains(p) ? 0.4 : 1,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.only(left: 40, right: 12),
+                  leading: eye([p]),
+                  title: Text(f.name),
+                  subtitle: Text(p),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return [
+      SliverList.list(
+        children: [
+          for (final app in apps) group(app, byApp[app]!),
+          if (byApp[null] case final rest?) group(null, rest),
+        ],
+      ),
+    ];
   }
 
   @override
@@ -271,93 +390,121 @@ class _FolderListState extends State<_FolderList> {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
               child: SegmentedButton<bool>(
                 segments: [
-                  ButtonSegment(value: false, label: Text(l.foldersRestNewest)),
-                  ButtonSegment(value: true, label: Text(l.foldersRestName)),
+                  ButtonSegment(
+                    value: false,
+                    icon: const Icon(Icons.folder_outlined),
+                    label: Text(l.foldersByFolder),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    icon: const Icon(Icons.apps),
+                    label: Text(l.foldersByApp),
+                  ),
                 ],
-                selected: {_byName},
-                onSelectionChanged: (s) async {
-                  await storage.write(
-                    key: _sortKey,
-                    value: s.first ? 'name' : 'newest',
-                  );
-                  await _load();
-                },
+                selected: {_byApp},
+                onSelectionChanged: (s) => setState(() => _byApp = s.first),
               ),
             ),
           ),
-          SliverReorderableList(
-            itemCount: folders.length,
-            onReorderItem: _reorder,
-            // Where it lands: the gap in the list; the dragged row carries a frame in the accent
-            // colour.
-            proxyDecorator: (child, _, _) => Material(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                side: BorderSide(color: colors.primary, width: 2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: child,
-            ),
-            itemBuilder: (context, i) {
-              final (f, p) = folders[i];
-              final hidden = _hidden.contains(p);
-              final pinned = _pinned.contains(p);
-              return Material(
-                key: ValueKey(p),
-                color: Colors.transparent,
-                child: Opacity(
-                  opacity: hidden ? 0.4 : 1,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.only(left: 8, right: 4),
-                    leading: IconButton(
-                      tooltip: hidden ? l.foldersShow : l.foldersHide,
-                      icon: Icon(
-                        hidden
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          hidden ? _hidden.remove(p) : _hidden.add(p);
-                        });
-                        _write(_hiddenKey, _hidden);
-                      },
+          if (_byApp)
+            ..._apps(folders, l)
+          else ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: SegmentedButton<bool>(
+                  segments: [
+                    ButtonSegment(
+                      value: false,
+                      label: Text(l.foldersRestNewest),
                     ),
-                    title: Text(f.name),
-                    subtitle: Text(p),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: pinned ? l.foldersUnpin : l.foldersPin,
-                          isSelected: pinned,
-                          icon: const Icon(Icons.push_pin_outlined),
-                          selectedIcon: Icon(
-                            Icons.push_pin,
-                            color: colors.primary,
-                          ),
-                          onPressed: () => _togglePin(p),
+                    ButtonSegment(value: true, label: Text(l.foldersRestName)),
+                  ],
+                  selected: {_byName},
+                  onSelectionChanged: (s) async {
+                    await storage.write(
+                      key: _sortKey,
+                      value: s.first ? 'name' : 'newest',
+                    );
+                    await _load();
+                  },
+                ),
+              ),
+            ),
+            SliverReorderableList(
+              itemCount: folders.length,
+              onReorderItem: _reorder,
+              // Where it lands: the gap in the list; the dragged row carries a frame in the accent
+              // colour.
+              proxyDecorator: (child, _, _) => Material(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(color: colors.primary, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: child,
+              ),
+              itemBuilder: (context, i) {
+                final (f, p) = folders[i];
+                final hidden = _hidden.contains(p);
+                final pinned = _pinned.contains(p);
+                return Material(
+                  key: ValueKey(p),
+                  color: Colors.transparent,
+                  child: Opacity(
+                    opacity: hidden ? 0.4 : 1,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.only(left: 8, right: 4),
+                      leading: IconButton(
+                        tooltip: hidden ? l.foldersShow : l.foldersHide,
+                        icon: Icon(
+                          hidden
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                         ),
-                        ReorderableDragStartListener(
-                          index: i,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Icon(
-                              Icons.drag_handle,
-                              semanticLabel: l.foldersMove,
+                        onPressed: () {
+                          setState(() {
+                            hidden ? _hidden.remove(p) : _hidden.add(p);
+                          });
+                          _write(_hiddenKey, _hidden);
+                        },
+                      ),
+                      title: Text(f.name),
+                      subtitle: Text(p),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: pinned ? l.foldersUnpin : l.foldersPin,
+                            isSelected: pinned,
+                            icon: const Icon(Icons.push_pin_outlined),
+                            selectedIcon: Icon(
+                              Icons.push_pin,
+                              color: colors.primary,
+                            ),
+                            onPressed: () => _togglePin(p),
+                          ),
+                          ReorderableDragStartListener(
+                            index: i,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Icon(
+                                Icons.drag_handle,
+                                semanticLabel: l.foldersMove,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
+          ],
         ],
         const SliverToBoxAdapter(child: SizedBox(height: 40)),
       ],

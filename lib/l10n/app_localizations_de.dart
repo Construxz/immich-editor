@@ -654,4 +654,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get foldersMove => 'Verschieben';
+
+  @override
+  String get foldersByFolder => 'Ordner';
+
+  @override
+  String get foldersByApp => 'Apps';
+
+  @override
+  String get foldersOtherApps => 'Andere und unbekannte';
+
+  @override
+  String foldersAppCount(int count, int hidden) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Ordner',
+      one: '1 Ordner',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      hidden,
+      locale: localeName,
+      other: ' · $hidden ausgeblendet',
+      zero: '',
+    );
+    return '$_temp0$_temp1';
+  }
 }
