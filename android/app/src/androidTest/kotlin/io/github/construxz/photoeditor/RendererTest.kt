@@ -3,6 +3,7 @@ package io.github.construxz.photoeditor
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -31,6 +32,28 @@ class RendererTest {
     private fun channels(b: Bitmap, x: Int, y: Int) = b.getPixel(x, y).let { intArrayOf(Color.red(it), Color.green(it), Color.blue(it)) }
     private fun lightness(b: Bitmap, x: Int, y: Int) = channels(b, x, y).average()
     private fun chroma(b: Bitmap, x: Int, y: Int) = channels(b, x, y).let { it.max() - it.min() }
+
+    init { Luts.assets = InstrumentationRegistry.getInstrumentation().targetContext.assets }
+
+    @Test fun filterBlackAndWhiteIsGrayHalfStrengthHalfway() {
+        val b = render("""{"filter":{"id":"bw@1","strength":1}}""")
+        assertTrue(chroma(b, 56, 8) <= 3)
+        assertTrue(chroma(b, 8, 56) <= 3)
+        val half = render("""{"filter":{"id":"bw@1","strength":0.5}}""")
+        assertEquals(chroma(source, 56, 8) / 2.0, chroma(half, 56, 8).toDouble(), 6.0)
+        // The gray ramp stays where it was (LUT interpolation within 2 steps)
+        for (x in listOf(4, 20, 36, 60)) assertEquals(lightness(source, x, 32), lightness(b, x, 32), 2.5)
+    }
+
+    @Test fun filterWarmAndUnknownFilter() {
+        val warm = render("""{"filter":{"id":"warm@1","strength":1}}""")
+        val a = channels(source, 32, 32); val n = channels(warm, 32, 32)
+        assertTrue(n[0] > a[0] && n[2] < a[2])
+        // A filter this app does not know (newer recipe) is left out
+        val unknown = render("""{"filter":{"id":"later@9","strength":1}}""")
+        assertEquals(lightness(source, 56, 8), lightness(unknown, 56, 8), 2.0)
+        assertEquals(chroma(source, 56, 8).toDouble(), chroma(unknown, 56, 8).toDouble(), 2.0)
+    }
 
     @Test fun neutralLeavesTheImageUnchanged() {
         val b = render("""{"v":1}""")

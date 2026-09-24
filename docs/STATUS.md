@@ -3,7 +3,7 @@
 **Diese Datei wird überschrieben, nicht fortgeschrieben.** Warum etwas so ist, steht in
 [DECISIONS.md](DECISIONS.md), was noch fehlt, in [ROADMAP.md](ROADMAP.md).
 
-Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
+Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
 
 ## Was es gibt
 
@@ -38,8 +38,9 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Editor im Aufbau von Google Fotos (D-22): schwarz; oben Schließen, Rückgängig/Wiederholen,
     HDR, Speichern, ⋮ (HDR, alles zurücksetzen); Reiter „Presets" (Regler sichern, anwenden,
     D-40), „Zuschneiden" (Rahmen mit Anfassern,
-    Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal) und „Anpassen" (12 Regler als runde Knöpfe,
-    Skalen-Lineal); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
+    Seitenverhältnis, Spiegeln, Drehen, Winkel-Lineal), „Anpassen" (12 Regler als runde Knöpfe,
+    Skalen-Lineal) und „Filter" (acht eigene Looks als 3D-LUT mit Vorschaubild und Stärke; Presets
+    nehmen den Filter mit, D-62); Gedrückthalten zeigt das Original. Vorschau und Export rechnet der native
     Renderer (AGSL, `Renderer.kt`); die Bildfläche ist eine native Ansicht im HDR-Fenster (D-17,
     D-20). Das Lineal rastet nahe 0 ein; die Null ist bernsteinfarben markiert (D-41). Server-Fotos öffnen mit Immichs Vorschaubild, das
     Original (und damit HDR) kommt im Hintergrund nach; Speichern wartet darauf (D-29).
@@ -60,21 +61,22 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   - Erneut bearbeiten: Öffnet man eine Kopie, öffnet der Editor das Original mit deren Rezept;
     beim Speichern „Kopie ersetzen" (die alte in den Papierkorb) oder „Als weitere Kopie
     speichern" — alle Kopien bleiben in einem Stapel (D-31).
-  - **Noch nicht:** Filter,
+  - **Noch nicht:** „Optimieren",
     Perspektive — siehe ROADMAP.
 - Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung),
   `lib/gallery/` (mit `device.dart` über `photo_manager`), `lib/stacking/` (Stapeln, auch
   vorgemerkt nach dem Backup), `lib/editor/` (Seite, Rezept, Presets, Laden und Speichern einer Kopie, Lineal,
   Zuschnittrahmen, Vorschau-Kanal),
   `lib/export/` (Zusammensetzen der JPEG-Datei), `lib/photo.dart`; nativ in
-  `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometry.kt`, `Preview.kt` (Sitzung, Ansicht),
+  `android/app/src/main/kotlin/…/` `Renderer.kt`, `Geometry.kt`, `Lut.kt` (Filter aus `assets/luts`, erzeugt von
+  `tool/make_luts.py`), `Preview.kt` (Sitzung, Ansicht),
   `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
   Englisch** (D-42). Anzeigesprache Deutsch oder Englisch nach dem Gerät, in den Einstellungen
   umstellbar (D-43); Texte in `lib/l10n/app_{de,en}.arb`. Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (22 — Ordnerreihenfolge, Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
+- Tests: `test/` (24 — Ordnerreihenfolge, Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
   Prüfsummen-Abgleich, Start),
-  `android/app/src/test/` (9 — Geometrie, JVM, auch in der CI) und `android/app/src/androidTest/`
-  (11 — Renderer auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).
+  `android/app/src/test/` (12 — Geometrie, `.cube`-Filter, JVM, auch in der CI) und `android/app/src/androidTest/`
+  (13 — Renderer samt Filter auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,
   analyze, test, Debug-APK.
 - **Release** ([release.yml](../.github/workflows/release.yml)) bei Tag `v*`: signierte Split-

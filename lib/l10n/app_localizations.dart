@@ -362,6 +362,66 @@ abstract class AppLocalizations {
   /// **'Adjust'**
   String get editorTabAdjust;
 
+  /// No description provided for @editorTabFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get editorTabFilter;
+
+  /// No description provided for @filterNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get filterNone;
+
+  /// No description provided for @filterVivid.
+  ///
+  /// In en, this message translates to:
+  /// **'Vivid'**
+  String get filterVivid;
+
+  /// No description provided for @filterWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm'**
+  String get filterWarm;
+
+  /// No description provided for @filterCool.
+  ///
+  /// In en, this message translates to:
+  /// **'Cool'**
+  String get filterCool;
+
+  /// No description provided for @filterFilm.
+  ///
+  /// In en, this message translates to:
+  /// **'Film'**
+  String get filterFilm;
+
+  /// No description provided for @filterFade.
+  ///
+  /// In en, this message translates to:
+  /// **'Faded'**
+  String get filterFade;
+
+  /// No description provided for @filterBw.
+  ///
+  /// In en, this message translates to:
+  /// **'Black & white'**
+  String get filterBw;
+
+  /// No description provided for @filterNoir.
+  ///
+  /// In en, this message translates to:
+  /// **'Noir'**
+  String get filterNoir;
+
+  /// No description provided for @filterSepia.
+  ///
+  /// In en, this message translates to:
+  /// **'Sepia'**
+  String get filterSepia;
+
   /// No description provided for @presetSaveTitle.
   ///
   /// In en, this message translates to:

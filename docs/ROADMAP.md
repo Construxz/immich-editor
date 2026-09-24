@@ -10,14 +10,15 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** 🔶
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über Gerät und Server,
-Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server (D-17 bis D-57). Offen, in dieser
+Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server, Filter (D-17 bis D-62). Offen, in dieser
 Reihenfolge:
 - ⬜ **Noodle:** bei Noodle anfragen, ob ihr Editor das Rezept-Format übernimmt (D-27, D-56).
-- ⬜ **Filter** (3D-LUT) mit Reiter „Filter". Ideen des Besitzers (24.09.2026): ein
-  **„Optimieren"** wie bei Google Fotos — das Bild analysieren (Histogramm, Weißabgleich) und die
-  vorhandenen Regler setzen, nichts generieren; als Grundausstattung schauen, was offene Apps wie
-  Image Toolbox mitliefern (Lizenzen prüfen); **Filter teilen** wie Lightroom Mobile — Presets und
-  LUTs als Datei (`.cube`) exportieren und importieren, später über den Server.
+- ⬜ **„Optimieren"** als erster Eintrag unter „Presets" (D-62), wie „Automatisch" bei Google
+  Fotos: das Bild analysieren (Histogramm, Weißabgleich) und die vorhandenen Regler setzen, nichts
+  generieren; danach unter „Anpassen" veränderbar. *Abnahme:* ein zu dunkles und ein farbstichiges
+  Testbild werden sichtbar besser, ein gutes bleibt fast gleich (Regler nahe 0).
+- 🔶 **Filter auf dem Pixel ansehen:** Wirkung der acht Looks, HDR mit Filter, Zeit bis zu den
+  Vorschaubildern (Emulator 2,7 s, D-62).
 - ⬜ Perspektive (Vier-Punkt).
 - ⬜ Zeitleiste ohne Netz: Immichs Monatsliste merken (D-55 — ohne Netz bleibt sie leer).
 - ⬜ HDR im Betrachter auch für reine Server-Fotos (Original laden, nach Einstellung „Mobile Daten").
@@ -43,6 +44,12 @@ Pinsel, linearer und radialer Verlauf (`local`).
 **M5. Freistellen und Radierer auf dem Gerät.** ⬜
 Stufe 3 (`patch`), Modelle nach D-6.
 *Abnahme:* ein angetipptes Objekt verschwindet im Flugmodus.
+
+## Ideen, nicht geplant
+
+- **Presets und Filter teilen** wie Lightroom Mobile (Besitzer, 24.09.2026): als Datei (`.cube`,
+  Rezept-JSON) oder über einen öffentlichen Server, auf dem man Presets benannt hochlädt,
+  bewertet und herunterlädt — in der App. Ein eigenes Projekt; ausgeklammert (D-62).
 
 ## Offene Entscheidungen
 

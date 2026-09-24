@@ -27,6 +27,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        Luts.assets = assets
         flutterEngine.platformViewsController.registry
             .registerViewFactory("immich_editor/preview", PreviewFactory())
         flutterEngine.platformViewsController.registry
@@ -62,6 +63,13 @@ class MainActivity : FlutterActivity() {
                         Session.setHdr(on)
                         hdrWindow(on)
                         result.success(null)
+                    }
+                    "filterThumbs" -> {
+                        val ids = call.argument<List<String>>("ids")!!
+                        Session.background.post {
+                            val thumbs = Session.filterThumbs(ids)
+                            runOnUiThread { result.success(thumbs) }
+                        }
                     }
                     "recipe" -> {
                         Session.setRecipe(call.argument<String>("recipe")!!)

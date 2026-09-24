@@ -40,6 +40,18 @@ object Renderer {
         uniform float2 size; // output in pixels
         uniform float brightness, contrast, whitePoint, blackPoint, highlights, shadows,
                       saturation, warmth, tint, blueTones, vignette, sharpness;
+        uniform shader lut;     // filter as a strip (Lut.bitmap)
+        uniform float lutSize;  // grid points per axis
+        uniform float lutStrength; // 0 = no filter
+
+        // Trilinear: red and green by the bitmap filter within a slice, blue between two slices.
+        float3 applyLut(float3 c) {
+            float n = lutSize - 1.0, b = c.b * n, b0 = floor(b), b1 = min(b0 + 1.0, n);
+            float2 rg = c.rg * n + 0.5;
+            float3 lo = lut.eval(float2(b0 * lutSize + rg.x, rg.y)).rgb;
+            float3 hi = lut.eval(float2(b1 * lutSize + rg.x, rg.y)).rgb;
+            return mix(lo, hi, b - b0);
+        }
 
         float3 toLinear(float3 c) {
             return mix(c / 12.92, pow((c + 0.055) / 1.055, float3(2.4)), step(0.04045, c));
@@ -94,6 +106,9 @@ object Renderer {
             float nearBlue = saturate(1.0 - abs(hue(c) - 0.6) * 8.0);
             c = mix(float3(luma(c)), c, 1.0 + blueTones * nearBlue);
 
+            // Filter: a look over the adjusted image; the vignette stays on top.
+            if (lutStrength > 0.0) c = mix(c, applyLut(saturate(c)), lutStrength);
+
             // Vignette: corners darker (> 0) or lighter (< 0).
             float d = length((p / size - 0.5) * 2.0) / 1.41421356;
             c = push(c, -0.8 * vignette * smoothstep(0.35, 1.0, d));
@@ -102,6 +117,8 @@ object Renderer {
         }
     """
 
+    private val NO_LUT = Bitmap.createBitmap(4, 2, Bitmap.Config.ARGB_8888)
+
     /** EXIF orientation (1…8) of the original; BitmapFactory does not set it upright itself. */
     fun orientation(original: ByteArray) = ExifInterface(ByteArrayInputStream(original))
         .getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
@@ -109,6 +126,29 @@ object Renderer {
     /** Renders [source] with geometry [geo] and [recipe]; the result is a HARDWARE bitmap. */
     fun render(source: Bitmap, geo: Geometry, recipe: JSONObject): Bitmap {
         val (width, height) = size(geo, source)
+        val paint = paint(source, geo, recipe, width, height)
+        return draw(width, height) { drawPaint(paint) }
+    }
+
+    /**
+     * [source] once per recipe, in one pass — a GPU pass costs about 1 s to set up in the
+     * emulator, the tiles themselves almost nothing. For the filter thumbnails.
+     */
+    fun renderTiles(source: Bitmap, geo: Geometry, recipes: List<JSONObject>): List<Bitmap> {
+        val (width, height) = size(geo, source)
+        val paints = recipes.map { paint(source, geo, it, width, height) }
+        val strip = draw(width * recipes.size, height) {
+            paints.forEachIndexed { i, p ->
+                save(); translate(i * width.toFloat(), 0f)
+                drawRect(0f, 0f, width.toFloat(), height.toFloat(), p)
+                restore()
+            }
+        }
+        val copy = strip.copy(Bitmap.Config.ARGB_8888, false).also { strip.recycle() }
+        return recipes.indices.map { Bitmap.createBitmap(copy, it * width, 0, width, height) }
+    }
+
+    private fun paint(source: Bitmap, geo: Geometry, recipe: JSONObject, width: Int, height: Int): Paint {
         val imageShader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
             filterMode = BitmapShader.FILTER_MODE_LINEAR
             setLocalMatrix(matrix(geo, source))
@@ -119,14 +159,26 @@ object Renderer {
             for ((key, uniform) in ADJUSTMENTS) {
                 setFloatUniform(uniform, recipe.optDouble(key, 0.0).toFloat().coerceIn(-1f, 1f))
             }
+            // An unknown filter (recipe from a newer app) is left out rather than failing.
+            val filter = recipe.optJSONObject("filter")
+            val strip = filter?.optString("id")?.let { Luts.strip(it) }
+            val (lut, lutSize) = strip ?: (NO_LUT to 2)
+            setInputShader("lut", BitmapShader(lut, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+                filterMode = BitmapShader.FILTER_MODE_LINEAR
+            })
+            setFloatUniform("lutSize", lutSize.toFloat())
+            setFloatUniform("lutStrength", if (strip == null) 0f else filter!!.optDouble("strength", 1.0).toFloat().coerceIn(0f, 1f))
         }
+        return Paint().apply { this.shader = shader }
+    }
 
+    private fun draw(width: Int, height: Int, record: android.graphics.RecordingCanvas.() -> Unit): Bitmap {
         val reader = ImageReader.newInstance(
             width, height, PixelFormat.RGBA_8888, 1,
             HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE or HardwareBuffer.USAGE_GPU_COLOR_OUTPUT,
         )
         val node = RenderNode("image").apply { setPosition(0, 0, width, height) }
-        node.beginRecording().drawPaint(Paint().apply { this.shader = shader })
+        node.beginRecording().record()
         node.endRecording()
         val renderer = HardwareRenderer().apply {
             setSurface(reader.surface)

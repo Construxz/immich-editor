@@ -187,7 +187,9 @@ Hauptversion warnen.
 (bisher `{"v":1,"brightness":…,"contrast":…,"geometry":{"quarterTurns":0…3,"flip":…,"angle":−45…45,"crop":[x,y,b,h]}}`;
 Regler `brightness`, `contrast`, `whitePoint`, `blackPoint`, `highlights`, `shadows`,
 `saturation`, `warmth`, `tint`, `blueTones`, `vignette`, `sharpness`, je −1 … 1 und nur, wenn
-≠ 0 — die Rechnung steht in `Renderer.kt`; Geometrie nur, wenn sie etwas ändert — Reihenfolge: Vierteldrehungen im
+≠ 0 — die Rechnung steht in `Renderer.kt`; `filter` als `{"id":"warm@1","strength":0 … 1}`, nur
+wenn Stärke > 0 — die ID nennt einen eingebauten Look samt Version, ein geänderter Look bekommt
+eine neue ID (D-62); Geometrie nur, wenn sie etwas ändert — Reihenfolge: Vierteldrehungen im
 Uhrzeigersinn, Spiegeln in der gedrehten Ansicht, Geraderichten mit Zoom ohne leere Ecken,
 Zuschnitt 0 … 1 im gedrehten Rahmen; alles nach dem Aufrichten gemäß EXIF), `ife:originalSha1` die SHA-1 des Originals in Base64,
 wie Immich sie als `checksum` führt. Ab dem ersten Release ein Versprechen: spätere Fassungen lesen ältere.

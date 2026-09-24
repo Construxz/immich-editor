@@ -142,6 +142,36 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editorTabAdjust => 'Anpassen';
 
   @override
+  String get editorTabFilter => 'Filter';
+
+  @override
+  String get filterNone => 'Kein Filter';
+
+  @override
+  String get filterVivid => 'Lebendig';
+
+  @override
+  String get filterWarm => 'Warm';
+
+  @override
+  String get filterCool => 'Kühl';
+
+  @override
+  String get filterFilm => 'Film';
+
+  @override
+  String get filterFade => 'Verblasst';
+
+  @override
+  String get filterBw => 'Schwarzweiß';
+
+  @override
+  String get filterNoir => 'Noir';
+
+  @override
+  String get filterSepia => 'Sepia';
+
+  @override
   String get presetSaveTitle => 'Als Preset sichern';
 
   @override

@@ -48,7 +48,7 @@ Code- und Gewichtslizenz können abweichen — bei jedem Modell die **Gewichte**
 
 | Projekt | Rolle | Lizenz | passt |
 |---|---|---|---|
-| [T8RIN/ImageToolbox](https://github.com/T8RIN/ImageToolbox) | Algorithmen: GPU-Filter, Freistellen, Spot-Healing, Perspektive, Stapelverarbeitung. Seine Modelle einzeln prüfen (RMBG von BRIA vermutlich nicht frei) | Apache-2.0 | ja, mit `NOTICE` |
+| [T8RIN/ImageToolbox](https://github.com/T8RIN/ImageToolbox) | Algorithmen: GPU-Filter, Freistellen, Spot-Healing, Perspektive, Stapelverarbeitung. Seine Modelle einzeln prüfen (RMBG von BRIA vermutlich nicht frei). **Seine LUTs nicht:** die eingebauten tragen die Namen von Photoshops „Color Lookup"-Vorgaben, das nachgeladene Paket hat keine Lizenz (D-62) — unsere Filter sind eigene (`tool/make_luts.py`) | Apache-2.0 | ja, mit `NOTICE` |
 | [burhanrashid52/PhotoEditor](https://github.com/burhanrashid52/PhotoEditor) | Zeichnen, Text, Rückgängig | MIT | ja, mit `NOTICE` |
 | [immich-app/immich](https://github.com/immich-app/immich) | API; Design der Mobil-App übernommen (Theme, Konto-Fenster, Einstellungen — D-35) | AGPL-3.0 | ja |
 | [open-noodle/gallery](https://github.com/open-noodle/gallery) | Immich-Fork, Arbeitsweise mit Specs | AGPL-3.0 | ja |

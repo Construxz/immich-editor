@@ -41,6 +41,35 @@ String toolName(AppLocalizations l, String key) => switch (key) {
   _ => key,
 };
 
+/// A filter: a built-in look (3D LUT in the app, `tool/make_luts.py`) and its strength 0 … 1.
+typedef Filter = ({String id, double strength});
+
+/// The built-in filters, in toolbar order. The ID names the look in the recipe and never
+/// changes meaning; a changed look gets a new ID (warm@2).
+const filters = [
+  'vivid@1',
+  'warm@1',
+  'cool@1',
+  'film@1',
+  'fade@1',
+  'bw@1',
+  'noir@1',
+  'sepia@1',
+];
+
+/// Display name of filter [id].
+String filterName(AppLocalizations l, String id) => switch (id) {
+  'vivid@1' => l.filterVivid,
+  'warm@1' => l.filterWarm,
+  'cool@1' => l.filterCool,
+  'film@1' => l.filterFilm,
+  'fade@1' => l.filterFade,
+  'bw@1' => l.filterBw,
+  'noir@1' => l.filterNoir,
+  'sepia@1' => l.filterSepia,
+  _ => id,
+};
+
 /// The settings of an edit. Stored as JSON in the copy's XMP and handed to the
 /// native renderer; from the first release on, later versions read older ones.
 @immutable
@@ -51,6 +80,7 @@ class Recipe {
     this.flip = false,
     this.angle = 0,
     this.crop = const [0, 0, 1, 1],
+    this.filter,
   });
 
   /// Values of the [tools], each −1 … 1; missing = 0 = unchanged.
@@ -68,6 +98,9 @@ class Recipe {
   /// x, y, width, height; 0 … 1 in the rotated frame.
   final List<double> crop;
 
+  /// Look over the adjustments; null = none.
+  final Filter? filter;
+
   double value(String key) => adjustments[key] ?? 0;
 
   bool get isGeometryNeutral =>
@@ -77,7 +110,19 @@ class Recipe {
       crop.join(',') == '0.0,0.0,1.0,1.0';
 
   bool get isNeutral =>
-      isGeometryNeutral && adjustments.values.every((v) => v == 0);
+      isGeometryNeutral &&
+      adjustments.values.every((v) => v == 0) &&
+      (filter?.strength ?? 0) == 0;
+
+  /// With filter [f] (null: none); everything else stays.
+  Recipe withFilter(Filter? f) => Recipe(
+    adjustments: adjustments,
+    quarterTurns: quarterTurns,
+    flip: flip,
+    angle: angle,
+    crop: crop,
+    filter: f,
+  );
 
   Recipe withValue(String key, double value) =>
       copyWith(adjustments: {...adjustments, key: value});
@@ -94,11 +139,13 @@ class Recipe {
     flip: flip ?? this.flip,
     angle: angle ?? this.angle,
     crop: crop ?? this.crop,
+    filter: filter,
   );
 
   /// Reads a recipe as [toJson] writes it; unknown fields are skipped.
   factory Recipe.fromJson(Map<String, dynamic> j) {
     final g = j['geometry'] as Map<String, dynamic>?;
+    final f = j['filter'] as Map<String, dynamic>?;
     return Recipe(
       adjustments: {
         for (final t in tools)
@@ -111,6 +158,12 @@ class Recipe {
         for (final c in (g?['crop'] as List?) ?? const [0, 0, 1, 1])
           (c as num).toDouble(),
       ],
+      filter: f?['id'] is String
+          ? (
+              id: f!['id'] as String,
+              strength: (f['strength'] as num?)?.toDouble() ?? 1,
+            )
+          : null,
     );
   }
 
@@ -128,6 +181,8 @@ class Recipe {
         'angle': angle,
         'crop': crop,
       },
+    if (filter case (:final id, :final strength) when strength > 0)
+      'filter': {'id': id, 'strength': strength},
   };
 }
 

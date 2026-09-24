@@ -50,4 +50,17 @@ void main() {
     expect(back.sameAs(r), isTrue);
     expect(Recipe.fromJson({'v': 1}).isNeutral, isTrue);
   });
+
+  test('filter: ID and strength in the JSON, strength 0 = none', () {
+    final r = const Recipe().withFilter((id: 'warm@1', strength: 0.7));
+    expect(r.toJson()['filter'], {'id': 'warm@1', 'strength': 0.7});
+    expect(
+      Recipe.fromJson(jsonDecode(jsonEncode(r.toJson()))).sameAs(r),
+      isTrue,
+    );
+    expect(r.copyWith(angle: 2).filter, r.filter);
+    final off = r.withFilter((id: 'warm@1', strength: 0));
+    expect(off.isNeutral, isTrue);
+    expect(off.toJson().containsKey('filter'), isFalse);
+  });
 }

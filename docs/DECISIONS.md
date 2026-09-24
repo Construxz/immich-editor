@@ -7,6 +7,52 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-62: Filter (3D-LUT), eigene Looks
+
+Abgestimmt mit dem Besitzer (24.09.2026): **eigene Looks** statt fremder LUTs; im Rezept nur
+**ID und Stärke**; „Optimieren" wird der erste Eintrag unter „Presets" (wie „Automatisch" in
+Google Fotos, dort vor „Zuschneiden"; nur „Optimieren", „Dynamisch" ist ihm zu stark) — ein
+eigener Schritt. **Teilen** (Presets/LUTs als Datei, öffentlicher Server mit Bewerten) bleibt
+eine Idee, nicht M2.
+
+Befund Image Toolbox (Apache-2.0, 24.09.2026 im Quelltext): Die fest eingebauten 512×512-LUTs
+heißen wie Photoshops „Color Lookup"-Vorgaben (Bleach Bypass, Candlelight, Drop Blues, Edgy
+Amber, Fall Colors, Filmstock 50, Foggy Night, Kodak 5218) — vermutlich Adobes, nicht frei; das
+nachgeladene Paket `ImageToolboxRemoteResources` hat keine Lizenz. Nur Amatorka stammt aus
+GPUImage (BSD). Übernommen wird nichts.
+
+Gebaut:
+- **Acht Looks** — Lebendig, Warm, Kühl, Film, Verblasst, Schwarzweiß, Noir, Sepia — rechnet
+  `tool/make_luts.py` als `.cube` (17³, je 100 KB) nach `android/app/src/main/assets/luts/`.
+  Die ID trägt eine Version (`warm@1`); ein geänderter Look bekommt eine neue ID, alte Rezepte
+  bleiben gleich.
+- **Renderer:** `Lut.kt` liest `.cube` und legt die Tabelle als Streifen (17 Scheiben
+  nebeneinander) an; der AGSL-Shader rechnet trilinear — Rot und Grün filtert die GPU, Blau
+  mischt er zwischen zwei Scheiben. Der Filter liegt **nach den Reglern, vor der Vignette**, mit
+  `mix` nach der Stärke. Unbekannte ID (Rezept einer neueren App): ohne Filter statt Fehler.
+- **HDR:** Der Filter wirkt wie die Regler auf das SDR-Bild, die Gain-Map bleibt. Bei
+  einkanaliger Gain-Map (Pixel) bleibt Schwarzweiß auch in HDR grau; eine dreikanalige könnte
+  Farbe zurückbringen — nicht geprüft, kein Testbild.
+- **Rezept:** `"filter":{"id":"bw@1","strength":0.8}`, nur wenn Stärke > 0. **Presets** nehmen
+  den Filter mit; ein Preset ohne Filter entfernt ihn.
+- **Editor:** Reiter „Filter" nach „Anpassen" (Spec, *Bedienung*): „Kein Filter", dann die Looks
+  als runde Vorschaubilder des Fotos (192 px, ein Ring markiert die Wahl); gewählt erscheint das
+  Lineal für die Stärke 0 … 100.
+- Vorschaubilder in **einem** GPU-Durchgang, alle Looks als Kacheln nebeneinander: einzeln
+  gerechnet dauerten sie im Emulator 9,5 s (je Look etwa 1 s, fast alles für den Aufbau von
+  `HardwareRenderer` und `ImageReader`; Einlesen einer LUT 50–150 ms), gemeinsam **2,7 s** ab dem
+  Wechsel auf den Reiter (Log `editor: filters after`), einmal je Editor-Sitzung.
+
+**Geprüft** 24.09.2026 im Emulator, Testbenutzer: `preset-11` (Ultra HDR, nur auf dem Server)
+mit „Warm" — Mittelwert des Bildes R/G/B 99/91/91 → 100/88/83; mit „Schwarzweiß" gespeichert:
+`preset-11.edit.jpg` im Kameraordner, Rezept `{"v":1,"filter":{"id":"bw@1","strength":1.0}}`,
+libvips (`uhdrload`) erkennt Ultra HDR, Gain-Map einkanalig (697×926), SDR-Bild ohne Farbe
+(größter Kanalabstand 0). Tests: 24 Flutter (neu Filter im Rezept und im Preset), 12 JVM (neu
+`.cube` lesen, die acht Looks vollständig, Schwarzweiß grau), 13 auf der GPU (neu Schwarzweiß
+und halbe Stärke, Warm, unbekannte ID). App-Version `0.1.0-dev.62`.
+
+---
+
 ## 2026-09-24 · D-61: Geräteordner nach App
 
 Wunsch des Besitzers: Obsidian legt Bilder in vielen Anhang-Ordnern ab, jeder erscheint einzeln;

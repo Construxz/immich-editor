@@ -20,9 +20,20 @@ void main() {
     final result = withPreset(copy, (
       name: 'P',
       adjustments: {'saturation': -0.3},
+      filter: null,
     ));
     expect(result.adjustments, {'saturation': -0.3});
     expect(result.quarterTurns, 2);
     expect(result.crop, [0.1, 0.1, 0.8, 0.8]);
+  });
+
+  test('a preset takes the filter along and replaces the one in the photo', () {
+    final r = const Recipe().withFilter((id: 'film@1', strength: 0.6));
+    final p = presetFrom('Film', r);
+    expect(p.filter, (id: 'film@1', strength: 0.6));
+    final other = const Recipe().withFilter((id: 'bw@1', strength: 1));
+    expect(withPreset(other, p).filter, (id: 'film@1', strength: 0.6));
+    final none = (name: 'Ohne', adjustments: <String, double>{}, filter: null);
+    expect(withPreset(other, none).filter, isNull);
   });
 }

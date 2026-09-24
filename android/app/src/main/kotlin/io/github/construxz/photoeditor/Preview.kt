@@ -18,6 +18,7 @@ import org.json.JSONObject
 /** The image being edited. There is only ever one editor. */
 object Session {
     private const val PREVIEW_EDGE = 2048 // longest edge of the preview source
+    private const val THUMB_EDGE = 192 // filter thumbnails
 
     private val thread = HandlerThread("renderer").apply { start() }
     val background = Handler(thread.looper)
@@ -63,6 +64,18 @@ object Session {
     fun setRecipe(json: String) {
         recipe = JSONObject(json)
         rerender()
+    }
+
+    /** Small JPEGs of the photo, upright, with each filter in [ids] — for the filter tab. */
+    fun filterThumbs(ids: List<String>): List<ByteArray> {
+        val q = source ?: return emptyList()
+        val s = THUMB_EDGE.toFloat() / maxOf(q.width, q.height)
+        val small = Bitmap.createScaledBitmap(q, maxOf(1, (q.width * s).toInt()), maxOf(1, (q.height * s).toInt()), true)
+        val geo = Geometry().afterExif(orientation)
+        val recipes = ids.map { JSONObject().put("filter", JSONObject().put("id", it)) }
+        return Renderer.renderTiles(small, geo, recipes).map { tile ->
+            java.io.ByteArrayOutputStream().also { tile.compress(Bitmap.CompressFormat.JPEG, 85, it) }.toByteArray()
+        }
     }
 
     fun end() {

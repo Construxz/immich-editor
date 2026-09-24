@@ -15,7 +15,7 @@ import 'save.dart';
 import 'preview.dart';
 import 'crop.dart';
 
-enum _Section { presets, crop, adjust }
+enum _Section { presets, crop, adjust, filter }
 
 /// The editor laid out like Google Photos (spec, *Bedienung*): close, undo, save at the
 /// top; the image in the middle; tools and sections at the bottom.
@@ -64,6 +64,7 @@ class _EditorPageState extends State<EditorPage> {
   var _section = _Section.adjust;
   String? _tool; // selected adjustment in the adjust section
   var _presets = <Preset>[];
+  List<Uint8List>? _thumbs; // filter thumbnails, in the order of [filters]
 
   // Undo/redo: the history and the position in it
   var _history = <Recipe>[const Recipe()];
@@ -199,6 +200,15 @@ class _EditorPageState extends State<EditorPage> {
       _tool = null;
     });
     _show();
+    if (s == _Section.filter && _thumbs == null) {
+      final clock = Stopwatch()..start();
+      filterThumbs(filters).then((t) {
+        if (kDebugMode) {
+          debugPrint('editor: filters after ${clock.elapsedMilliseconds} ms');
+        }
+        if (mounted) setState(() => _thumbs = t);
+      });
+    }
   }
 
   /// HDR switched here, in the gallery or the viewer (D-58).
@@ -644,7 +654,7 @@ class _EditorPageState extends State<EditorPage> {
   Widget _tools(AppLocalizations l) {
     if (_section == _Section.presets) {
       // ponytail: names instead of thumbnails (spec); the renderer computes those only one at a time.
-      final own = presetFrom('', _recipe).adjustments;
+      final own = presetFrom('', _recipe);
       return SizedBox(
         height: 96,
         child: ListView(
@@ -656,13 +666,17 @@ class _EditorPageState extends State<EditorPage> {
               icon: Icons.add,
               selected: false,
               changed: false,
-              onTap: own.isEmpty ? null : _savePreset,
+              onTap: own.adjustments.isEmpty && own.filter == null
+                  ? null
+                  : _savePreset,
             ),
             for (final p in _presets)
               _ToolButton(
                 label: p.name,
                 icon: Icons.auto_awesome,
-                selected: mapEquals(p.adjustments, own),
+                selected:
+                    mapEquals(p.adjustments, own.adjustments) &&
+                    p.filter == own.filter,
                 changed: false,
                 onTap: () => _change(withPreset(_recipe, p)),
                 onLongPress: () => _deletePreset(p),
@@ -671,6 +685,7 @@ class _EditorPageState extends State<EditorPage> {
         ),
       );
     }
+    if (_section == _Section.filter) return _filterTools(l);
     if (_section == _Section.crop) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -726,6 +741,60 @@ class _EditorPageState extends State<EditorPage> {
     );
   }
 
+  /// Strength ruler for the chosen filter, below it the filters as thumbnails.
+  Widget _filterTools(AppLocalizations l) {
+    final chosen = _recipe.filter;
+    final thumbs = _thumbs;
+    return Column(
+      children: [
+        if (chosen != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Ruler(
+              value: chosen.strength,
+              min: 0,
+              max: 1,
+              onChanged: (v) => _change(
+                _recipe.withFilter((id: chosen.id, strength: v)),
+                remember: false,
+              ),
+              onEnd: _remember,
+            ),
+          ),
+        SizedBox(
+          height: 96,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            children: [
+              _ToolButton(
+                label: l.filterNone,
+                icon: Icons.block,
+                selected: chosen == null,
+                changed: false,
+                onTap: () => _change(_recipe.withFilter(null)),
+              ),
+              for (final (i, id) in filters.indexed)
+                _ToolButton(
+                  label: filterName(l, id),
+                  icon: Icons.filter,
+                  image: thumbs == null || i >= thumbs.length
+                      ? null
+                      : thumbs[i],
+                  selected: chosen?.id == id,
+                  changed: false,
+                  onTap: chosen?.id == id
+                      ? null
+                      : () =>
+                            _change(_recipe.withFilter((id: id, strength: 1))),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _tabs(AppLocalizations l) => Padding(
     padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
     child: Row(
@@ -735,6 +804,7 @@ class _EditorPageState extends State<EditorPage> {
           (_Section.presets, l.editorTabPresets),
           (_Section.crop, l.editorTabCrop),
           (_Section.adjust, l.editorTabAdjust),
+          (_Section.filter, l.editorTabFilter),
         ])
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -760,10 +830,14 @@ class _ToolButton extends StatelessWidget {
     required this.changed,
     required this.onTap,
     this.onLongPress,
+    this.image,
   });
 
   final String label;
   final IconData icon;
+
+  /// A thumbnail instead of the icon (filters).
+  final Uint8List? image;
   final bool selected, changed;
   final VoidCallback? onTap, onLongPress;
 
@@ -782,15 +856,26 @@ class _ToolButton extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: selected
-                      ? colors.primary
-                      : colors.surfaceContainerHighest,
-                  foregroundColor: selected
-                      ? colors.onPrimary
-                      : colors.onSurface,
-                  child: Icon(icon),
+                // A thumbnail covers the fill, so a ring marks the choice.
+                DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: CircleBorder(
+                      side: selected && image != null
+                          ? BorderSide(color: colors.primary, width: 3)
+                          : BorderSide.none,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: selected
+                        ? colors.primary
+                        : colors.surfaceContainerHighest,
+                    foregroundColor: selected
+                        ? colors.onPrimary
+                        : colors.onSurface,
+                    foregroundImage: image == null ? null : MemoryImage(image!),
+                    child: Icon(icon),
+                  ),
                 ),
                 if (changed)
                   Positioned(

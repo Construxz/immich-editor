@@ -36,6 +36,12 @@ Future<void> showRecipe(Recipe recipe) => rendererChannel.invokeMethod(
   {'recipe': jsonEncode(recipe.toJson())},
 );
 
+/// Small JPEGs of the loaded photo with each filter in [ids], in that order.
+Future<List<Uint8List>> filterThumbs(List<String> ids) async =>
+    (await rendererChannel.invokeListMethod<Uint8List>('filterThumbs', {
+      'ids': ids,
+    }))!;
+
 Future<void> showHdr(bool on) =>
     rendererChannel.invokeMethod('hdr', {'on': on});
 
