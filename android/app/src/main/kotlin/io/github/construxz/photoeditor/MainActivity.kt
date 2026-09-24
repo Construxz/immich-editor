@@ -5,10 +5,9 @@ import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.ExifInterface
+import androidx.exifinterface.media.ExifInterface
 import android.net.ConnectivityManager
 import android.os.Handler
 import android.os.HandlerThread
@@ -30,6 +29,8 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         flutterEngine.platformViewsController.registry
             .registerViewFactory("immich_editor/preview", PreviewFactory())
+        flutterEngine.platformViewsController.registry
+            .registerViewFactory("immich_editor/hdr", HdrImageFactory(this))
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "immich_editor/renderer")
             .setMethodCallHandler { call, result ->
@@ -150,7 +151,7 @@ class MainActivity : FlutterActivity() {
                     )
                     "end" -> {
                         Session.end()
-                        window.colorMode = ActivityInfo.COLOR_MODE_DEFAULT
+                        hdrMode(HdrImageView.active > 0) // back in the viewer, its HDR photo stays
                         result.success(null)
                     }
                     else -> result.notImplemented()
@@ -160,8 +161,7 @@ class MainActivity : FlutterActivity() {
 
     /** HDR window only when there is something to show (D-17). */
     private fun hdrWindow(on: Boolean) {
-        window.colorMode = if (on && Session.hasGainmap)
-            ActivityInfo.COLOR_MODE_HDR else ActivityInfo.COLOR_MODE_DEFAULT
+        hdrMode(on && Session.hasGainmap)
     }
 
     /**

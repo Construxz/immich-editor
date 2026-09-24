@@ -64,6 +64,8 @@ flutter {
 }
 
 dependencies {
+    // EXIF with LensModel, which the framework ExifInterface lacks (D-54); also in photo_manager
+    implementation("androidx.exifinterface:exifinterface:1.4.2")
     // nur für JVM-Tests (src/test); nicht in der App
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20250517")

@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../editor/editor_page.dart';
+import '../editor/preview.dart' show HdrImage;
+import '../main.dart' show storage;
+import 'checksums.dart' show deviceIdWithChecksum;
 import '../l10n/app_localizations.dart';
 import '../photo.dart';
 import '../server/immich.dart';
@@ -43,6 +46,7 @@ class _ViewerPageState extends State<ViewerPage> {
   var _zoomed = false;
   late var _count = widget.count;
   var _loading = false;
+  late var _current = widget.start; // only this page shows HDR (D-54)
 
   @override
   void initState() {
@@ -98,26 +102,43 @@ class _ViewerPageState extends State<ViewerPage> {
     data: darkTheme,
     child: Scaffold(
       backgroundColor: Colors.black,
-      body: PageView.builder(
-        controller: _pages,
-        physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
-        itemCount: _count,
-        onPageChanged: _nearEnd,
-        itemBuilder: (context, i) => FutureBuilder(
-          future: _entries[i] ??= widget.entryAt(i),
-          builder: (context, s) {
-            final e = s.data;
-            if (e == null) return const SizedBox();
-            return _Page(
-              key: ValueKey(e),
-              immich: widget.immich,
-              entry: e,
-              onZoom: (z) {
-                if (z != _zoomed) setState(() => _zoomed = z);
-              },
-              onEdit: (shown) => _edit(i, shown),
-            );
-          },
+      // The HDR view (a real Android view) only while the pages rest: created mid-swipe it
+      // stalls the page animation (D-54). -1: none while scrolling.
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (n) {
+          if (n.depth != 0) return false;
+          if (n is ScrollStartNotification && _current != -1) {
+            setState(() => _current = -1);
+          } else if (n is ScrollEndNotification) {
+            final page = _pages.page?.round();
+            if (page != null && page != _current) {
+              setState(() => _current = page);
+            }
+          }
+          return false;
+        },
+        child: PageView.builder(
+          controller: _pages,
+          physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+          itemCount: _count,
+          onPageChanged: _nearEnd,
+          itemBuilder: (context, i) => FutureBuilder(
+            future: _entries[i] ??= widget.entryAt(i),
+            builder: (context, s) {
+              final e = s.data;
+              if (e == null) return const SizedBox();
+              return _Page(
+                key: ValueKey(e),
+                immich: widget.immich,
+                entry: e,
+                active: i == _current,
+                onZoom: (z) {
+                  if (z != _zoomed) setState(() => _zoomed = z);
+                },
+                onEdit: (shown) => _edit(i, shown),
+              );
+            },
+          ),
         ),
       ),
     ),
@@ -131,12 +152,16 @@ class _Page extends StatefulWidget {
     super.key,
     required this.immich,
     required this.entry,
+    required this.active,
     required this.onZoom,
     required this.onEdit,
   });
 
   final Immich immich;
   final Entry entry;
+
+  /// The page on screen: only it lays the HDR image over (D-54).
+  final bool active;
   final ValueChanged<bool> onZoom;
   final ValueChanged<Entry> onEdit;
 
@@ -150,6 +175,20 @@ class _PageState extends State<_Page> {
   late String _shown = widget.entry.id;
   AssetEntity? _deviceAsset;
   Future<Uint8List?>? _deviceImage;
+  var _zoomed = false;
+
+  /// Setting "HDR" (persisted: do not rename).
+  static final _hdrOn = storage.read(key: 'hdr').then((v) => v != 'aus');
+  final _hdrIds = <String, Future<String?>>{};
+
+  /// The shown photo's ID on the device, if HDR is on and it lives here — kept per photo so the
+  /// native view isn't rebuilt.
+  Future<String?> _hdrId(String? checksum) =>
+      _hdrIds['$_shown/$checksum'] ??= () async {
+        if (!await _hdrOn) return null;
+        if (widget.entry.onDevice) return _shown;
+        return checksum == null ? null : await deviceIdWithChecksum(checksum);
+      }();
 
   Future<PhotoStack> _load() => widget.entry.onDevice
       ? Future.value((
@@ -170,9 +209,11 @@ class _PageState extends State<_Page> {
         return a?.thumbnailDataWithSize(const ThumbnailSize.square(1440));
       });
     }
-    _zoom.addListener(
-      () => widget.onZoom(_zoom.value.getMaxScaleOnAxis() > 1.01),
-    );
+    _zoom.addListener(() {
+      final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
+      widget.onZoom(zoomed);
+      if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+    });
   }
 
   @override
@@ -324,7 +365,23 @@ class _PageState extends State<_Page> {
                       _info();
                     }
                   },
-                  child: SizedBox.expand(child: image),
+                  child: SizedBox.expand(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        image,
+                        // HDR from the local original: device photos, or server photos that
+                        // also live here (D-54). Server-only ones stay SDR — no download here.
+                        if (widget.active && !_zoomed)
+                          FutureBuilder(
+                            future: _hdrId(shown?.$1.checksum),
+                            builder: (context, s) => s.data == null
+                                ? const SizedBox()
+                                : HdrImage(key: ValueKey(s.data), id: s.data!),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               if (photos.length > 1) _thumbnails(stack!, photos),

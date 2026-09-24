@@ -104,3 +104,34 @@ class Preview extends StatelessWidget {
           ..create(),
   );
 }
+
+/// A device photo drawn by Android, so its gain map shows in HDR — the viewer lays it over its
+/// Flutter image while not zoomed (D-54). Gestures pass through to Flutter.
+class HdrImage extends StatelessWidget {
+  const HdrImage({super.key, required this.id});
+
+  /// The photo's ID on the device (MediaStore).
+  final String id;
+
+  static const _type = 'immich_editor/hdr';
+
+  @override
+  Widget build(BuildContext context) => PlatformViewLink(
+    viewType: _type,
+    surfaceFactory: (context, controller) => AndroidViewSurface(
+      controller: controller as AndroidViewController,
+      gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+      hitTestBehavior: PlatformViewHitTestBehavior.transparent,
+    ),
+    onCreatePlatformView: (params) =>
+        PlatformViewsService.initExpensiveAndroidView(
+            id: params.id,
+            viewType: _type,
+            layoutDirection: TextDirection.ltr,
+            creationParams: {'id': id, 'hdr': true},
+            creationParamsCodec: const StandardMessageCodec(),
+          )
+          ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+          ..create(),
+  );
+}
