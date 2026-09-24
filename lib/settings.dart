@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'editor/preview.dart' show appVersion;
+import 'editor/preview.dart' show appVersion, urlHandlers;
 import 'photo.dart';
 import 'gallery/checksums.dart' show checksumProgress;
 import 'gallery/folders.dart' show FolderSettings;
@@ -805,6 +805,7 @@ class _SectionPageState extends State<_SectionPage> {
           l.settingsOnlineTitle,
           l.settingsOnlineText,
         ),
+        const _OpenWith(),
       ],
       _Section.network => [
         _toggle(
@@ -842,6 +843,85 @@ class _SectionPageState extends State<_SectionPage> {
         itemBuilder: (_, i) => items[i],
         separatorBuilder: (_, _) => const SizedBox(height: 10),
       ),
+    );
+  }
+}
+
+/// Which app opens an edit in Immich (D-52): Android asks, or a fixed one — then even an
+/// "Always" chosen in Android doesn't apply.
+class _OpenWith extends StatefulWidget {
+  const _OpenWith();
+
+  @override
+  State<_OpenWith> createState() => _OpenWithState();
+}
+
+class _OpenWithState extends State<_OpenWith> {
+  static const _key = 'openWith'; // persisted: do not rename
+  late final _apps = urlHandlers('immich://asset');
+  String? _chosen;
+
+  @override
+  void initState() {
+    super.initState();
+    () async {
+      final chosen = await storage.read(key: _key);
+      if (mounted) setState(() => _chosen = chosen);
+    }();
+  }
+
+  Future<void> _choose(List<({String package, String label})> apps) async {
+    final l = AppLocalizations.of(context);
+    final picked = await showDialog<(String?,)>(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text(l.settingsOpenWithTitle),
+        children: [
+          for (final (package, label) in [
+            (null, l.settingsOpenWithAsk),
+            for (final a in apps) (a.package, a.label),
+          ])
+            ListTile(
+              title: Text(label),
+              trailing: package == _chosen ? const Icon(Icons.check) : null,
+              onTap: () => Navigator.pop(c, (package,)),
+            ),
+        ],
+      ),
+    );
+    if (picked == null) return;
+    final (package,) = picked;
+    package == null
+        ? await storage.delete(key: _key)
+        : await storage.write(key: _key, value: package);
+    if (mounted) setState(() => _chosen = package);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final colors = Theme.of(context).colorScheme;
+    return FutureBuilder(
+      future: _apps,
+      builder: (context, s) {
+        final apps = s.data ?? const [];
+        final name = apps
+            .where((a) => a.package == _chosen)
+            .map((a) => a.label)
+            .firstOrNull;
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+          leading: Icon(Icons.open_in_new, color: colors.primary),
+          title: Text(l.settingsOpenWithTitle),
+          subtitle: Text(
+            '${name ?? l.settingsOpenWithAsk}'
+            '\n'
+            '${l.settingsOpenWithText}',
+          ),
+          isThreeLine: true,
+          onTap: s.hasData ? () => _choose(apps) : null,
+        );
+      },
     );
   }
 }

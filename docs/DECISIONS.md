@@ -7,6 +7,30 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-52: „Öffnen mit" wählbar; Geräteordner nach dem neuesten Foto
+
+Entscheidungen des Besitzers:
+
+1. **„In Immich öffnen"** lässt weiter Android wählen, mit „Nur diesmal" / „Immer" (auf dem Pixel
+   verstehen Immich und Noodle Gallery `immich://`, D-50). Neu: Einstellungen → Speichern →
+   „Bearbeitungen öffnen mit": „Android fragen" (Vorgabe) oder eine der Apps, die Android für
+   `immich://` kennt (`queryIntentActivities`, dafür `<queries>` im Manifest). Eine feste App gilt
+   auch, wenn in Android „Immer" auf eine andere gesetzt ist — so lässt sich ein falsches „Immer"
+   in der App auflösen. Gespeichert unter `openWith`.
+2. **Reihenfolge der Geräteordner** wie in der Immich-App: Nachgesehen in deren Quelltext
+   (`v3.2.2`, `providers/infrastructure/album.provider.dart`): `localAlbumProvider` sortiert nach
+   `SortLocalAlbumsBy.newestAsset` — der Ordner mit dem neuesten Foto zuerst; die empfundene
+   „Wichtigkeit" (Camera, dann Screenshots) ist Aktualität. Übernommen für Bibliothek und
+   Einstellungen. Das Datum stammt aus der Liste aller Fotos (neueste zuerst, wie die Zeitleiste);
+   das erste Foto, das photo_manager je Ordner liefert, ist nicht verlässlich das neueste — der
+   erste Versuch damit stellte Screenshots (22.09.) vor Camera (23.09.).
+
+**Geprüft** 24.09.2026 auf dem Pixel (Release): Bibliothek „Camera, Screenshots, Telegram Images,
+Camera Remote, WhatsApp …"; Einstellungen → Speichern → „Bearbeitungen öffnen mit" zeigt Android
+fragen, Immich, Noodle Gallery; „Immich" gewählt, angezeigt, zurück auf „Android fragen".
+
+---
+
 ## 2026-09-24 · D-51: Gerätefotos gleich beim Start
 
 Befund des Besitzers am Pixel: Beim Öffnen stehen erst nur die Server-Stapel da, die Gerätefotos

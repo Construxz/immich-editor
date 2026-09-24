@@ -17,9 +17,11 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     der Stand des letzten Abgleichs, dann frisch, D-51; der erste Lauf
     erklärt sich in einem Fenster, danach Ring ums Profilbild und Stand im Konto-Fenster, D-39), mit Wolke unten
     rechts (nur Gerät / nur Server / beides); vom Gerät nur gewählte Ordner, Vorgabe die Kamera
-    (D-48); „Bibliothek" mit den Geräteordnern, einzelne ausblendbar (D-48). Getrennte
+    (D-48); „Bibliothek" mit den Geräteordnern, der mit dem neuesten Foto zuerst wie in der
+    Immich-App, einzelne ausblendbar (D-48, D-52). Getrennte
     Reiter per Einstellung „Ansicht". Fotos aus Ordnern, die Immich nicht sichert: nach dem
-    Speichern auf Wunsch archiviert hochladen, Album „Editor for Immich", in Immich öffnen.
+    Speichern auf Wunsch archiviert hochladen, Album „Editor for Immich", in Immich öffnen —
+    mit der App, die Android anbietet, oder einer in den Einstellungen festgelegten (D-52).
   - Anzeigesprache wie das Gerät (Deutsch, sonst Englisch) oder fest gewählt (D-43).
   - Oben rechts das Profilbild → Konto-Fenster wie in der Immich-App (Profil,
     Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden) und

@@ -49,5 +49,10 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Apps that open immich:// links, for "Open edits with" (D-52) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="immich"/>
+        </intent>
     </queries>
 </manifest>

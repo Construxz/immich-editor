@@ -389,5 +389,8 @@
   "foldersInPhotos": "Show under “Photos”",
   "foldersInPhotosHint": "“Photos” shows everything on the server and, from the device, only these folders — like the camera in Google Photos.",
   "foldersHidden": "Hide in the library",
-  "foldersHiddenHint": "These folders don’t appear under “Library”."
+  "foldersHiddenHint": "These folders don’t appear under “Library”.",
+  "settingsOpenWithTitle": "Open edits with",
+  "settingsOpenWithAsk": "Ask Android",
+  "settingsOpenWithText": "For photos from folders Immich doesn’t back up. “Ask Android” offers “Just once” and “Always”; an app chosen here wins even over “Always” in Android."
 }

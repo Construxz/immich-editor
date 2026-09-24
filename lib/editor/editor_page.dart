@@ -390,7 +390,10 @@ class _EditorPageState extends State<EditorPage> {
       throw Exception(l.saveCopyMismatch(id));
     }
     await immich.addToAlbum(await immich.album(_album), [id]);
-    final opened = await openUrl('immich://asset?id=$id');
+    final opened = await openUrl(
+      'immich://asset?id=$id',
+      package: await storage.read(key: 'openWith'), // null: Android asks
+    );
     messenger.showSnackBar(
       SnackBar(
         content: Text(

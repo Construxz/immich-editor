@@ -3,6 +3,7 @@ package io.github.construxz.photoeditor
 import android.content.ActivityNotFoundException
 import android.content.ContentUris
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
@@ -127,10 +128,22 @@ class MainActivity : FlutterActivity() {
                     }
                     "filesDir" -> result.success(filesDir.path)
                     "openUrl" -> try {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(call.argument<String>("url")!!)))
+                        // Without a package Android asks ("Just once" / "Always"), D-52.
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(call.argument<String>("url")!!))
+                        call.argument<String>("package")?.let { intent.setPackage(it) }
+                        startActivity(intent)
                         result.success(true)
                     } catch (_: ActivityNotFoundException) {
                         result.success(false) // no app for it, e.g. without the Immich app
+                    }
+                    "urlHandlers" -> {
+                        // Apps that open the link, e.g. Immich and Noodle Gallery for immich:// (D-52)
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(call.argument<String>("url")!!))
+                        result.success(
+                            packageManager.queryIntentActivities(intent, PackageManager.MATCH_ALL)
+                                .map { mapOf("package" to it.activityInfo.packageName, "label" to it.loadLabel(packageManager).toString()) }
+                                .distinctBy { it["package"] },
+                        )
                     }
                     "isMetered" -> result.success(
                         getSystemService(ConnectivityManager::class.java).isActiveNetworkMetered,

@@ -5,6 +5,7 @@ import 'package:photo_manager/photo_manager.dart';
 
 import '../l10n/app_localizations.dart';
 import '../main.dart' show storage;
+import 'checksums.dart' show lastListed;
 import 'device.dart';
 
 /// Which device folders show under "Fotos" — by default the camera, like Google Photos — and
@@ -26,21 +27,29 @@ Future<void> _write(String key, Set<String> folders) =>
 Future<Set<String>> photoFolders() => _read(_photosKey, defaultPhotoFolders);
 Future<Set<String>> hiddenFolders() => _read(_hiddenKey, const {});
 
-/// A folder's relative path, from its newest photo (photo_manager doesn't give it for the folder).
-Future<String?> folderPath(AssetPathEntity folder) async =>
-    (await folder.getAssetListRange(
+/// The device folders with their paths, the one with the newest photo first — like the Immich
+/// app sorts "on this device" (`SortLocalAlbumsBy.newestAsset`, v3.2.2), D-52. Newest from the
+/// list of all photos (newest first, as the timeline has it); a folder's first photo from
+/// photo_manager is not reliably its newest, but it gives the path.
+Future<List<(AssetPathEntity, String)>> foldersWithPaths() async {
+  final all = lastListed.isNotEmpty
+      ? lastListed
+      : await devicePhotos(0, await deviceCount());
+  final newest = <String, int>{};
+  for (final (i, a) in all.indexed) {
+    newest.putIfAbsent(a.relativePath ?? '', () => i);
+  }
+  final found = <(AssetPathEntity, String)>[];
+  for (final f in await deviceFolders()) {
+    final path = (await f.getAssetListRange(
       start: 0,
       end: 1,
     )).firstOrNull?.relativePath;
-
-/// The device folders with their paths, newest first.
-Future<List<(AssetPathEntity, String)>> foldersWithPaths() async => [
-  for (final f in await deviceFolders())
-    ?switch (await folderPath(f)) {
-      final p? => (f, p),
-      null => null,
-    },
-];
+    if (path != null) found.add((f, path));
+  }
+  int rank((AssetPathEntity, String) f) => newest[f.$2] ?? all.length;
+  return found..sort((a, b) => rank(a).compareTo(rank(b)));
+}
 
 /// Settings → device folders: which ones show under "Fotos", which ones the library hides.
 class FolderSettings extends StatefulWidget {

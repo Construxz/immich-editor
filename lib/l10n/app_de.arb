@@ -152,5 +152,8 @@
   "foldersInPhotos": "Unter „Fotos“ zeigen",
   "foldersInPhotosHint": "Unter „Fotos“ stehen alle Fotos auf dem Server und vom Gerät nur diese Ordner — wie bei Google Fotos die Kamera.",
   "foldersHidden": "In der Bibliothek ausblenden",
-  "foldersHiddenHint": "Diese Ordner erscheinen nicht unter „Bibliothek“."
+  "foldersHiddenHint": "Diese Ordner erscheinen nicht unter „Bibliothek“.",
+  "settingsOpenWithTitle": "Bearbeitungen öffnen mit",
+  "settingsOpenWithAsk": "Android fragen",
+  "settingsOpenWithText": "Für Fotos aus Ordnern, die Immich nicht sichert. „Android fragen“ bietet „Nur diesmal“ und „Immer“ an; eine App hier gilt auch, wenn in Android „Immer“ gewählt ist."
 }

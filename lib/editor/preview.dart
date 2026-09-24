@@ -54,9 +54,23 @@ Future<Map<String, Object?>> readExif(Uint8List bytes) async =>
 Future<String> appVersion() async =>
     (await rendererChannel.invokeMethod<String>('appVersion'))!;
 
-/// Opens [url] in the app that understands it; false if there is none.
-Future<bool> openUrl(String url) async =>
-    (await rendererChannel.invokeMethod<bool>('openUrl', {'url': url}))!;
+/// Opens [url] in the app that understands it — in [package], or Android asks; false if there
+/// is none.
+Future<bool> openUrl(String url, {String? package}) async =>
+    (await rendererChannel.invokeMethod<bool>('openUrl', {
+      'url': url,
+      'package': package,
+    }))!;
+
+/// The apps that open [url]: package and name.
+Future<List<({String package, String label})>> urlHandlers(String url) async =>
+    [
+      for (final a in (await rendererChannel.invokeListMethod<Map>(
+        'urlHandlers',
+        {'url': url},
+      ))!)
+        (package: a['package'] as String, label: a['label'] as String),
+    ];
 
 /// Does the connection currently cost data (mobile, hotspot)? Android decides.
 Future<bool> isMetered() async =>

@@ -1015,6 +1015,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'These folders don’t appear under “Library”.'**
   String get foldersHiddenHint;
+
+  /// No description provided for @settingsOpenWithTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open edits with'**
+  String get settingsOpenWithTitle;
+
+  /// No description provided for @settingsOpenWithAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Android'**
+  String get settingsOpenWithAsk;
+
+  /// No description provided for @settingsOpenWithText.
+  ///
+  /// In en, this message translates to:
+  /// **'For photos from folders Immich doesn’t back up. “Ask Android” offers “Just once” and “Always”; an app chosen here wins even over “Always” in Android.'**
+  String get settingsOpenWithText;
 }
 
 class _AppLocalizationsDelegate

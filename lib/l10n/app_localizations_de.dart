@@ -601,4 +601,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get foldersHiddenHint =>
       'Diese Ordner erscheinen nicht unter „Bibliothek“.';
+
+  @override
+  String get settingsOpenWithTitle => 'Bearbeitungen öffnen mit';
+
+  @override
+  String get settingsOpenWithAsk => 'Android fragen';
+
+  @override
+  String get settingsOpenWithText =>
+      'Für Fotos aus Ordnern, die Immich nicht sichert. „Android fragen“ bietet „Nur diesmal“ und „Immer“ an; eine App hier gilt auch, wenn in Android „Immer“ gewählt ist.';
 }

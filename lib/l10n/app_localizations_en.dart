@@ -597,4 +597,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get foldersHiddenHint => 'These folders don’t appear under “Library”.';
+
+  @override
+  String get settingsOpenWithTitle => 'Open edits with';
+
+  @override
+  String get settingsOpenWithAsk => 'Ask Android';
+
+  @override
+  String get settingsOpenWithText =>
+      'For photos from folders Immich doesn’t back up. “Ask Android” offers “Just once” and “Always”; an app chosen here wins even over “Always” in Android.';
 }
