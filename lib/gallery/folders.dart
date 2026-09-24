@@ -124,16 +124,62 @@ Future<List<(AssetPathEntity, String)>> foldersWithPaths() async {
   return [for (final p in order) (byPath[p]!, p)];
 }
 
-/// Settings → device folders: which ones show under "Fotos"; for the library a list to hide,
-/// pin and drag into order, and how the rest is sorted (D-59).
-class FolderSettings extends StatefulWidget {
+/// Settings → device folders: two entries, each its own page, so neither list scrolls past
+/// the other (D-60).
+class FolderSettings extends StatelessWidget {
   const FolderSettings({super.key});
 
   @override
-  State<FolderSettings> createState() => _FolderSettingsState();
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    Widget entry(IconData icon, String title, String text, bool library) =>
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+          leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          title: Text(title),
+          subtitle: Text(text),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => Scaffold(
+                appBar: AppBar(centerTitle: false, title: Text(title)),
+                body: _FolderList(library: library),
+              ),
+            ),
+          ),
+        );
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      children: [
+        entry(
+          Icons.photo_outlined,
+          l.foldersInPhotos,
+          l.foldersInPhotosHint,
+          false,
+        ),
+        entry(
+          Icons.photo_library_outlined,
+          l.foldersLibrary,
+          l.foldersLibraryHint,
+          true,
+        ),
+      ],
+    );
+  }
 }
 
-class _FolderSettingsState extends State<FolderSettings> {
+/// One of the two folder pages: which ones show under "Fotos", or the library's list to hide,
+/// pin and drag into order, and how the rest is sorted (D-59).
+class _FolderList extends StatefulWidget {
+  const _FolderList({required this.library});
+
+  final bool library;
+
+  @override
+  State<_FolderList> createState() => _FolderListState();
+}
+
+class _FolderListState extends State<_FolderList> {
   List<(AssetPathEntity, String)>? _folders;
   var _inPhotos = <String>{}, _hidden = <String>{}, _pinned = <String>{};
   var _order = <String>[];
@@ -192,125 +238,127 @@ class _FolderSettingsState extends State<FolderSettings> {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 4,
         children: [
-          Text(title, style: text.titleSmall),
           Text(hint, style: text.bodyMedium),
-        ],
+        ], // the title is in the app bar
       ),
     );
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(
-          child: header(l.foldersInPhotos, l.foldersInPhotosHint),
-        ),
-        SliverList.list(
-          children: [
-            for (final (f, p) in folders)
-              CheckboxListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                title: Text(f.name),
-                subtitle: Text(p),
-                value: _inPhotos.contains(p),
-                onChanged: (on) {
-                  setState(() {
-                    on == true ? _inPhotos.add(p) : _inPhotos.remove(p);
-                  });
-                  _write(_photosKey, _inPhotos);
-                },
-              ),
-          ],
-        ),
-        SliverToBoxAdapter(
-          child: header(l.foldersLibrary, l.foldersLibraryHint),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-            child: SegmentedButton<bool>(
-              segments: [
-                ButtonSegment(value: false, label: Text(l.foldersRestNewest)),
-                ButtonSegment(value: true, label: Text(l.foldersRestName)),
-              ],
-              selected: {_byName},
-              onSelectionChanged: (s) async {
-                await storage.write(
-                  key: _sortKey,
-                  value: s.first ? 'name' : 'newest',
-                );
-                await _load();
-              },
-            ),
+        if (!widget.library) ...[
+          SliverToBoxAdapter(
+            child: header(l.foldersInPhotos, l.foldersInPhotosHint),
           ),
-        ),
-        SliverReorderableList(
-          itemCount: folders.length,
-          onReorderItem: _reorder,
-          // Where it lands: the gap in the list; the dragged row carries a frame in the accent
-          // colour.
-          proxyDecorator: (child, _, _) => Material(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              side: BorderSide(color: colors.primary, width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: child,
-          ),
-          itemBuilder: (context, i) {
-            final (f, p) = folders[i];
-            final hidden = _hidden.contains(p);
-            final pinned = _pinned.contains(p);
-            return Material(
-              key: ValueKey(p),
-              color: Colors.transparent,
-              child: Opacity(
-                opacity: hidden ? 0.4 : 1,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.only(left: 8, right: 4),
-                  leading: IconButton(
-                    tooltip: hidden ? l.foldersShow : l.foldersHide,
-                    icon: Icon(
-                      hidden
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        hidden ? _hidden.remove(p) : _hidden.add(p);
-                      });
-                      _write(_hiddenKey, _hidden);
-                    },
-                  ),
+          SliverList.list(
+            children: [
+              for (final (f, p) in folders)
+                CheckboxListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                   title: Text(f.name),
                   subtitle: Text(p),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: pinned ? l.foldersUnpin : l.foldersPin,
-                        isSelected: pinned,
-                        icon: const Icon(Icons.push_pin_outlined),
-                        selectedIcon: Icon(
-                          Icons.push_pin,
-                          color: colors.primary,
-                        ),
-                        onPressed: () => _togglePin(p),
+                  value: _inPhotos.contains(p),
+                  onChanged: (on) {
+                    setState(() {
+                      on == true ? _inPhotos.add(p) : _inPhotos.remove(p);
+                    });
+                    _write(_photosKey, _inPhotos);
+                  },
+                ),
+            ],
+          ),
+        ] else ...[
+          SliverToBoxAdapter(
+            child: header(l.foldersLibrary, l.foldersLibraryHint),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: SegmentedButton<bool>(
+                segments: [
+                  ButtonSegment(value: false, label: Text(l.foldersRestNewest)),
+                  ButtonSegment(value: true, label: Text(l.foldersRestName)),
+                ],
+                selected: {_byName},
+                onSelectionChanged: (s) async {
+                  await storage.write(
+                    key: _sortKey,
+                    value: s.first ? 'name' : 'newest',
+                  );
+                  await _load();
+                },
+              ),
+            ),
+          ),
+          SliverReorderableList(
+            itemCount: folders.length,
+            onReorderItem: _reorder,
+            // Where it lands: the gap in the list; the dragged row carries a frame in the accent
+            // colour.
+            proxyDecorator: (child, _, _) => Material(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: colors.primary, width: 2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: child,
+            ),
+            itemBuilder: (context, i) {
+              final (f, p) = folders[i];
+              final hidden = _hidden.contains(p);
+              final pinned = _pinned.contains(p);
+              return Material(
+                key: ValueKey(p),
+                color: Colors.transparent,
+                child: Opacity(
+                  opacity: hidden ? 0.4 : 1,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.only(left: 8, right: 4),
+                    leading: IconButton(
+                      tooltip: hidden ? l.foldersShow : l.foldersHide,
+                      icon: Icon(
+                        hidden
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                       ),
-                      ReorderableDragStartListener(
-                        index: i,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Icon(
-                            Icons.drag_handle,
-                            semanticLabel: l.foldersMove,
+                      onPressed: () {
+                        setState(() {
+                          hidden ? _hidden.remove(p) : _hidden.add(p);
+                        });
+                        _write(_hiddenKey, _hidden);
+                      },
+                    ),
+                    title: Text(f.name),
+                    subtitle: Text(p),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: pinned ? l.foldersUnpin : l.foldersPin,
+                          isSelected: pinned,
+                          icon: const Icon(Icons.push_pin_outlined),
+                          selectedIcon: Icon(
+                            Icons.push_pin,
+                            color: colors.primary,
+                          ),
+                          onPressed: () => _togglePin(p),
+                        ),
+                        ReorderableDragStartListener(
+                          index: i,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Icon(
+                              Icons.drag_handle,
+                              semanticLabel: l.foldersMove,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
+        ],
         const SliverToBoxAdapter(child: SizedBox(height: 40)),
       ],
     );

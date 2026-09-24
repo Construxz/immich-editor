@@ -7,6 +7,18 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-60: Geräteordner auf zwei Seiten
+
+Wunsch des Besitzers: „Unter ‚Fotos' zeigen" und „Bibliothek" nicht auf einer langen Seite
+(auf dem Pixel 62 Ordner je Liste), sondern eine Ebene tiefer getrennt. Einstellungen →
+Geräteordner zeigt zwei Einträge, jeder öffnet seine Liste; der Hinweistext steht oben, der Titel
+in der Leiste. App-Version `0.1.0-dev.60`.
+
+**Geprüft** 24.09.2026 im Emulator: Übersicht mit beiden Einträgen; „Bibliothek" öffnet Sortierung
+und Liste mit Auge, Stecknadel, Griff (Test15 angepinnt oben).
+
+---
+
 ## 2026-09-24 · D-59: Geräteordner anpinnen, anordnen, ausblenden
 
 Wunsch des Besitzers: Lieblingsordner oben anpinnen, die übrigen selbst anordnen, was nicht
