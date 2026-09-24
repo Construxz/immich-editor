@@ -388,8 +388,6 @@
   "settingsFoldersText": "What shows under “Photos”, what the library hides",
   "foldersInPhotos": "Show under “Photos”",
   "foldersInPhotosHint": "“Photos” shows everything on the server and, from the device, only these folders — like the camera in Google Photos.",
-  "foldersHidden": "Hide in the library",
-  "foldersHiddenHint": "These folders don’t appear under “Library”.",
   "settingsOpenWithTitle": "Open edits with",
   "settingsOpenWithAsk": "Ask Android",
   "settingsOpenWithText": "For photos from folders Immich doesn’t back up. “Ask Android” offers “Just once” and “Always”; an app chosen here wins even over “Always” in Android.",
@@ -405,5 +403,14 @@
     }
   },
   "settingsHdrButtonTitle": "Show HDR button",
-  "settingsHdrButtonText": "In gallery, viewer and editor; it switches HDR everywhere. Off: only here."
+  "settingsHdrButtonText": "In gallery, viewer and editor; it switches HDR everywhere. Off: only here.",
+  "foldersLibrary": "Library",
+  "foldersLibraryHint": "Pinned folders first, then your order, then the rest. The eye hides a folder; drag the handle to move it.",
+  "foldersRestNewest": "Rest: newest first",
+  "foldersRestName": "Rest: A–Z",
+  "foldersShow": "Show in library",
+  "foldersHide": "Hide in library",
+  "foldersPin": "Pin to top",
+  "foldersUnpin": "Unpin",
+  "foldersMove": "Move"
 }

@@ -7,6 +7,42 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-59: Geräteordner anpinnen, anordnen, ausblenden
+
+Wunsch des Besitzers: Lieblingsordner oben anpinnen, die übrigen selbst anordnen, was nicht
+angepinnt oder angeordnet ist, darunter alphabetisch oder nach Aktualität; Ausblenden im selben
+Menü. Einstellungen → Geräteordner → **Bibliothek**: je Zeile vorn ein Auge (zu: Zeile
+ausgegraut, Ordner nicht in der Bibliothek), hinten eine Stecknadel und ein Griff zum Verschieben;
+darüber die Wahl „Rest: neueste zuerst / A–Z". Die Reihenfolge rechnet `arrangeFolders`
+(getestet): angepinnt, dann angeordnet, dann der Rest. Wer einen Ordner zieht, ordnet alles
+darüber mit an; bisher Angeordnetes und Angepinntes behält seinen Platz (`orderAfterMove`,
+getestet). Gespeichert unter `pinnedFolders`, `folderOrder`, `folderSort`, `hiddenFolders`.
+
+Abweichung vom Wunsch: Die Zielstelle zeigt Flutters `SliverReorderableList` als Lücke, das
+gezogene Element trägt einen Rahmen in der Akzentfarbe — keine farbige Linie. Dafür scrollt die
+Liste beim Ziehen mit (62 Ordner auf dem Pixel); eine Linie hieße, das Ziehen samt Mitscrollen
+selbst zu bauen.
+
+**Geprüft** 24.09.2026 im Emulator (20 Ordner): Test15 angepinnt → steht oben; Test13 per Auge
+ausgeblendet → ausgegraut, fehlt in der Bibliothek; Test12 am Griff hinter Test5 gezogen →
+Bibliothek „Test15, Camera, Privat, Screenshots, Test1 … Test5, Test12, Test6 …".
+
+---
+
+## 2026-09-24 · D-58: HDR-Knopf überall, abschaltbar
+
+Wunsch des Besitzers: den HDR-Umschalter in Galerie, Betrachter und Editor; nur wenn er in den
+Einstellungen abgeschaltet ist, nirgends — ein erster Schritt zu anpassbaren Knöpfen. Ein
+gemeinsamer Zustand (`lib/hdr.dart`: `hdrOn`, `hdrButton`, beim Start gelesen wie die Sprache),
+ein `HdrButton` für alle drei; der Editor hört auf den Zustand und schaltet den Renderer um.
+Einstellungen → Bearbeiten: „HDR" und neu „HDR-Knopf anzeigen" (`hdrButton`).
+
+**Geprüft** 24.09.2026 im Emulator: Galerie „HDR an" → Tipp → „HDR aus", der Betrachter zeigt
+„aus", sein Tipp schaltet zurück, die Galerie zeigt wieder „an"; „HDR-Knopf anzeigen" aus → kein
+Knopf in Galerie und Betrachter, wieder an → da.
+
+---
+
 ## 2026-09-24 · D-57: Bibliothek springt beim Hochscrollen nicht mehr
 
 Befund des Besitzers am Pixel: nach unten flüssig, nach oben springt die Liste — das angeschnittene

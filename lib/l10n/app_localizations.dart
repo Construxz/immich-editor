@@ -1004,18 +1004,6 @@ abstract class AppLocalizations {
   /// **'“Photos” shows everything on the server and, from the device, only these folders — like the camera in Google Photos.'**
   String get foldersInPhotosHint;
 
-  /// No description provided for @foldersHidden.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide in the library'**
-  String get foldersHidden;
-
-  /// No description provided for @foldersHiddenHint.
-  ///
-  /// In en, this message translates to:
-  /// **'These folders don’t appear under “Library”.'**
-  String get foldersHiddenHint;
-
   /// No description provided for @settingsOpenWithTitle.
   ///
   /// In en, this message translates to:
@@ -1069,6 +1057,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In gallery, viewer and editor; it switches HDR everywhere. Off: only here.'**
   String get settingsHdrButtonText;
+
+  /// No description provided for @foldersLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get foldersLibrary;
+
+  /// No description provided for @foldersLibraryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned folders first, then your order, then the rest. The eye hides a folder; drag the handle to move it.'**
+  String get foldersLibraryHint;
+
+  /// No description provided for @foldersRestNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest: newest first'**
+  String get foldersRestNewest;
+
+  /// No description provided for @foldersRestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest: A–Z'**
+  String get foldersRestName;
+
+  /// No description provided for @foldersShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in library'**
+  String get foldersShow;
+
+  /// No description provided for @foldersHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide in library'**
+  String get foldersHide;
+
+  /// No description provided for @foldersPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to top'**
+  String get foldersPin;
+
+  /// No description provided for @foldersUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get foldersUnpin;
+
+  /// No description provided for @foldersMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get foldersMove;
 }
 
 class _AppLocalizationsDelegate

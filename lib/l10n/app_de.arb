@@ -151,8 +151,6 @@
   "settingsFoldersText": "Was unter „Fotos“ erscheint, was die Bibliothek ausblendet",
   "foldersInPhotos": "Unter „Fotos“ zeigen",
   "foldersInPhotosHint": "Unter „Fotos“ stehen alle Fotos auf dem Server und vom Gerät nur diese Ordner — wie bei Google Fotos die Kamera.",
-  "foldersHidden": "In der Bibliothek ausblenden",
-  "foldersHiddenHint": "Diese Ordner erscheinen nicht unter „Bibliothek“.",
   "settingsOpenWithTitle": "Bearbeitungen öffnen mit",
   "settingsOpenWithAsk": "Android fragen",
   "settingsOpenWithText": "Für Fotos aus Ordnern, die Immich nicht sichert. „Android fragen“ bietet „Nur diesmal“ und „Immer“ an; eine App hier gilt auch, wenn in Android „Immer“ gewählt ist.",
@@ -168,5 +166,14 @@
     }
   },
   "settingsHdrButtonTitle": "HDR-Knopf anzeigen",
-  "settingsHdrButtonText": "In Galerie, Betrachter und Editor; er schaltet HDR überall. Aus: nur hier."
+  "settingsHdrButtonText": "In Galerie, Betrachter und Editor; er schaltet HDR überall. Aus: nur hier.",
+  "foldersLibrary": "Bibliothek",
+  "foldersLibraryHint": "Angepinnte Ordner oben, dann deine Reihenfolge, dann der Rest. Das Auge blendet einen Ordner aus, am Griff lässt er sich verschieben.",
+  "foldersRestNewest": "Rest: neueste zuerst",
+  "foldersRestName": "Rest: A–Z",
+  "foldersShow": "In der Bibliothek zeigen",
+  "foldersHide": "In der Bibliothek ausblenden",
+  "foldersPin": "Oben anpinnen",
+  "foldersUnpin": "Nicht mehr anpinnen",
+  "foldersMove": "Verschieben"
 }

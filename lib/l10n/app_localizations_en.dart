@@ -593,12 +593,6 @@ class AppLocalizationsEn extends AppLocalizations {
       '“Photos” shows everything on the server and, from the device, only these folders — like the camera in Google Photos.';
 
   @override
-  String get foldersHidden => 'Hide in the library';
-
-  @override
-  String get foldersHiddenHint => 'These folders don’t appear under “Library”.';
-
-  @override
   String get settingsOpenWithTitle => 'Open edits with';
 
   @override
@@ -628,4 +622,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsHdrButtonText =>
       'In gallery, viewer and editor; it switches HDR everywhere. Off: only here.';
+
+  @override
+  String get foldersLibrary => 'Library';
+
+  @override
+  String get foldersLibraryHint =>
+      'Pinned folders first, then your order, then the rest. The eye hides a folder; drag the handle to move it.';
+
+  @override
+  String get foldersRestNewest => 'Rest: newest first';
+
+  @override
+  String get foldersRestName => 'Rest: A–Z';
+
+  @override
+  String get foldersShow => 'Show in library';
+
+  @override
+  String get foldersHide => 'Hide in library';
+
+  @override
+  String get foldersPin => 'Pin to top';
+
+  @override
+  String get foldersUnpin => 'Unpin';
+
+  @override
+  String get foldersMove => 'Move';
 }

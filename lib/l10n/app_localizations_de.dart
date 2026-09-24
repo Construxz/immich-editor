@@ -596,13 +596,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Unter „Fotos“ stehen alle Fotos auf dem Server und vom Gerät nur diese Ordner — wie bei Google Fotos die Kamera.';
 
   @override
-  String get foldersHidden => 'In der Bibliothek ausblenden';
-
-  @override
-  String get foldersHiddenHint =>
-      'Diese Ordner erscheinen nicht unter „Bibliothek“.';
-
-  @override
   String get settingsOpenWithTitle => 'Bearbeitungen öffnen mit';
 
   @override
@@ -633,4 +626,32 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsHdrButtonText =>
       'In Galerie, Betrachter und Editor; er schaltet HDR überall. Aus: nur hier.';
+
+  @override
+  String get foldersLibrary => 'Bibliothek';
+
+  @override
+  String get foldersLibraryHint =>
+      'Angepinnte Ordner oben, dann deine Reihenfolge, dann der Rest. Das Auge blendet einen Ordner aus, am Griff lässt er sich verschieben.';
+
+  @override
+  String get foldersRestNewest => 'Rest: neueste zuerst';
+
+  @override
+  String get foldersRestName => 'Rest: A–Z';
+
+  @override
+  String get foldersShow => 'In der Bibliothek zeigen';
+
+  @override
+  String get foldersHide => 'In der Bibliothek ausblenden';
+
+  @override
+  String get foldersPin => 'Oben anpinnen';
+
+  @override
+  String get foldersUnpin => 'Nicht mehr anpinnen';
+
+  @override
+  String get foldersMove => 'Verschieben';
 }

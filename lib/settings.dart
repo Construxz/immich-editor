@@ -810,7 +810,7 @@ class _SectionPageState extends State<_SectionPage> {
             },
           ),
       ],
-      _Section.folders => [const FolderSettings()],
+      _Section.folders => const <Widget>[], // own page below
       _Section.view => [
         _toggle(
           'zusammen',
@@ -875,12 +875,15 @@ class _SectionPageState extends State<_SectionPage> {
     };
     return Scaffold(
       appBar: AppBar(centerTitle: false, title: Text(widget.section.title(l))),
-      body: ListView.separated(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        itemCount: items.length,
-        itemBuilder: (_, i) => items[i],
-        separatorBuilder: (_, _) => const SizedBox(height: 10),
-      ),
+      // The folder list scrolls itself, so dragging a folder can scroll along (D-59).
+      body: widget.section == _Section.folders
+          ? const FolderSettings()
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              itemCount: items.length,
+              itemBuilder: (_, i) => items[i],
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+            ),
     );
   }
 }

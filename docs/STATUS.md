@@ -17,8 +17,10 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     der Stand des letzten Abgleichs, dann frisch, D-51; der erste Lauf
     erklärt sich in einem Fenster, danach Ring ums Profilbild und Stand im Konto-Fenster, D-39), mit Wolke unten
     rechts (nur Gerät / nur Server / beides); vom Gerät nur gewählte Ordner, Vorgabe die Kamera
-    (D-48); „Bibliothek" mit den Geräteordnern, der mit dem neuesten Foto zuerst wie in der
-    Immich-App, einzelne ausblendbar (D-48, D-52). Getrennte
+    (D-48); „Bibliothek" mit den Geräteordnern: angepinnte, dann selbst angeordnete, dann der
+    Rest nach neuestem Foto (wie die Immich-App) oder A–Z, einzelne ausblendbar (D-52, D-59).
+  - HDR-Knopf in Galerie, Betrachter und Editor, ein gemeinsamer Zustand; in den Einstellungen
+    ausblendbar (D-58). Getrennte
     Reiter per Einstellung „Ansicht". Fotos aus Ordnern, die Immich nicht sichert: nach dem
     Speichern auf Wunsch archiviert hochladen, Album „Editor for Immich", in Immich öffnen —
     mit der App, die Android anbietet, oder einer in den Einstellungen festgelegten (D-52).
@@ -69,7 +71,7 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
   Englisch** (D-42). Anzeigesprache Deutsch oder Englisch nach dem Gerät, in den Einstellungen
   umstellbar (D-43); Texte in `lib/l10n/app_{de,en}.arb`. Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (20 — Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
+- Tests: `test/` (22 — Ordnerreihenfolge, Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange,
   Prüfsummen-Abgleich, Start),
   `android/app/src/test/` (9 — Geometrie, JVM, auch in der CI) und `android/app/src/androidTest/`
   (11 — Renderer auf der GPU, nur im Emulator: `gradlew connectedDebugAndroidTest`).
