@@ -47,5 +47,7 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
   prüfen, nie über „den ersten Suchtreffer" (D-23). Friert das Emulator-Fenster ein, obwohl
   `adb` antwortet (Screenshot zeigt Neues, das Fenster nicht): `adb emu rotate` zweimal. Nicht per
   `adb` testen, während der Besitzer den Emulator bedient — installieren und Tippen stören ihn.
+  Auf dem Pixel kommt Wischen per `adb` (`input swipe`, `motionevent`) nicht als Scrollen an,
+  Tippen schon — Listen dort den Besitzer scrollen lassen (D-50).
 - Werkzeuge: siehe README, *Development*. Installationen, die Administratorrechte, Käufe oder
   Konten brauchen, übernimmt der Besitzer — vorher fragen, nicht selbst anstoßen.

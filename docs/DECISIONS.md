@@ -7,6 +7,26 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-50: Befund — „In Immich öffnen" auf dem Pixel
+
+Geprüft 24.09.2026 auf dem Pixel des Besitzers (Release-Stand `cc669d6`, als Testbenutzer; die
+Immich-App dort mit dem Hauptkonto, auf Wunsch des Besitzers nicht umgemeldet):
+
+- Testfoto in `Pictures/EditorTest` (nicht gesichert), in der App gedreht, gespeichert → Frage
+  „Bearbeitung in Immich öffnen?" → „In Immich öffnen": Kopie beim Testbenutzer archiviert, im
+  Album „Editor for Immich".
+- `immich://asset?id=…` löst Androids Auswahl aus: **Immich und Noodle Gallery** verstehen den
+  Link beide. „Immich" gewählt → die Immich-App geht auf und zeigt ihre Zeitleiste; das Foto des
+  Testbenutzers kann sie mit dem Hauptkonto nicht finden. Der Sprung trägt; ob sie das Foto
+  öffnet, lässt sich erst mit demselben Konto prüfen.
+- Danach aufgeräumt: Testordner auf dem Telefon gelöscht, Kopie beim Testbenutzer im Papierkorb.
+
+Nebenbefunde: Die Bibliothek listet auf dem Pixel 62 Ordner in etwa 1 s (Camera ganz unten).
+Wischen per `adb` scrollt dort weder Zeitleiste noch Bibliothek, Tippen wirkt — von Hand scrollt
+die Liste (der Besitzer: im Debug-Build etwas holprig).
+
+---
+
 ## 2026-09-24 · D-49: Befund — der erste Bildabgleich einer großen Bibliothek
 
 Gemessen 24.09.2026 auf dem Pixel 7 Pro des Besitzers (17.490 Fotos), App-Stand `cc669d6` als
