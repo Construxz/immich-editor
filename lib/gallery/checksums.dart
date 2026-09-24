@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 import '../editor/preview.dart' show rendererChannel;
 import 'device.dart';
@@ -82,12 +83,14 @@ Future<Map<String, String>> deviceChecksums() =>
       checksumProgress.value = null;
     });
 
+/// The device photos the last pass listed, newest first — listing 17,500 takes a second, so
+/// the backup check reuses them instead of listing again (D-51).
+List<AssetEntity> lastListed = const [];
+
 Future<Map<String, String>> _compute() async {
   final count = await deviceCount();
-  final photos = {
-    for (final a in count == 0 ? const [] : await devicePhotos(0, count))
-      a.id as String: a.modifiedDateSecond as int? ?? 0,
-  };
+  lastListed = count == 0 ? const [] : await devicePhotos(0, count);
+  final photos = {for (final a in lastListed) a.id: a.modifiedDateSecond ?? 0};
   final (:valid, :pending) = reconcile(photos, await _read());
   const batch = 40;
   final start = DateTime.now();

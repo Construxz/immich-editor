@@ -7,6 +7,27 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-51: Gerätefotos gleich beim Start
+
+Befund des Besitzers am Pixel: Beim Öffnen stehen erst nur die Server-Stapel da, die Gerätefotos
+kommen etwa 3 s später. **Gemessen** 24.09.2026 auf dem Pixel (17.490 Fotos, Profil-Build,
+Zeitmarken): Gerätefotos erst nach **5,6–6,2 s** — alle Fotos auflisten 1,1–2,1 s, Prüfsummen-Datei
+lesen < 0,1 s, `bulk-upload-check` in 18 Anfragen nacheinander **2,7–3,3 s**, alle Fotos ein
+zweites Mal auflisten **1,1 s**.
+
+Gebaut:
+- `existing` stellt die Anfragen zu je 1.000 gleichzeitig.
+- Der Abgleich nimmt die Liste des Prüfsummen-Laufs (`lastListed`) statt neu aufzulisten.
+- Er merkt sich sein Ergebnis in `backup.json` (Gerätefotos nur hier mit Datum, Maßen, Ordner;
+  dazu die Sets für die Wolken). Die Galerie zeigt diesen Stand sofort und ersetzt ihn, sobald der
+  frische Abgleich da ist. Neue Fotos erscheinen nach dem Abgleich.
+
+**Ergebnis** auf dem Pixel: frischer Abgleich nach **2,3–2,8 s**; der gemerkte Stand steht
+**0,6–0,7 s** nach dem Antippen des App-Symbols (Log: `START` → Stand geladen), mit dem Erscheinen
+des Fensters — auf dem Bildschirmfoto nach 1,5 s die ganze Zeitleiste mit den Kamerafotos.
+
+---
+
 ## 2026-09-24 · D-50: Befund — „In Immich öffnen" auf dem Pixel
 
 Geprüft 24.09.2026 auf dem Pixel des Besitzers (Release-Stand `cc669d6`, als Testbenutzer; die

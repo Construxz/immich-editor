@@ -13,7 +13,8 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     Immich-Hauptversion nicht 3 ist.
   - Aussehen der Immich-App (Farben, Google Sans, D-35), Bedienung nach Google Fotos.
   - Galerie wie die Immich-App (D-36): „Fotos" ist eine Zeitleiste über Gerät und Server,
-    über die Prüfsumme zusammengeführt (einmal gerechnet, zwischengespeichert; der erste Lauf
+    über die Prüfsumme zusammengeführt (einmal gerechnet, zwischengespeichert; beim Start sofort
+    der Stand des letzten Abgleichs, dann frisch, D-51; der erste Lauf
     erklärt sich in einem Fenster, danach Ring ums Profilbild und Stand im Konto-Fenster, D-39), mit Wolke unten
     rechts (nur Gerät / nur Server / beides); vom Gerät nur gewählte Ordner, Vorgabe die Kamera
     (D-48); „Bibliothek" mit den Geräteordnern, einzelne ausblendbar (D-48). Getrennte

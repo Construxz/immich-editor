@@ -283,11 +283,11 @@ class Immich {
   /// Which of the [checksums] (key → SHA-1) the server already has: key → asset ID.
   /// Archived ones too; not what is in the trash.
   Future<Map<String, String>> existing(Map<String, String> checksums) async {
-    final result = <String, String>{};
     final all = checksums.entries.toList();
-    for (var i = 0; i < all.length; i += 1000) {
-      final r = _json(
-        await _await(
+    // Batches of 1000, all at once: one after another took 3 s for 17,500 photos (D-51).
+    final answers = await Future.wait([
+      for (var i = 0; i < all.length; i += 1000)
+        _await(
           _http.post(
             _uri('/assets/bulk-upload-check'),
             headers: {...headers, 'Content-Type': 'application/json'},
@@ -300,14 +300,13 @@ class Immich {
           ),
           _short,
         ),
-      );
-      for (final x in r['results'] as List) {
-        if (x['assetId'] != null && x['isTrashed'] != true) {
-          result[x['id'] as String] = x['assetId'] as String;
-        }
-      }
-    }
-    return result;
+    ]);
+    return {
+      for (final r in answers)
+        for (final x in _json(r)['results'] as List)
+          if (x['assetId'] != null && x['isTrashed'] != true)
+            x['id'] as String: x['assetId'] as String,
+    };
   }
 
   /// Into the trash — it stays restorable there.

@@ -72,6 +72,7 @@ class _GalleryPageState extends State<GalleryPage> {
     super.initState();
     _readSettings();
     checksumProgress.addListener(_explain);
+    _showStored();
     _checkBackup();
     _stackPending();
   }
@@ -113,6 +114,16 @@ class _GalleryPageState extends State<GalleryPage> {
   }
 
   /// Which device photos are already backed up; the first time this computes all checksums.
+  /// The last check's device photos at once; the fresh check replaces them (D-51).
+  Future<void> _showStored() async {
+    final stored = await storedBackup();
+    if (!mounted || !identical(_backup, emptyBackupState)) return;
+    setState(() {
+      _backup = stored;
+      _mergedLoaded.clear();
+    });
+  }
+
   Future<void> _checkBackup() async {
     try {
       final backup = await checkBackup(widget.immich);

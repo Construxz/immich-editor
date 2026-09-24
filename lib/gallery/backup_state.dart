@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:photo_manager/photo_manager.dart';
 
+import '../editor/preview.dart' show rendererChannel;
 import '../server/immich.dart';
 import 'checksums.dart';
 import 'device.dart';
@@ -37,9 +41,8 @@ Future<BackupState> checkBackup(Immich immich) async {
   if (!await devicePermitted()) return emptyBackupState;
   final sums = await deviceChecksums();
   final found = await immich.existing(sums); // device ID → server ID
-  final count = await deviceCount();
-  final all = count == 0 ? <AssetEntity>[] : await devicePhotos(0, count);
-  return (
+  final all = lastListed; // listed by the checksum pass just now
+  final state = (
     deviceOnly: [
       for (final a in all)
         if (!found.containsKey(a.id)) a,
@@ -47,4 +50,55 @@ Future<BackupState> checkBackup(Immich immich) async {
     deviceBackedUp: found.keys.toSet(),
     serverOnDevice: found.values.toSet(),
   );
+  _store(state).ignore();
+  return state;
+}
+
+/// The last state, stored, so the gallery shows the device photos at once and checks in the
+/// background — the check takes about 2 s with 17,500 photos (D-51).
+Future<File> _file() async => File(
+  '${await rendererChannel.invokeMethod<String>('filesDir')}/backup.json',
+);
+
+Future<void> _store(BackupState s) async => (await _file()).writeAsString(
+  jsonEncode({
+    'deviceOnly': [
+      for (final a in s.deviceOnly)
+        [
+          a.id,
+          a.createDateSecond,
+          a.width,
+          a.height,
+          a.orientation,
+          a.relativePath,
+        ],
+    ],
+    'deviceBackedUp': [...s.deviceBackedUp],
+    'serverOnDevice': [...s.serverOnDevice],
+  }),
+);
+
+/// The state of the last check, or [emptyBackupState] if there is none.
+Future<BackupState> storedBackup() async {
+  try {
+    final j = jsonDecode(await (await _file()).readAsString());
+    return (
+      deviceOnly: [
+        for (final a in j['deviceOnly'] as List)
+          AssetEntity(
+            id: a[0],
+            typeInt: AssetType.image.index,
+            createDateSecond: a[1],
+            width: a[2],
+            height: a[3],
+            orientation: a[4],
+            relativePath: a[5],
+          ),
+      ],
+      deviceBackedUp: {for (final id in j['deviceBackedUp']) id as String},
+      serverOnDevice: {for (final id in j['serverOnDevice']) id as String},
+    );
+  } catch (_) {
+    return emptyBackupState; // never checked, or broken
+  }
 }
