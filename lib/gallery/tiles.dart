@@ -42,7 +42,12 @@ Future<Uint8List> _thumbnail(Immich immich, String id) {
     return bytes;
   }();
   // A failure is not kept: next time it tries again.
-  loaded.then((_) {}, onError: (_) => _memory.remove(id));
+  loaded.then(
+    (_) {},
+    onError: (_) {
+      _memory.remove(id);
+    },
+  );
   return _memory[id] = loaded;
 }
 
