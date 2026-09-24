@@ -392,5 +392,16 @@
   "foldersHiddenHint": "These folders don’t appear under “Library”.",
   "settingsOpenWithTitle": "Open edits with",
   "settingsOpenWithAsk": "Ask Android",
-  "settingsOpenWithText": "For photos from folders Immich doesn’t back up. “Ask Android” offers “Just once” and “Always”; an app chosen here wins even over “Always” in Android."
+  "settingsOpenWithText": "For photos from folders Immich doesn’t back up. “Ask Android” offers “Just once” and “Always”; an app chosen here wins even over “Always” in Android.",
+  "settingsPendingWhere": "Copy in {folder} — not in Immich yet",
+  "settingsPendingNotFound": "Copy not found on the device yet",
+  "settingsPendingUnknown": "Edit",
+  "settingsPendingDiscard": "Stop waiting — the copy stays",
+  "@settingsPendingWhere": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  }
 }

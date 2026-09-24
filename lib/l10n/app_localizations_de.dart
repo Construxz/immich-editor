@@ -611,4 +611,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsOpenWithText =>
       'Für Fotos aus Ordnern, die Immich nicht sichert. „Android fragen“ bietet „Nur diesmal“ und „Immer“ an; eine App hier gilt auch, wenn in Android „Immer“ gewählt ist.';
+
+  @override
+  String settingsPendingWhere(String folder) {
+    return 'Kopie in $folder — noch nicht in Immich';
+  }
+
+  @override
+  String get settingsPendingNotFound =>
+      'Kopie auf dem Gerät noch nicht gefunden';
+
+  @override
+  String get settingsPendingUnknown => 'Bearbeitung';
+
+  @override
+  String get settingsPendingDiscard => 'Nicht mehr warten — die Kopie bleibt';
 }

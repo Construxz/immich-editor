@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:intl/intl.dart';
 
 import 'editor/preview.dart' show appVersion, urlHandlers;
 import 'photo.dart';
 import 'gallery/checksums.dart' show checksumProgress;
 import 'gallery/folders.dart' show FolderSettings;
+import 'gallery/checksums.dart' show deviceIdWithChecksum;
+import 'gallery/tiles.dart' show DeviceThumbnail;
 import 'l10n/app_localizations.dart';
 import 'language.dart';
 import 'main.dart' show storage;
@@ -833,6 +836,13 @@ class _SectionPageState extends State<_SectionPage> {
               ),
             ),
           ),
+        _PendingList(
+          key: ValueKey(_pending),
+          onChanged: () async {
+            final pending = await pendingCount();
+            if (mounted) setState(() => _pending = pending);
+          },
+        ),
       ],
     };
     return Scaffold(
@@ -922,6 +932,71 @@ class _OpenWithState extends State<_OpenWith> {
           onTap: s.hasData ? () => _choose(apps) : null,
         );
       },
+    );
+  }
+}
+
+/// Each waiting edit: where its copy lies, and a way to stop waiting — e.g. when the Immich app
+/// doesn't back that folder up (D-53). The copy itself stays.
+class _PendingList extends StatefulWidget {
+  const _PendingList({super.key, required this.onChanged});
+
+  final VoidCallback onChanged;
+
+  @override
+  State<_PendingList> createState() => _PendingListState();
+}
+
+class _PendingListState extends State<_PendingList> {
+  late var _items = _load();
+
+  static Future<List<(Pending, AssetEntity?)>> _load() async => [
+    for (final p in await pendingList())
+      (
+        p,
+        switch (await deviceIdWithChecksum(p.copy)) {
+          final id? => await AssetEntity.fromId(id),
+          null => null,
+        },
+      ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return FutureBuilder(
+      future: _items,
+      builder: (context, s) => Column(
+        children: [
+          for (final (p, copy) in s.data ?? const <(Pending, AssetEntity?)>[])
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+              leading: SizedBox.square(
+                dimension: 48,
+                child: copy == null
+                    ? const Icon(Icons.image_not_supported_outlined)
+                    : DeviceThumbnail(copy),
+              ),
+              title: Text(copy?.title ?? l.settingsPendingUnknown),
+              subtitle: Text(
+                copy == null
+                    ? l.settingsPendingNotFound
+                    : l.settingsPendingWhere(copy.relativePath ?? ''),
+              ),
+              trailing: IconButton(
+                tooltip: l.settingsPendingDiscard,
+                icon: const Icon(Icons.close),
+                onPressed: () async {
+                  await discard(p);
+                  setState(() {
+                    _items = _load();
+                  });
+                  widget.onChanged();
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

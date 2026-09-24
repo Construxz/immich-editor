@@ -76,6 +76,15 @@ Future<void> _write(List<Pending> queue) => storage.write(
 /// How many copies are still waiting for the backup.
 Future<int> pendingCount() async => (await _read()).length;
 
+/// What is waiting, for the settings (D-53).
+Future<List<Pending>> pendingList() => _read();
+
+/// Takes [p] out of the queue; the copy stays where it is (D-53).
+Future<void> discard(Pending p) async => _write([
+  for (final q in await _read())
+    if (q != p) q,
+]);
+
 Future<void> enqueue(Pending added) async {
   await _write(enqueueIn(await _read(), added));
   await scheduleBackgroundStacking();

@@ -607,4 +607,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsOpenWithText =>
       'For photos from folders Immich doesn’t back up. “Ask Android” offers “Just once” and “Always”; an app chosen here wins even over “Always” in Android.';
+
+  @override
+  String settingsPendingWhere(String folder) {
+    return 'Copy in $folder — not in Immich yet';
+  }
+
+  @override
+  String get settingsPendingNotFound => 'Copy not found on the device yet';
+
+  @override
+  String get settingsPendingUnknown => 'Edit';
+
+  @override
+  String get settingsPendingDiscard => 'Stop waiting — the copy stays';
 }

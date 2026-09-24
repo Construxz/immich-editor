@@ -155,5 +155,16 @@
   "foldersHiddenHint": "Diese Ordner erscheinen nicht unter „Bibliothek“.",
   "settingsOpenWithTitle": "Bearbeitungen öffnen mit",
   "settingsOpenWithAsk": "Android fragen",
-  "settingsOpenWithText": "Für Fotos aus Ordnern, die Immich nicht sichert. „Android fragen“ bietet „Nur diesmal“ und „Immer“ an; eine App hier gilt auch, wenn in Android „Immer“ gewählt ist."
+  "settingsOpenWithText": "Für Fotos aus Ordnern, die Immich nicht sichert. „Android fragen“ bietet „Nur diesmal“ und „Immer“ an; eine App hier gilt auch, wenn in Android „Immer“ gewählt ist.",
+  "settingsPendingWhere": "Kopie in {folder} — noch nicht in Immich",
+  "settingsPendingNotFound": "Kopie auf dem Gerät noch nicht gefunden",
+  "settingsPendingUnknown": "Bearbeitung",
+  "settingsPendingDiscard": "Nicht mehr warten — die Kopie bleibt",
+  "@settingsPendingWhere": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -7,6 +7,19 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-53: Wartende Bearbeitungen einzeln zeigen
+
+ROADMAP: Vorgemerktes, dessen Backup ausbleibt, obwohl die Datei da ist (Backup aus, Ordner nicht
+gesichert), in den Einstellungen zeigen. Einstellungen → Stapeln listet jetzt jede wartende
+Kopie mit Miniatur, Dateiname und Ordner („Kopie in Pictures/Privat/ — noch nicht in Immich");
+× nimmt sie aus der Warteschlange, die Datei bleibt. Die Kopie findet die App über ihre Prüfsumme
+in den gespeicherten Geräte-Prüfsummen.
+
+**Geprüft** 24.09.2026 im Emulator: 7 wartende Kopien mit Ordnern, darunter `privat-test` aus dem
+ungesicherten `Pictures/Privat`; × → „6 Bearbeitungen warten", die Datei liegt weiter im Ordner.
+
+---
+
 ## 2026-09-24 · D-52: „Öffnen mit" wählbar; Geräteordner nach dem neuesten Foto
 
 Entscheidungen des Besitzers:

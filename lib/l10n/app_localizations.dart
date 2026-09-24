@@ -1033,6 +1033,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For photos from folders Immich doesn’t back up. “Ask Android” offers “Just once” and “Always”; an app chosen here wins even over “Always” in Android.'**
   String get settingsOpenWithText;
+
+  /// No description provided for @settingsPendingWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy in {folder} — not in Immich yet'**
+  String settingsPendingWhere(String folder);
+
+  /// No description provided for @settingsPendingNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy not found on the device yet'**
+  String get settingsPendingNotFound;
+
+  /// No description provided for @settingsPendingUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get settingsPendingUnknown;
+
+  /// No description provided for @settingsPendingDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop waiting — the copy stays'**
+  String get settingsPendingDiscard;
 }
 
 class _AppLocalizationsDelegate
