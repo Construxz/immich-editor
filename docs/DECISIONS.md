@@ -7,6 +7,27 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-24 · D-49: Befund — der erste Bildabgleich einer großen Bibliothek
+
+Gemessen 24.09.2026 auf dem Pixel 7 Pro des Besitzers (17.490 Fotos), App-Stand `cc669d6` als
+Debug-Build (die Prüfsummen rechnet Kotlin, Debug ändert daran nichts): `checksums.json`
+beiseitegelegt, `dumpsys battery unplug`, `batterystats --reset`, App gestartet.
+
+- Das Erklärfenster (D-39) erschien: „1.960 von 17.490 Fotos · fertig in etwa 4 Minuten".
+- **Dauer: etwa 7½ Minuten** (12:05:30 Start bis 12:13:11 alle 17.490 in der Datei), im Mittel
+  39 Fotos/s, ungleichmäßig (Stufen zu je 1000 zwischen 15 und 75 s) — die erste Schätzung war zu
+  knapp, sie folgt dem Tempo der ersten Sekunden.
+- **Akku: 10,4 mAh** für die App laut `batterystats` (Vordergrund 3 min, Hintergrund 4½ min),
+  etwa 0,24 % von 4.370 mAh; die Anzeige blieb bei 95 %.
+- Der Lauf ging weiter, als der Bildschirm ausging und die App nicht mehr vorn war.
+
+Danach Release-Build wieder installiert; die neue Datei bleibt, die alte ist gelöscht.
+
+**Anwenden:** Der erste Abgleich ist einmalig tragbar; kein Grund, ihn in WorkManager
+auszulagern. Die Restzeit-Schätzung könnte das Tempo über ein längeres Fenster mitteln.
+
+---
+
 ## 2026-09-24 · D-48: Welche Geräteordner unter „Fotos" und in der Bibliothek erscheinen
 
 Befund des Besitzers am Pixel: Unter „Fotos" stand alles vom Gerät durcheinander — Screenshots,

@@ -81,8 +81,8 @@ Stand: 23.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Stand `91876f4` (Release-Build, Debug-Schlüssel), installiert
-  23.09.2026 nachmittags.
+- **Pixel des Besitzers:** App-Stand `cc669d6` (Release-Build, Debug-Schlüssel), installiert
+  24.09.2026 mittags, als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung
 
