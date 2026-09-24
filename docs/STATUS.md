@@ -82,8 +82,8 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
 - **CI** ([ci.yml](../.github/workflows/ci.yml)) bei jedem Push und Pull Request: format,
   analyze, test, Debug-APK.
 - **Release** ([release.yml](../.github/workflows/release.yml)) bei Tag `v*`: signierte Split-
-  und Universal-APKs mit `SHA256SUMS.txt` als GitHub-Release. Letzter Release: **v0.0.1**
-  (leeres Gerüst, D-11).
+  und Universal-APKs mit `SHA256SUMS.txt` als GitHub-Release. Letzter Release: **v0.1.0-dev.76**
+  (25.09.2026, Stand D-76; Vorabversion, das Repo bleibt privat, D-4).
 - **Signierschlüssel** `%USERPROFILE%\keys\immich-editor-upload.jks`, Alias `upload`, beim
   Besitzer gesichert; in GitHub als Secrets `ANDROID_KEYSTORE_BASE64`,
   `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Lokale Builds
