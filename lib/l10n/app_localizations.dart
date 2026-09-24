@@ -1057,6 +1057,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop waiting — the copy stays'**
   String get settingsPendingDiscard;
+
+  /// No description provided for @settingsHdrButtonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show HDR button'**
+  String get settingsHdrButtonTitle;
+
+  /// No description provided for @settingsHdrButtonText.
+  ///
+  /// In en, this message translates to:
+  /// **'In gallery, viewer and editor; it switches HDR everywhere. Off: only here.'**
+  String get settingsHdrButtonText;
 }
 
 class _AppLocalizationsDelegate

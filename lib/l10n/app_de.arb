@@ -166,5 +166,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "settingsHdrButtonTitle": "HDR-Knopf anzeigen",
+  "settingsHdrButtonText": "In Galerie, Betrachter und Editor; er schaltet HDR überall. Aus: nur hier."
 }

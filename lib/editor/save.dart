@@ -5,6 +5,7 @@ import '../export/jpeg.dart' show recipeFrom;
 import '../photo.dart';
 import '../gallery/checksums.dart' show deviceIdWithChecksum;
 import '../gallery/device.dart';
+import '../hdr.dart';
 import '../language.dart';
 import '../main.dart' show storage;
 import '../server/immich.dart';
@@ -188,7 +189,7 @@ Future<List<Object>> applyPreset(
   Preset preset, {
   void Function(int done)? onDone,
 }) async {
-  final hdr = await storage.read(key: 'hdr') != 'aus';
+  final hdr = hdrOn.value;
   final online = await storage.read(key: 'online') != 'server';
   final errors = <Object>[];
   for (final (i, e) in photos.indexed) {

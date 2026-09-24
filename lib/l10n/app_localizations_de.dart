@@ -626,4 +626,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsPendingDiscard => 'Nicht mehr warten — die Kopie bleibt';
+
+  @override
+  String get settingsHdrButtonTitle => 'HDR-Knopf anzeigen';
+
+  @override
+  String get settingsHdrButtonText =>
+      'In Galerie, Betrachter und Editor; er schaltet HDR überall. Aus: nur hier.';
 }

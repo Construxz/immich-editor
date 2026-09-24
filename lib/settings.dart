@@ -6,6 +6,7 @@ import 'editor/preview.dart' show appVersion, urlHandlers;
 import 'photo.dart';
 import 'gallery/checksums.dart' show checksumProgress;
 import 'gallery/folders.dart' show FolderSettings;
+import 'hdr.dart';
 import 'gallery/checksums.dart' show deviceIdWithChecksum;
 import 'gallery/tiles.dart' show DeviceThumbnail;
 import 'l10n/app_localizations.dart';
@@ -695,13 +696,11 @@ class _SectionPage extends StatefulWidget {
 class _SectionPageState extends State<_SectionPage> {
   // Key → value meaning "off"; anything else (including none) means "on". persisted: do not rename
   static const _off = {
-    'hdr': 'aus',
     'online': 'server',
     'mobil': 'aus',
     'zusammen': 'getrennt',
   };
   static const _on = {
-    'hdr': 'an',
     'online': 'geraet',
     'mobil': 'an',
     'zusammen': 'zusammen',
@@ -722,10 +721,33 @@ class _SectionPageState extends State<_SectionPage> {
     }();
   }
 
+  /// A switch on shared state (D-58), looking like [_toggle].
+  Widget _switch(
+    ValueNotifier<bool> state,
+    Future<void> Function(bool) set,
+    IconData icon,
+    String title,
+    String text,
+  ) => ValueListenableBuilder(
+    valueListenable: state,
+    builder: (context, on, _) => _tile(on, icon, title, text, (v) => set(v)),
+  );
+
   /// Like Immich's `SettingsSwitchListTile`.
-  Widget _toggle(String k, IconData icon, String title, String text) {
+  Widget _toggle(String k, IconData icon, String title, String text) =>
+      _tile(_values[k] ?? true, icon, title, text, (v) {
+        setState(() => _values[k] = v);
+        storage.write(key: k, value: v ? _on[k]! : _off[k]!);
+      });
+
+  Widget _tile(
+    bool isOn,
+    IconData icon,
+    String title,
+    String text,
+    ValueChanged<bool> onChanged,
+  ) {
     final colors = Theme.of(context).colorScheme;
-    final isOn = _values[k] ?? true;
     return SwitchListTile.adaptive(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
       dense: true,
@@ -742,10 +764,7 @@ class _SectionPageState extends State<_SectionPage> {
         style: Theme.of(context).textTheme.bodyMedium
             ?.copyWith(color: colors.onSurfaceSecondary),
       ),
-      onChanged: (v) {
-        setState(() => _values[k] = v);
-        storage.write(key: k, value: v ? _on[k]! : _off[k]!);
-      },
+      onChanged: onChanged,
     );
   }
 
@@ -800,7 +819,16 @@ class _SectionPageState extends State<_SectionPage> {
           l.settingsTogetherText,
         ),
       ],
-      _Section.edit => [_toggle('hdr', Icons.hdr_on, 'HDR', l.settingsHdrText)],
+      _Section.edit => [
+        _switch(hdrOn, setHdr, Icons.hdr_on, 'HDR', l.settingsHdrText),
+        _switch(
+          hdrButton,
+          setHdrButton,
+          Icons.smart_button_outlined,
+          l.settingsHdrButtonTitle,
+          l.settingsHdrButtonText,
+        ),
+      ],
       _Section.save => [
         _toggle(
           'online',

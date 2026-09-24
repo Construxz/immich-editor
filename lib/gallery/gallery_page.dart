@@ -7,6 +7,7 @@ import '../editor/presets.dart';
 import '../editor/preview.dart' show isMetered;
 import '../editor/save.dart' show applyPreset;
 import '../l10n/app_localizations.dart';
+import '../hdr.dart';
 import '../main.dart' show storage;
 import '../photo.dart';
 import '../server/immich.dart';
@@ -386,6 +387,7 @@ class _GalleryPageState extends State<GalleryPage> {
       centerTitle: false, // like Immich's timeline: name left, avatar right
       title: const Text('Editor for Immich'),
       actions: [
+        const HdrButton(),
         // The checksum pass is shown by the avatar (ring) and the account dialog.
         AccountButton(
           immich: widget.immich,

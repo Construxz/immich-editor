@@ -403,5 +403,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "settingsHdrButtonTitle": "Show HDR button",
+  "settingsHdrButtonText": "In gallery, viewer and editor; it switches HDR everywhere. Off: only here."
 }

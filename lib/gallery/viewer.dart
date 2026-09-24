@@ -6,7 +6,7 @@ import 'package:photo_manager/photo_manager.dart';
 
 import '../editor/editor_page.dart';
 import '../editor/preview.dart' show HdrImage;
-import '../main.dart' show storage;
+import '../hdr.dart';
 import 'checksums.dart' show deviceIdWithChecksum;
 import '../l10n/app_localizations.dart';
 import '../photo.dart';
@@ -177,15 +177,12 @@ class _PageState extends State<_Page> {
   Future<Uint8List?>? _deviceImage;
   var _zoomed = false;
 
-  /// Setting "HDR" (persisted: do not rename).
-  static final _hdrOn = storage.read(key: 'hdr').then((v) => v != 'aus');
   final _hdrIds = <String, Future<String?>>{};
 
   /// The shown photo's ID on the device, if HDR is on and it lives here — kept per photo so the
   /// native view isn't rebuilt.
   Future<String?> _hdrId(String? checksum) =>
       _hdrIds['$_shown/$checksum'] ??= () async {
-        if (!await _hdrOn) return null;
         if (widget.entry.onDevice) return _shown;
         return checksum == null ? null : await deviceIdWithChecksum(checksum);
       }();
@@ -373,11 +370,19 @@ class _PageState extends State<_Page> {
                         // HDR from the local original: device photos, or server photos that
                         // also live here (D-54). Server-only ones stay SDR — no download here.
                         if (widget.active && !_zoomed)
-                          FutureBuilder(
-                            future: _hdrId(shown?.$1.checksum),
-                            builder: (context, s) => s.data == null
+                          ValueListenableBuilder(
+                            valueListenable: hdrOn,
+                            builder: (context, on, _) => !on
                                 ? const SizedBox()
-                                : HdrImage(key: ValueKey(s.data), id: s.data!),
+                                : FutureBuilder(
+                                    future: _hdrId(shown?.$1.checksum),
+                                    builder: (context, s) => s.data == null
+                                        ? const SizedBox()
+                                        : HdrImage(
+                                            key: ValueKey(s.data),
+                                            id: s.data!,
+                                          ),
+                                  ),
                           ),
                       ],
                     ),
@@ -394,6 +399,7 @@ class _PageState extends State<_Page> {
                       tooltip: l.viewerInfo,
                       onPressed: _info,
                     ),
+                    const HdrButton(),
                     const Spacer(),
                     FilledButton.icon(
                       icon: const Icon(Icons.tune),

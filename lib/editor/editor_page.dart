@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../photo.dart';
 import '../gallery/backup_state.dart' show folderBackedUp;
 import '../l10n/app_localizations.dart';
+import '../hdr.dart';
 import '../main.dart' show storage;
 import '../server/immich.dart';
 import '../theme.dart';
@@ -52,7 +53,6 @@ class _EditorPageState extends State<EditorPage> {
 
   /// Setting "Mobile Daten" off (D-24): originals and uploads only without a metered connection.
   var _wifiOnly = false;
-  var _hdr = true;
   var _toDevice =
       true; // copy into the device gallery instead of straight to the server
   var _hasGainmap = false;
@@ -77,6 +77,7 @@ class _EditorPageState extends State<EditorPage> {
   @override
   void initState() {
     super.initState();
+    hdrOn.addListener(_hdrChanged);
     final clock = Stopwatch()..start(); // measured as in D-29
     () async {
       try {
@@ -85,7 +86,7 @@ class _EditorPageState extends State<EditorPage> {
         // background (D-29). A copy opens its original with its recipe. Settings meanwhile.
         // Settings and presets load meanwhile; small, local, they never fail.
         final settings = Future.wait([
-          for (final k in ['hdr', 'online', 'mobil']) storage.read(key: k),
+          for (final k in ['online', 'mobil']) storage.read(key: k),
         ]);
         final presetsRead = readPresets();
         final (:photo, :original, :preview, :oldCopy, :start) = await loadPhoto(
@@ -94,10 +95,10 @@ class _EditorPageState extends State<EditorPage> {
           onDevice: widget.onDevice,
           preview: true,
         );
-        final [hdrSetting, online, mobile] = await settings;
-        final presets = await presetsRead;
         // persisted: do not rename
-        final hdr = hdrSetting != 'aus';
+        final [online, mobile] = await settings;
+        final presets = await presetsRead;
+        final hdr = hdrOn.value;
         // Online photos per setting, default device (D-25).
         // A local original (also a server photo that lives here, D-24) saves to the device.
         final toDevice = original != null || online != 'server';
@@ -118,7 +119,6 @@ class _EditorPageState extends State<EditorPage> {
           _recipe = start;
           _original = original;
           _ready = true;
-          _hdr = hdr;
           _toDevice = toDevice;
           _hasGainmap = loaded.hasGainmap;
           _dimensions = Size(loaded.width, loaded.height);
@@ -142,7 +142,11 @@ class _EditorPageState extends State<EditorPage> {
   Future<Uint8List> _fetchOriginal(String id) async {
     final original = await widget.immich.original(id);
     if (!mounted) return original;
-    final loaded = await loadOriginal(original, hdr: _hdr, recipe: _shown);
+    final loaded = await loadOriginal(
+      original,
+      hdr: hdrOn.value,
+      recipe: _shown,
+    );
     if (mounted) {
       setState(() {
         _original = original;
@@ -154,6 +158,7 @@ class _EditorPageState extends State<EditorPage> {
 
   @override
   void dispose() {
+    hdrOn.removeListener(_hdrChanged);
     endSession();
     super.dispose();
   }
@@ -196,11 +201,11 @@ class _EditorPageState extends State<EditorPage> {
     _show();
   }
 
-  void _toggleHdr() {
-    setState(() => _hdr = !_hdr);
-    showHdr(_hdr);
-    // persisted: do not rename
-    storage.write(key: 'hdr', value: _hdr ? 'an' : 'aus');
+  /// HDR switched here, in the gallery or the viewer (D-58).
+  void _hdrChanged() {
+    if (!mounted) return;
+    setState(() {});
+    showHdr(hdrOn.value);
   }
 
   /// Aspect ratio of the rotated frame (width/height).
@@ -311,7 +316,7 @@ class _EditorPageState extends State<EditorPage> {
         photo: photo,
         original: await _originalReady!,
         recipe: _recipe,
-        hdr: _hdr,
+        hdr: hdrOn.value,
         toDevice: _toDevice,
         oldCopy: _oldCopy,
         replace: replace,
@@ -460,12 +465,7 @@ class _EditorPageState extends State<EditorPage> {
               : null,
         ),
         const Spacer(),
-        if (_hasGainmap)
-          IconButton(
-            icon: Icon(_hdr ? Icons.hdr_on : Icons.hdr_off),
-            tooltip: _hdr ? l.editorHdrOn : l.editorHdrOff,
-            onPressed: _saving ? null : _toggleHdr,
-          ),
+        if (_hasGainmap) HdrButton(enabled: !_saving),
         FilledButton(
           onPressed: _saving || !_changed || _recipe.isNeutral ? null : _save,
           child: Text(l.save),
@@ -474,7 +474,7 @@ class _EditorPageState extends State<EditorPage> {
           tooltip: l.editorMore,
           enabled: !_saving,
           onSelected: (v) {
-            if (v == 'hdr') _toggleHdr();
+            if (v == 'hdr') setHdr(!hdrOn.value);
             if (v == 'reset') {
               _ratio = null;
               _change(const Recipe());
@@ -482,10 +482,10 @@ class _EditorPageState extends State<EditorPage> {
             if (v == 'saved') _change(_start);
           },
           itemBuilder: (_) => [
-            if (_hasGainmap)
+            if (_hasGainmap && hdrButton.value)
               CheckedPopupMenuItem(
                 value: 'hdr',
-                checked: _hdr,
+                checked: hdrOn.value,
                 child: const Text('HDR'),
               ),
             PopupMenuItem(value: 'reset', child: Text(l.editorResetAll)),
