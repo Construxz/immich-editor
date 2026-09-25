@@ -52,6 +52,6 @@ Code- und Gewichtslizenz können abweichen — bei jedem Modell die **Gewichte**
 | [burhanrashid52/PhotoEditor](https://github.com/burhanrashid52/PhotoEditor) | Zeichnen, Text, Rückgängig | MIT | ja, mit `NOTICE` |
 | [immich-app/immich](https://github.com/immich-app/immich) | API; Design der Mobil-App übernommen (Theme, Konto-Fenster, Einstellungen — D-35) | AGPL-3.0 | ja |
 | [open-noodle/gallery](https://github.com/open-noodle/gallery) | Immich-Fork, Arbeitsweise mit Specs | AGPL-3.0 | ja |
-| [haavardnk/immich-edit](https://github.com/haavardnk/immich-edit) | RAW-Entwickler (Rust + `wgpu`), nur Lektüre | AGPL-3.0 | ja |
+| [haavardnk/immich-edit](https://github.com/haavardnk/immich-edit) | Selbst gehosteter, nicht-destruktiver RAW-Entwickler für eine Immich-Bibliothek: Server (Rust + `wgpu`) mit Browser-Oberfläche, Vorschau per WebGPU, Bearbeitungen als Sidecar auf seinem Server, `0.x` (nachgesehen 25.09.2026). Nur Lektüre, Vorbild für den Pro-Modus | AGPL-3.0-**only** | ja — aber übernommener Code legt uns auf AGPL-3.0 ohne „or later“ fest; D-3 nennt die Variante noch nicht |
 | [dev-nick421/immich-swipe](https://github.com/dev-nick421/immich-swipe) | Bedienmuster | **keine** | **nein** — ohne Lizenz alle Rechte vorbehalten; nur lesen |
 | [IMG.LY Photo SDK](https://img.ly/products/photo-sdk/) | — | proprietär | **nein** — D-9 |

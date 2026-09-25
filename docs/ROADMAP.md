@@ -63,6 +63,30 @@ SDR-Kopien.
 → erstes Release; Repo wird öffentlich (D-4), vorher Mail an Immich (D-5) und die Doku ins
 Englische übersetzt (D-15) — dabei DECISIONS straffen (1175 Zeilen, `doccheck`-Richtwert 600).
 
+**M6. Ein Renderer für alle, dann eine Web-Fassung.** ⬜ Nach M2, vor M3 (Besitzer, 25.09.2026).
+Heute rechnen Regler, Pop und Filter in AGSL, also nur auf Android. Galerie, Editor, Rezept,
+Immich-Client und JPEG-Aufbau (samt Ultra HDR) sind schon Dart. Flutter führt eigene
+Fragment-Shader auf Android, iOS und im Web aus. In dieser Reihenfolge:
+- ⬜ **Shader nach GLSL** (Flutter `FragmentProgram`), ein Renderer für alle Plattformen; die
+  Gain-Map bleibt vorerst Android-nativ. *Abnahme:* Abstand auf der Testtafel
+  (`tool/chartdump.sh`, `readchart.py --distance`) zur heutigen GPU-Ausgabe höchstens 1 Stufe je
+  Regler bei ±100.
+- ⬜ **Web, lokal:** ein Foto vom PC öffnen (Datei wählen oder hineinziehen; in Chrome und Edge
+  auch einen Ordner, die Kopie daneben), im Browser bearbeiten, als Kopie mit Rezept und Gain-Map
+  speichern, ohne Netzverkehr; eine statische Seite, nichts zu installieren. *Abnahme:* ein
+  Ultra-HDR-Foto vom Pixel im Browser bearbeitet, auf dem Handy wieder geöffnet, das Rezept ist
+  dasselbe.
+- ⬜ **Web mit Immich:** Serverfotos bearbeiten, Kopie hochladen und stapeln. Zu klären: die
+  Seite unter der Adresse des Servers (Reverse-Proxy, etwa `/editor`) oder eine eigene Adresse,
+  dann muss der Server Anfragen von dort erlauben. *Abnahme:* ein Serverfoto im Browser
+  bearbeitet, die Kopie liegt gestapelt vor dem Original.
+
+Offen und erst zu messen: HDR im Browser (anzeigen ja, bearbeiten mühsam — erste Fassung wohl
+SDR mit mitgenommener Gain-Map), Pop im Browser flüssig? Abgrenzung zu
+[immich-edit](https://github.com/haavardnk/immich-edit) (LICENSES): der ist ein selbst gehosteter
+RAW-Entwickler; unsere Web-Fassung braucht keinen Server und bleibt bei Handyfotos im Stil von
+Google Fotos.
+
 **M3. Stufe 2 und Zeichnen.** ⬜
 Pop, Rauschen, bester Bildausschnitt, Hautton; Stift, Textmarker, Text.
 *Abnahme:* ein eigener Look mit Pop und Entrauschen lässt sich als Preset auf 20 Bilder anwenden.
