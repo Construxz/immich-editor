@@ -1,7 +1,8 @@
 # Zustand — was jetzt gilt
 
 **Diese Datei wird überschrieben, nicht fortgeschrieben.** Warum etwas so ist, steht in
-[DECISIONS.md](DECISIONS.md), was noch fehlt, in [ROADMAP.md](ROADMAP.md).
+[DECISIONS.md](DECISIONS.md), was noch fehlt, in [ROADMAP.md](ROADMAP.md) (beide auch englisch:
+[DECISIONS.en.md](DECISIONS.en.md), [ROADMAP.en.md](ROADMAP.en.md)).
 
 Stand: 25.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
 

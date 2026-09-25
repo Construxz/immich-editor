@@ -1,7 +1,9 @@
 # Roadmap
 
+*English: [ROADMAP.en.md](ROADMAP.en.md).*
+
 **Hier steht nur Offenes**, jeweils mit Abnahme. Erledigtes verlässt die Datei; das Ergebnis
-steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
+steht in [DECISIONS.md](DECISIONS.md) ([englisch](DECISIONS.en.md)), die Geschichte im `git log`.
 
 ⬜ nicht gebaut · 🔶 teilweise gebaut oder nicht belastbar geprüft
 

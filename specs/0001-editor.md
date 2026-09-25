@@ -1,7 +1,8 @@
 # 0001 — Editor for Immich: Umfang und Aufbau
 
 **Stand 21.09.2026.** Das Konzept der App. Entscheidungen samt Begründung stehen in
-[DECISIONS.md](../docs/DECISIONS.md), Meilensteine in [ROADMAP.md](../docs/ROADMAP.md),
+[DECISIONS.md](../docs/DECISIONS.md) ([englisch](../docs/DECISIONS.en.md)), Meilensteine in
+[ROADMAP.md](../docs/ROADMAP.md) ([englisch](../docs/ROADMAP.en.md)),
 Lizenzen in [LICENSES.md](../docs/LICENSES.md).
 
 ## Ziele

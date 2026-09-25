@@ -122,7 +122,8 @@ do and want to help, open an issue.
 This project is open to ideas and wishes. Some on our list: a **pro mode** in the spirit of
 Lightroom mobile (curves, HSL, masks) — open source, on the device —, perspective correction,
 more of Google Photos' tools (Tone, Skin tone, Dynamic, Portrait light), and sharing presets.
-The current plan: [docs/ROADMAP.md](docs/ROADMAP.md).
+The current plan: [docs/ROADMAP.en.md](docs/ROADMAP.en.md) (German original:
+[docs/ROADMAP.md](docs/ROADMAP.md)).
 
 Bug reports, wishes and pull requests are welcome, AI-assisted ones too if they are marked and
 tested. How it works: [CONTRIBUTING.md](CONTRIBUTING.md).

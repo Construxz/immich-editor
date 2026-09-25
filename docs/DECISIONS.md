@@ -1,8 +1,10 @@
 # Entscheidungen und Befunde
 
+*English (condensed): [DECISIONS.en.md](DECISIONS.en.md).*
+
 Eine Entscheidung oder ein Befund je Eintrag, mit Datum, Begründung und — bei Befunden — wie
 gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
-[ROADMAP.md](ROADMAP.md), was jetzt gilt in [STATUS.md](STATUS.md), das Konzept in
+[ROADMAP.md](ROADMAP.md) ([englisch](ROADMAP.en.md)), was jetzt gilt in [STATUS.md](STATUS.md), das Konzept in
 [specs/0001-editor.md](../specs/0001-editor.md).
 
 ---

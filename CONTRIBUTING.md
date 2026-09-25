@@ -14,7 +14,8 @@ details first.**
 ## Suggesting a feature
 
 Open an issue with the **Feature request** form. Tell us what you want to do and why, not only
-how. The current plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
+how. The current plan is in [docs/ROADMAP.en.md](docs/ROADMAP.en.md) (German original:
+[docs/ROADMAP.md](docs/ROADMAP.md)).
 
 ## Pull requests
 
