@@ -5,8 +5,8 @@ number and measurement method is kept; if the two differ, the German file is aut
 
 One decision or finding per entry, with date, reasoning and — for findings — how it was
 measured. **New entries go on top.** What is still to do is in [ROADMAP.en.md](ROADMAP.en.md),
-what is true now in [STATUS.md](STATUS.md) (German), the concept in
-[specs/0001-editor.md](../specs/0001-editor.md) (German).
+what is true now in [STATUS.en.md](STATUS.en.md), the concept in
+[specs/0001-editor.en.md](../specs/0001-editor.en.md).
 
 ---
 
@@ -32,7 +32,9 @@ decisions. Decided: **in addition**, the German files stay authoritative
 reasons, numbers and measurement methods stay, filler goes). Whoever changes the German file
 updates the English one in the same commit (CLAUDE.md). `doccheck` does not count point numbers
 in `*.en.md`, otherwise it would report every ROADMAP number twice (its self-test checks this).
-The full translation per D-15 (M2) is still open.
+**Addendum** (same day, the maintainer's wish): STATUS, LICENSES and the spec now have a full
+English version next to them too; all are linked to each other and from the German files. Every
+doc file is now bilingual, German stays authoritative.
 
 ---
 
@@ -589,7 +591,7 @@ Built:
 - **Viewer:** while a page rests unzoomed, a native view (`HdrImageView`, `immich_editor/hdr`) over Flutter's image draws the local original via `ImageDecoder` with gain map and EXIF rotation; with a gain map and "HDR" on, the window switches to HDR and back on leaving (a counter over all such views so editor and viewer don't switch each other off). Sources: device photos and server photos whose original is on the device (checksum). Server-only photos stay SDR — the viewer doesn't download originals.
 - Creating the native view mid-swipe (`onPageChanged` fires halfway) left the page stuck between photos (Hybrid Composition). Now it goes away when a swipe starts and returns on `ScrollEndNotification`.
 - **Gentle HDR ramp** (Android 15+): `desiredHdrHeadroom` goes from 1 to the display maximum over 0.5 s, then unlimited — editor and viewer.
-- **Lens** for device photos: AndroidX `ExifInterface` instead of the framework one (has `LensModel`); already present via `photo_manager` (LICENSES.md).
+- **Lens** for device photos: AndroidX `ExifInterface` instead of the framework one (has `LensModel`); already present via `photo_manager` ([LICENSES.en.md](LICENSES.en.md)).
 
 **Verified** 2026-09-24 on the Pixel (release `1b9deb4`), test photo A (Ultra HDR) in a folder the Immich app doesn't back up, deleted afterwards:
 - Viewer: `COLOR_MODE_HDR`, `currentHdrSdrRatio=4.99999` (desired 5).
@@ -701,7 +703,7 @@ Swiping used to stop at the edge of the server photo's month. Now the viewer loa
 
 ## 2026-09-23 · D-46: Stacking in the background
 
-ROADMAP: stack without opening the app. Via Android **WorkManager** (plugin `workmanager`, MIT; AndroidX WorkManager, Apache-2.0; no Play services — [LICENSES.md](LICENSES.md)):
+ROADMAP: stack without opening the app. Via Android **WorkManager** (plugin `workmanager`, MIT; AndroidX WorkManager, Apache-2.0; no Play services — [LICENSES.en.md](LICENSES.en.md)):
 
 - A periodic task (Android minimum 15 min, network required) runs `stackPending` in an Activity-less Flutter engine. Scheduled when the queue gets an entry or still has one after a run; cancelled when empty.
 - Without an Activity there's no renderer channel (checksums) and no delete dialog, so the background only stacks. Local copies due to leave the device (D-28) go into `deviceTrashLater`; Android asks once for all at next start. Only the foreground discards unreachable entries (D-45).
@@ -741,7 +743,7 @@ Built (`loadPhoto` in `lib/editor/save.dart`):
 
 Maintainer: app usable internationally — language follows the device, German and English first, switchable in settings.
 
-- Flutter's standard: `flutter_localizations` (SDK) and `intl`, both BSD-3-Clause ([LICENSES.md](LICENSES.md)); strings in `lib/l10n/app_en.arb` (template) and `app_de.arb`, 147 keys, ICU plurals; `flutter gen-l10n` generates `AppLocalizations`.
+- Flutter's standard: `flutter_localizations` (SDK) and `intl`, both BSD-3-Clause ([LICENSES.en.md](LICENSES.en.md)); strings in `lib/l10n/app_en.arb` (template) and `app_de.arb`, 147 keys, ICU plurals; `flutter gen-l10n` generates `AppLocalizations`.
 - Settings → **Language**: "Device language" (default), Deutsch, English; stored as `language`, kept on logout. Other device languages get English.
 - Widgets use `AppLocalizations.of(context)` and rebuild on switch; context-free code (errors, save steps) uses `l10n` from `lib/language.dart`.
 - Dates, months, weekdays, numbers via `intl` instead of German lists ("Mi., 23. Sept. 2026 · 12:00", "f/1,9" vs. "f/1.9").
@@ -1147,7 +1149,7 @@ Side findings:
 
 Verified:
 
-- `flutter doctor` on the dev machine: "No issues found" (versions in [STATUS.md](STATUS.md)).
+- `flutter doctor` on the dev machine: "No issues found" (versions in [STATUS.en.md](STATUS.en.md)).
 - `ci.yml` green on GitHub for `7adb2e8` and `741c2ee` (format, analyze, test, debug APK), about 6½ minutes each.
 - Tag `v0.0.1` on `741c2ee`: `release.yml` green (run 35618926008), release with four APKs (arm64-v8a, armeabi-v7a, x86_64, universal) and `SHA256SUMS.txt`. Downloaded; `sha256sum -c` OK for all four; `apksigner verify` for arm64-v8a: scheme v2, certificate `CN=Construxz`, SHA-256 `9adfffc3…149a131f` — not the debug key.
 - Installed the arm64 APK via `adb install` on a Pixel 7 Pro: `versionName=0.0.1`, `versionCode=2001`, app starts with no crash in the log. Before that, ran via `flutter run` in debug mode on the same device.
@@ -1173,7 +1175,7 @@ Android application ID and iOS bundle ID; the Dart package name stays `immich_ed
 
 Evaluated as a ready-made editor base. Vendor states "typical deployments $600–2,000/month", billed per monthly active user; proprietary, so incompatible with AGPL; and as a Canva-like CreativeEditor far larger than the intended scope.
 
-**Apply:** No commercial SDK at the core. Open building blocks are listed in [LICENSES.md](LICENSES.md).
+**Apply:** No commercial SDK at the core. Open building blocks are listed in [LICENSES.en.md](LICENSES.en.md).
 
 ---
 
@@ -1230,7 +1232,7 @@ APK from GitHub Actions to GitHub Releases, later Google Play and App Store. The
 
 ## 2026-09-21 · D-3: License AGPL-3.0
 
-Same as Immich. Every distributed modification stays open, and code from Immich and other AGPL projects may be reused. Apache-2.0 and MIT code is compatible, with attribution in a `NOTICE` file. All dependencies are listed in [LICENSES.md](LICENSES.md).
+Same as Immich. Every distributed modification stays open, and code from Immich and other AGPL projects may be reused. Apache-2.0 and MIT code is compatible, with attribution in a `NOTICE` file. All dependencies are listed in [LICENSES.en.md](LICENSES.en.md).
 
 ---
 
@@ -1240,7 +1242,7 @@ Finding, checked in `immich-app/immich`, branch `main`: Immich stores its own ed
 
 Decision: the app renders on the device, uploads the result as a **new asset**, stores the recipe as **XMP in its own namespace** in the copy, and **stacks the copy in front of the original**. Reasons: no server fork; fully reversible (only ordinary assets and stacks); and only **one** renderer — going via `asset_edit` would have needed the same image math again in Sharp, which cannot directly do perspective, 3D LUTs, highlights or masks. Cost: every edited photo is stored twice on the server.
 
-Detailed in [specs/0001-editor.md](../specs/0001-editor.md).
+Detailed in [specs/0001-editor.en.md](../specs/0001-editor.en.md).
 
 ---
 

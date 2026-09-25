@@ -1,5 +1,7 @@
 # Register: Abhängigkeiten, Modelle, Vorlagen
 
+*English: [LICENSES.en.md](LICENSES.en.md).*
+
 Je Eintrag die Lizenz und ob sie zur **AGPL-3.0** des Projekts passt (D-3 in
 [DECISIONS.md](DECISIONS.md)). Als Register zu lesen, nicht als Tor: Neue Einträge kommen
 hinzu, sobald etwas eingebunden wird. **Zuerst nach Copyleft fragen.**

@@ -107,7 +107,7 @@ A fair question, and it came up with other Immich forks too. Three reasons:
 
 Still, the app is kept **as close to Immich as we can**: the same framework as Immich's mobile
 app (Flutter), Immich's look, only its public API, and a small, documented edit recipe
-([spec](specs/0001-editor.md), *Aufbau*). If the Immich team ever wants to take ideas, the
+([spec](specs/0001-editor.en.md), *Structure*). If the Immich team ever wants to take ideas, the
 recipe format or parts of the code, they are welcome to — AGPL-3.0, like Immich itself.
 
 ## iPhone?
@@ -136,7 +136,7 @@ page (`arm64-v8a` for current phones, `universal` if unsure). Check the download
 
 ## Development
 
-Required (versions in use: [docs/STATUS.md](docs/STATUS.md)):
+Required (versions in use: [docs/STATUS.en.md](docs/STATUS.en.md)):
 
 - **Flutter SDK**, stable channel (includes Dart)
 - **JDK** in the version `flutter doctor` asks for
@@ -149,16 +149,17 @@ Signing keys and `.env` files never go into the repository (see `.gitignore`).
 
 ## Documentation
 
-The project docs are in German; ROADMAP and DECISIONS also exist in English. Every statement lives in exactly one file; the others link to it.
+The project docs are written in German, and each has an English translation next to it
+(`*.en.md`; DECISIONS condensed). If they differ, the German file is authoritative. Every
+statement lives in exactly one file; the others link to it.
 
 | File | owns | maintained by |
 |---|---|---|
-| [docs/STATUS.md](docs/STATUS.md) | what is true **now**: environment, repository, target API | overwriting |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | decisions and findings, with reasons and how they were measured | appending on top |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | what is **open**: milestones and open decisions, each with acceptance criteria | deleting what is done |
-| [docs/ROADMAP.en.md](docs/ROADMAP.en.md), [docs/DECISIONS.en.md](docs/DECISIONS.en.md) | English translations of ROADMAP and DECISIONS (the German files are authoritative; DECISIONS condensed) | updated with the German file |
-| [docs/LICENSES.md](docs/LICENSES.md) | register of dependencies, models and references with their licenses | adding entries |
-| [specs/0001-editor.md](specs/0001-editor.md) | the concept: scope, storage path, gallery, features, structure | one spec per feature |
+| [docs/STATUS.md](docs/STATUS.md) ([English](docs/STATUS.en.md)) | what is true **now**: environment, repository, target API | overwriting |
+| [docs/DECISIONS.md](docs/DECISIONS.md) ([English](docs/DECISIONS.en.md)) | decisions and findings, with reasons and how they were measured | appending on top |
+| [docs/ROADMAP.md](docs/ROADMAP.md) ([English](docs/ROADMAP.en.md)) | what is **open**: milestones and open decisions, each with acceptance criteria | deleting what is done |
+| [docs/LICENSES.md](docs/LICENSES.md) ([English](docs/LICENSES.en.md)) | register of dependencies, models and references with their licenses | adding entries |
+| [specs/0001-editor.md](specs/0001-editor.md) ([English](specs/0001-editor.en.md)) | the concept: scope, storage path, gallery, features, structure | one spec per feature |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | how to report bugs, suggest features and contribute | editing when a rule changes |
 | [CLAUDE.md](CLAUDE.md) | working rules for coding agents: constraints, workflow, environment | editing when a rule changes |
 

@@ -32,7 +32,10 @@ lesen können. Entschieden: **zusätzlich**, die deutschen Dateien bleiben maßg
 ist gestrafft (Entscheidungen, Gründe, Zahlen und Messwege bleiben, Füllwerk fällt weg). Wer die
 deutsche Datei ändert, zieht die englische im selben Commit nach (CLAUDE.md). `doccheck` zählt
 Punktnummern in `*.en.md` nicht mit, sonst meldet es jede ROADMAP-Nummer doppelt (Selbsttest
-prüft das). Die vollständige Übersetzung nach D-15 (M2) bleibt offen.
+prüft das). **Nachtrag** (selber Tag, Wunsch des Besitzers): Auch STATUS, LICENSES und die Spec
+haben jetzt eine vollständige englische Fassung daneben; alle sind gegenseitig und von den
+deutschen Dateien aus verlinkt. Damit ist jede Doku-Datei zweisprachig, Deutsch bleibt
+maßgeblich.
 
 ---
 

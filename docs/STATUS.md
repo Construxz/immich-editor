@@ -1,5 +1,7 @@
 # Zustand — was jetzt gilt
 
+*English: [STATUS.en.md](STATUS.en.md).*
+
 **Diese Datei wird überschrieben, nicht fortgeschrieben.** Warum etwas so ist, steht in
 [DECISIONS.md](DECISIONS.md), was noch fehlt, in [ROADMAP.md](ROADMAP.md) (beide auch englisch:
 [DECISIONS.en.md](DECISIONS.en.md), [ROADMAP.en.md](ROADMAP.en.md)).
