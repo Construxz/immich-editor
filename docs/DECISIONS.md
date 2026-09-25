@@ -7,6 +7,39 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-80: App-Icon, Slogan und eine README für Außenstehende
+
+**Icon und Slogan** vom Besitzer: vier Blätter in Rot, Gelb, Grün und Blau um einen weißen
+Zuschnitt-Rahmen mit Zauberstab; Slogan „Your photos. Your edits. Your server." Das Motiv ist
+für dunklen Grund gemacht, der weiße Schein in der Mitte verschwindet auf Weiß (geprüft auf Weiß
+und Dunkelgrau).
+
+**Gebaut** mit `tool/make_icons.py` aus `docs/assets/icon-source.png`:
+- **App-Symbol:** adaptives Icon (`mipmap-anydpi-v26`) mit Hintergrund `#202124` und dem Motiv
+  als Vordergrund, auf 62 % der 108 dp. So bleibt es in der sicheren Zone und wird auch von runden
+  Masken nicht angeschnitten. Dazu die alten 48-dp-Icons als dunkle, abgerundete Kachel. Den
+  Startbildschirm von Android 12+ übernimmt das Icon selbst, statt des Flutter-Logos.
+- **GitHub:** `docs/assets/icon.png` oben in der README und `docs/assets/social-preview.png`
+  (1280 × 640, Icon, Name, Slogan in Google Sans). Das Vorschaubild lädt der Besitzer von Hand in
+  den Repo-Einstellungen hoch (*Social preview*), die API kann das nicht.
+
+**README neu** (englisch, für die Immich-Gemeinde): was die App kann, wo sie läuft, wie sie mit
+Immich arbeitet. Offen gesagt, dass sie vibe-coded ist und wie trotzdem geprüft wird. Warum kein
+PR an Immich, iPhone, Ideen und Mitmachen. Die Fakten dazu, nachgelesen am 25.09.2026:
+- Immichs [CONTRIBUTING.md](https://github.com/immich-app/immich/blob/main/CONTRIBUTING.md):
+  „We ask you not to open PRs generated with an LLM", und größere PRs erst im Discord
+  besprechen. Ein PR dieser App kommt damit nicht in Frage.
+- [Building the Immich editor](https://immich.app/blog/immich-editor) (30.01.2026): Immich
+  v2.5.0 hat nicht-destruktives Zuschneiden, Drehen und Spiegeln, gespeichert als Liste von
+  „Edit Actions" auf dem Server. Filter sind geplant. Vorher scheiterten vier PRs (#3271, #5151,
+  #9575, #11658).
+- Der Anlass: Noodle Gallery bekam auf Reddit Ablehnung als KI-Fork, verbunden mit der Frage
+  „warum kein PR?" (Bildschirmfotos des Besitzers).
+
+App-Version `0.1.0-dev.80`.
+
+---
+
 ## 2026-09-25 · D-79: Ohne Server nutzbar
 
 Wunsch des Besitzers (D-77): Auch ohne Immich- oder Noodle-Konto soll die App als Editor für

@@ -77,6 +77,8 @@ Stufe 3 (`patch`), Modelle nach D-6.
 
 ## Ideen, nicht geplant
 
+- **Pro-Modus** wie Lightroom Mobile (Besitzer, 25.09.2026): Kurven, HSL, Masken, offen und auf
+  dem Gerät. In der README als Idee genannt.
 - **Presets und Filter teilen** wie Lightroom Mobile (Besitzer, 24.09.2026): als Datei (`.cube`,
   Rezept-JSON) oder über einen öffentlichen Server, auf dem man Presets benannt hochlädt,
   bewertet und herunterlädt — in der App. Ein eigenes Projekt; ausgeklammert (D-62).
