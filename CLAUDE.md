@@ -35,7 +35,8 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
   ist. Pushen auf `origin` (privat) ist erlaubt; Tags und Releases nur nach Rückfrage.
 - **App-Version mit jedem Feature anheben** (Wunsch des Besitzers): in `pubspec.yaml`
   `0.1.0-dev.N+N`, N = Nummer der jüngsten Entscheidung in DECISIONS (D-N), vor jedem Aufspielen
-  aufs Telefon. Das Konto-Fenster zeigt sie; STATUS nennt den Stand auf dem Pixel.
+  aufs Telefon; ein Release-Kandidat heißt `0.1.0-rc.K+N` (D-82). Commits unter der Identität
+  aus `git config` dieses Repos (GitHub-noreply), nie mit privater Adresse. Das Konto-Fenster zeigt sie; STATUS nennt den Stand auf dem Pixel.
 
 ## Umgebung
 

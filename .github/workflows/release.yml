@@ -40,10 +40,12 @@ jobs:
 
       - run: flutter pub get
       - name: APKs bauen
+        # Version und Build-Nummer aus pubspec.yaml (D-82); der Tag muss dazu passen.
         run: |
-          V="--build-name=${GITHUB_REF_NAME#v} --build-number=${{ github.run_number }}"
-          flutter build apk --release --split-per-abi $V
-          flutter build apk --release $V
+          V=$(sed -n 's/^version: *//p' pubspec.yaml)
+          test "v${V%%+*}" = "$GITHUB_REF_NAME" || { echo "Tag $GITHUB_REF_NAME passt nicht zu pubspec $V"; exit 1; }
+          flutter build apk --release --split-per-abi
+          flutter build apk --release
 
       - name: Umbenennen und Prüfsummen
         run: |
@@ -58,4 +60,7 @@ jobs:
       - name: GitHub-Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --generate-notes
+        # Mit Bindestrich (0.1.0-rc.1, 0.1.0-dev.N) eine Vorabversion.
+        run: |
+          case "$GITHUB_REF_NAME" in *-*) PRE=--prerelease ;; *) PRE= ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --generate-notes $PRE
