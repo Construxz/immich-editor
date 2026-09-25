@@ -7,6 +7,49 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-77: Nach einem Netzfehler neue Verbindung; Gerätefotos auch ohne Server
+
+Befund des Besitzers (25.09.2026, Pixel, direkt nach einem Android-Update): Die Galerie blieb
+leer, auch das Profilbild, dann kam „Server nicht erreichbar". Erst nach mehrmaligem Schließen und
+Öffnen lud sie wieder.
+
+**Aus dem Logcat des Pixels** (per `adb` gelesen, `logcat -b all` seit dem Neustart um 09:50;
+kein Absturzbericht in `dumpsys dropbox`):
+- Android hat die App um 09:52:48 selbst geöffnet, gleich nach dem Neustart (Prozess 9968). Das
+  WLAN war seit 09:52:26 geprüft online, der Mobilfunk meldete sich um 09:52:51 neu.
+- „Schließen und Öffnen" brachte bis 10:05 immer **denselben Prozess** zurück (nur
+  `wm_on_resume`). Erst das Wegwischen um 10:05:39 beendete ihn, und der neue Prozess erreichte
+  den Server.
+- Unsere Fehlermeldungen standen nicht im Log, deshalb bleibt die genaue Ursache offen.
+
+**Ursache (Schluss, nicht gemessen):** Der Client hält **eine** Keep-alive-Verbindung für den
+ganzen Prozess (D-23). „Nochmal" in der Galerie lud über denselben Client. Eine Verbindung, die
+beim Wechsel zwischen den Netzen hängen bleibt, lässt dann jede weitere Anfrage scheitern, bis der
+Prozess endet. Das passt zu „erst ein neuer Prozess half".
+
+**Gebaut:**
+- `Immich._await`: Nach einem Netzfehler (Zeitüberschreitung, Socket, abgebrochene Verbindung)
+  benutzt die nächste Anfrage einen **neuen Client**. Das geschieht höchstens alle 5 s, weil
+  parallele Anfragen wie Miniaturen gemeinsam scheitern. Der alte Client schließt sich erst nach
+  3 min, wenn seine Anfragen vorbei sind.
+- Netzfehler stehen jetzt im Logcat (`flutter`: `Immich: …`), damit ein Bericht sie zeigt.
+- Die Galerie lädt von selbst neu, wenn die App nach einem Serverfehler wieder in den
+  Vordergrund kommt.
+- Ohne Server zeigt die Zeitleiste die Gerätefotos aus dem letzten Abgleich weiter, mit einem
+  Hinweis und „Nochmal" darüber, statt einer leeren Fehlerseite.
+
+**Geprüft** 25.09.2026 im Emulator:
+- App im Flugmodus gestartet: Hinweis „Server unreachable: Failed host lookup", darunter die
+  Gerätefotos. Im Logcat stehen die Ursachen.
+- Flugmodus aus, App in den Hintergrund und zurück, **ohne** „Nochmal": Die Zeitleiste lädt mit
+  Server.
+
+Den Fall „hängende Verbindung nach einem Update" kann ich nicht nachstellen. Ob er behoben ist,
+zeigt erst der nächste Neustart auf dem Pixel, dann mit Log. `flutter analyze` sauber,
+`flutter test` grün. App-Version `0.1.0-dev.77`.
+
+---
+
 ## 2026-09-25 · D-76: Pop nur 0 … 100, Leiste springt zum Regler, Zoom im Editor
 
 Befunde des Besitzers auf dem Pixel mit `0.1.0-dev.75`:

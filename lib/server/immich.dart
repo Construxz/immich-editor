@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 
 import '../language.dart';
@@ -20,7 +21,30 @@ class Immich {
   final String token;
 
   /// One connection for all requests (keep-alive): saves the TLS handshake per request.
-  final _http = http.Client();
+  /// Replaced after a network error (D-77): a connection opened while the phone switches
+  /// networks (after booting: mobile data, then Wi-Fi) otherwise failed every later request
+  /// until the app was restarted.
+  var _http = http.Client();
+  var _replaced = DateTime(0);
+
+  /// [request] within [limit]; on a network error the next request opens a fresh connection.
+  Future<http.Response> _await(
+    Future<http.Response> request,
+    Duration limit,
+  ) async {
+    try {
+      return await _guard(request, limit);
+    } on ImmichError {
+      // Once per few seconds: parallel requests (thumbnails) fail together.
+      if (DateTime.now().difference(_replaced) > const Duration(seconds: 5)) {
+        final old = _http;
+        _http = http.Client();
+        _replaced = DateTime.now();
+        Future.delayed(_long, old.close); // after its last requests have ended
+      }
+      rethrow;
+    }
+  }
 
   /// Timeouts: short requests, loading originals, uploading.
   static const _short = Duration(seconds: 30);
@@ -37,7 +61,7 @@ class Immich {
     String password,
   ) async {
     final baseUrl = server.replaceAll(RegExp(r'/+$'), '');
-    final r = await _await(
+    final r = await _guard(
       http.post(
         Uri.parse('$baseUrl/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
@@ -427,18 +451,22 @@ class Immich {
     ),
   );
 
-  /// Waits at most [limit]; network errors become an understandable message.
-  static Future<http.Response> _await(
+  /// Waits at most [limit]; network errors become an understandable message — and a line in
+  /// the log (logcat "flutter"), so a report shows them later.
+  static Future<http.Response> _guard(
     Future<http.Response> request,
     Duration limit,
   ) async {
     try {
       return await request.timeout(limit);
     } on TimeoutException {
+      debugPrint('Immich: timeout after $limit');
       throw ImmichError(l10n.serverTimeout);
     } on SocketException catch (e) {
+      debugPrint('Immich: $e');
       throw ImmichError(l10n.serverUnreachable(e.message));
     } on http.ClientException catch (e) {
+      debugPrint('Immich: $e');
       throw ImmichError(l10n.serverConnectionLost(e.message));
     }
   }

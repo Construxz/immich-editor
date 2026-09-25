@@ -62,7 +62,8 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     beim Speichern „Kopie ersetzen" (die alte in den Papierkorb) oder „Als weitere Kopie
     speichern" — alle Kopien bleiben in einem Stapel (D-31).
   - **Noch nicht:** Perspektive — siehe ROADMAP.
-- Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung),
+- Code: `lib/server/` (Immich-Client, Endpunkte in der Spec, eine Keep-Alive-Verbindung, nach
+  einem Netzfehler eine neue; Netzfehler im Logcat unter `flutter`, D-77),
   `lib/gallery/` (mit `device.dart` über `photo_manager`), `lib/stacking/` (Stapeln, auch
   vorgemerkt nach dem Backup), `lib/editor/` (Seite, Rezept, Presets, Laden und Speichern einer Kopie, Lineal,
   Zuschnittrahmen, Vorschau-Kanal),
@@ -90,7 +91,7 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Version `0.1.0-dev.76` (Release-Build, Debug-Schlüssel, arm64), installiert
+- **Pixel des Besitzers:** App-Version `0.1.0-dev.77` (Release-Build, Debug-Schlüssel, arm64), installiert
   25.09.2026 nachts mit `adb install -r`, als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung

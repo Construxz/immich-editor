@@ -56,8 +56,10 @@ class GalleryPage extends StatefulWidget {
   State<GalleryPage> createState() => _GalleryPageState();
 }
 
-class _GalleryPageState extends State<GalleryPage> {
-  late Future<List<Month>> _months = widget.immich.months();
+class _GalleryPageState extends State<GalleryPage> with WidgetsBindingObserver {
+  late Future<List<Month>> _months = _watch(widget.immich.months());
+  var _serverFailed =
+      false; // the last load reached no server: again when the app returns
   final _loaded = <String, Future<List<Tile>>>{};
   final _mergedLoaded = <String, Future<List<_Item>>>{};
   final _selection = <Entry>{};
@@ -68,9 +70,26 @@ class _GalleryPageState extends State<GalleryPage> {
   late Future<int?> _deviceCount = _countDevice();
   final _devicePages = <int, Future<List<AssetEntity>>>{};
 
+  /// Notes whether the server answered, for [didChangeAppLifecycleState].
+  Future<List<Month>> _watch(Future<List<Month>> months) {
+    months.then(
+      (_) => _serverFailed = false,
+      onError: (Object _) => _serverFailed = true,
+    );
+    return months;
+  }
+
+  /// Back in the app after the server was unreachable (e.g. just after booting): load again
+  /// instead of showing the error until the app is restarted (D-77).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _serverFailed) _reload();
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _readSettings();
     checksumProgress.addListener(_explain);
     _showStored();
@@ -99,6 +118,7 @@ class _GalleryPageState extends State<GalleryPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     checksumProgress.removeListener(_explain);
     super.dispose();
   }
@@ -155,7 +175,7 @@ class _GalleryPageState extends State<GalleryPage> {
     setState(() {
       _loaded.clear();
       _mergedLoaded.clear();
-      _months = widget.immich.months();
+      _months = _watch(widget.immich.months());
       _devicePages.clear();
       _deviceCount = _countDevice();
     });
@@ -496,12 +516,15 @@ class _GalleryPageState extends State<GalleryPage> {
   Widget _mergedView() => FutureBuilder(
     future: _months,
     builder: (context, s) {
-      if (s.hasError) return _ErrorView('${s.error}', _reload);
-      final server = s.data;
+      // Without the server the device photos still show, the error above them (D-77).
+      final server = s.hasError ? const <Month>[] : s.data;
       if (server == null) {
         return const Center(child: CircularProgressIndicator());
       }
       final months = _mergedMonths(server);
+      if (s.hasError && months.isEmpty) {
+        return _ErrorView('${s.error}', _reload);
+      }
       if (months.isEmpty) {
         return Center(
           child: Text(AppLocalizations.of(context).galleryNoPhotos),
@@ -512,6 +535,18 @@ class _GalleryPageState extends State<GalleryPage> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            if (s.hasError)
+              SliverToBoxAdapter(
+                child: MaterialBanner(
+                  content: Text('${s.error}'),
+                  actions: [
+                    TextButton(
+                      onPressed: _reload,
+                      child: Text(AppLocalizations.of(context).galleryRetry),
+                    ),
+                  ],
+                ),
+              ),
             for (final (k, m) in months.indexed) ...[
               _monthHeader(DateTime.parse('${m.key}-01')),
               SliverGrid.builder(
