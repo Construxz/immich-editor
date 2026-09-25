@@ -54,6 +54,8 @@ def check(base: Path, max_lines: int) -> tuple[list[str], list[str]]:
     anchors = {p: {slug(h) for h in HEADING.findall(t)} for p, t in docs.items()}
     points: dict[str, list[str]] = {}
     for p, t in docs.items():
+        if p.name.endswith(".en.md"):  # a translation repeats the points of its original
+            continue
         for pid in POINT.findall(t):
             points.setdefault(pid, []).append(p.name)
 
@@ -105,6 +107,7 @@ def selftest() -> int:
         (b / "docs").mkdir()
         (b / "docs" / "S.md").write_text("# S\n\n[a](../A.md#titel)\n[r](../R%20%28x%29.md)\n", encoding="utf-8")
         (b / "R (x).md").write_text("# R\n", encoding="utf-8")
+        (b / "A.en.md").write_text("# Title\n\n**B1.** open\n", encoding="utf-8")
         (b / "A.md").write_text(
             "# Titel\n\n**B1.** offen\n**B1.** auch offen\n\n"
             "`![](x)` [weg](FEHLT.md)\n[tot](A.md#gibtesnicht)\n[gut](A.md#titel)\n"
@@ -113,7 +116,7 @@ def selftest() -> int:
         )
         errors, hints = check(b, 600)
         text = " | ".join(errors)
-        assert any("B1 ist 2-mal" in f for f in errors), text
+        assert any("B1 ist 2-mal" in f for f in errors), text  # not 3: A.en.md is a translation
         assert any("Link ins Leere" in f for f in errors), text
         assert any("toter Anker" in f for f in errors), text
         assert not any("Verweis auf B9" in f for f in errors), text

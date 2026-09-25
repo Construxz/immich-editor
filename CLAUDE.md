@@ -30,6 +30,8 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
   Besitzer. Erledigtes verlässt die ROADMAP, das Ergebnis geht mit Datum und Messweg in
   DECISIONS, der Ist-Stand wird in STATUS überschrieben. Danach `python doccheck.py`.
 - Doku-Sprache wird Englisch (D-15); bis zur Übersetzung in M2 bleibt sie einheitlich Deutsch.
+  ROADMAP und DECISIONS haben daneben eine englische Fassung (`*.en.md`, D-84): Wer die
+  deutsche ändert, zieht die englische im selben Commit nach (DECISIONS gestrafft).
   README englisch.
 - **Commits:** Dateien einzeln benennen, nie `git add -A`; die Nachricht sagt, was jetzt anders
   ist. Pushen auf `origin` (privat) ist erlaubt; Tags und Releases nur nach Rückfrage.

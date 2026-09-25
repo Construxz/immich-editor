@@ -7,6 +7,18 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-84: ROADMAP und DECISIONS zusätzlich auf Englisch
+
+Wunsch des Besitzers vor dem Öffentlichschalten: Außenstehende sollen Plan und Entscheidungen
+lesen können. Entschieden: **zusätzlich**, die deutschen Dateien bleiben maßgeblich
+([ROADMAP.en.md](ROADMAP.en.md), [DECISIONS.en.md](DECISIONS.en.md)). Die englische DECISIONS
+ist gestrafft (Entscheidungen, Gründe, Zahlen und Messwege bleiben, Füllwerk fällt weg). Wer die
+deutsche Datei ändert, zieht die englische im selben Commit nach (CLAUDE.md). `doccheck` zählt
+Punktnummern in `*.en.md` nicht mit, sonst meldet es jede ROADMAP-Nummer doppelt (Selbsttest
+prüft das). Die vollständige Übersetzung nach D-15 (M2) bleibt offen.
+
+---
+
 ## 2026-09-25 · D-83: Beiträge: CONTRIBUTING, Issue-Formulare, KI-Beiträge erlaubt mit Kennzeichnung
 
 Vor dem Öffentlichschalten, gegen Rauschen durch generierte Issues und PRs:
@@ -21,6 +33,8 @@ Vor dem Öffentlichschalten, gegen Rauschen durch generierte Issues und PRs:
 - **Fremde PRs:** Nichts eingestellt. Bei öffentlichen Repos startet GitHub die Actions für
   Erstbeitragende erst nach Freigabe, und Secrets bekommen PRs aus Forks nie; der Release-Workflow
   läuft nur auf Tags.
+
+---
 
 ## 2026-09-25 · D-82: Persönliches aus Repo und Historie entfernt; erste Vorabversion 0.1.0-rc.1
 

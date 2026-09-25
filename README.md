@@ -78,7 +78,8 @@ criterion that has to be *measured*, not assumed:
   real use get fixed with a finding and a cause — for example, how the app behaved after an
   Android update.
 - Every decision and measurement is written down with how it was measured:
-  [docs/DECISIONS.md](docs/DECISIONS.md) (German). The slider calibration against Google Photos,
+  [docs/DECISIONS.en.md](docs/DECISIONS.en.md) (condensed English translation of the German
+  [original](docs/DECISIONS.md)). The slider calibration against Google Photos,
   for instance, compares 132 color patches per slider.
 - Tests: Dart unit tests, JVM tests for the native parts and GPU tests of the renderer.
 - A security review went over login, storage, the native bridge and foreign files.
@@ -147,13 +148,14 @@ Signing keys and `.env` files never go into the repository (see `.gitignore`).
 
 ## Documentation
 
-The project docs are in German. Every statement lives in exactly one file; the others link to it.
+The project docs are in German; ROADMAP and DECISIONS also exist in English. Every statement lives in exactly one file; the others link to it.
 
 | File | owns | maintained by |
 |---|---|---|
 | [docs/STATUS.md](docs/STATUS.md) | what is true **now**: environment, repository, target API | overwriting |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | decisions and findings, with reasons and how they were measured | appending on top |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | what is **open**: milestones and open decisions, each with acceptance criteria | deleting what is done |
+| [docs/ROADMAP.en.md](docs/ROADMAP.en.md), [docs/DECISIONS.en.md](docs/DECISIONS.en.md) | English translations of ROADMAP and DECISIONS (the German files are authoritative; DECISIONS condensed) | updated with the German file |
 | [docs/LICENSES.md](docs/LICENSES.md) | register of dependencies, models and references with their licenses | adding entries |
 | [specs/0001-editor.md](specs/0001-editor.md) | the concept: scope, storage path, gallery, features, structure | one spec per feature |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | how to report bugs, suggest features and contribute | editing when a rule changes |
