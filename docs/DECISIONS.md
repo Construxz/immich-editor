@@ -9,6 +9,21 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-85: Keine KI-Zuschreibung in Commits; Historie ohne Co-Author-Zeile
+
+GitHub zeigte bei jedem Commit „Construxz and claude", weil alle 115 Commits mit
+`Co-Authored-By: Claude … <noreply@anthropic.com>` endeten. Wunsch des Besitzers: das nicht
+angeben. Dass das Projekt mit einem KI-Agenten entsteht, steht offen in der README; eine Zeile je
+Commit braucht es dafür nicht.
+- **Ab jetzt:** keine Co-Author-Zeile und kein „Generated with Claude Code" (CLAUDE.md).
+- **Historie:** Die Zeile ist aus allen 115 Commits entfernt (`git filter-branch --msg-filter`,
+  Tag mit `--tag-name-filter`). Der Stand der Dateien ist gleich (`git diff` alt/neu leer),
+  Autor und Committer bleiben noreply. Die Commit-Kennungen in DECISIONS sind umgeschrieben.
+  Force-Push eine Stunde nach dem Öffentlichschalten; Tag `v0.1.0-rc.1` und Release neu gebaut,
+  die Actions-Läufe der alten Kennungen gelöscht. Vorher ein Bundle als Sicherung (Scratchpad).
+
+---
+
 ## 2026-09-25 · D-84: ROADMAP und DECISIONS zusätzlich auf Englisch
 
 Wunsch des Besitzers vor dem Öffentlichschalten: Außenstehende sollen Plan und Entscheidungen
@@ -70,7 +85,7 @@ persönlichen Daten durchsucht:
   Besitzer am selben Tag gelöscht). `Construxz/immich-editor` ist neu angelegt, darin nur die bereinigte
   Historie und der Tag `v0.1.0-rc.1`; die vier Signier-Secrets hat der Besitzer neu eingetragen.
   **Geprüft über die REST-API:** 108 Commits, alle Autor und Committer noreply; 3 Actions-Läufe
-  (CI auf `a1fdee3` und `eb0fb08`, Release auf `eb0fb08`), alle erfolgreich und alle mit noreply;
+  (CI auf `13fd7f6` und `06e4885`, Release auf `06e4885`), alle erfolgreich und alle mit noreply;
   ein Release `v0.1.0-rc.1` (Vorabversion) mit 4 APKs und `SHA256SUMS.txt`; ein Tag; die Aktivität
   zeigt nur das Anlegen von `main`. Die Suche nach der alten E-Mail über alle Antworten (Repo,
   Commits, Läufe, Releases, Tags, Refs, Events, Aktivität, Beitragende; 540 kB) ergibt 0 Treffer.
@@ -880,7 +895,7 @@ mit „30 Fotos · …" zweizeilig; beim Hochscrollen luden die Zeilen oberhalb 
 schoben die Liste. Jetzt ist die Zeile von Anfang an zweizeilig (leere zweite Zeile) und bleibt
 geladen, wenn sie aus dem Bild scrollt (`AutomaticKeepAliveClientMixin`) — auch das Zählen über
 alle Fotos eines Ordners (Camera: 7.519) geschieht nur einmal. Auf dem Pixel installiert
-(`3907d19`); ob es flüssig ist, sagt der Besitzer.
+(`1b9deb4`); ob es flüssig ist, sagt der Besitzer.
 
 ---
 
@@ -902,7 +917,7 @@ Gebaut:
 - **Objektiv** bei Gerätefotos: AndroidX `ExifInterface` statt der des Frameworks (liefert
   `LensModel`); schon über `photo_manager` in der App (LICENSES.md).
 
-**Geprüft** 24.09.2026 auf dem Pixel (Release `3907d19`), Testfoto A (Ultra HDR) in einem
+**Geprüft** 24.09.2026 auf dem Pixel (Release `1b9deb4`), Testfoto A (Ultra HDR) in einem
 Ordner, den die Immich-App nicht sichert, danach gelöscht:
 - Betrachter: Fenster `COLOR_MODE_HDR`, `currentHdrSdrRatio=4.99999` (desired 5).
 - Editor: nach Drehen und Zuschnitt Quadrat weiter `COLOR_MODE_HDR`, Faktor 5. Gespeichert („Nur
@@ -1016,7 +1031,7 @@ des Fensters — auf dem Bildschirmfoto nach 1,5 s die ganze Zeitleiste mit den 
 
 ## 2026-09-24 · D-50: Befund — „In Immich öffnen" auf dem Pixel
 
-Geprüft 24.09.2026 auf dem Pixel des Besitzers (Release-Stand `9e61540`, als Testbenutzer; die
+Geprüft 24.09.2026 auf dem Pixel des Besitzers (Release-Stand `e577f0c`, als Testbenutzer; die
 Immich-App dort mit dem Hauptkonto, auf Wunsch des Besitzers nicht umgemeldet):
 
 - Testfoto in `Pictures/EditorTest` (nicht gesichert), in der App gedreht, gespeichert → Frage
@@ -1036,7 +1051,7 @@ die Liste (der Besitzer: im Debug-Build etwas holprig).
 
 ## 2026-09-24 · D-49: Befund — der erste Bildabgleich einer großen Bibliothek
 
-Gemessen 24.09.2026 auf dem Pixel 7 Pro des Besitzers (17.490 Fotos), App-Stand `9e61540` als
+Gemessen 24.09.2026 auf dem Pixel 7 Pro des Besitzers (17.490 Fotos), App-Stand `e577f0c` als
 Debug-Build (die Prüfsummen rechnet Kotlin, Debug ändert daran nichts): `checksums.json`
 beiseitegelegt, `dumpsys battery unplug`, `batterystats --reset`, App gestartet.
 
@@ -1448,7 +1463,7 @@ warten auf das Backup", Einstellungsseite mit allen Schaltern.
 
 ## 2026-09-22 · D-31: Eine Kopie ersetzen oder daneben legen; Miniaturen neuer Kopien
 
-Anlass: Rückmeldung des Besitzers (Pixel, Stand `1a96574`). Speichern geht dort — das „App
+Anlass: Rückmeldung des Besitzers (Pixel, Stand `53a8c7f`). Speichern geht dort — das „App
 reagiert nicht" des älteren Stands (D-23) tritt nicht mehr auf. Bei Google Fotos entstehen beim
 Bearbeiten einer Kopie immer weitere Kopien, lose in der Galerie — unübersichtlich. Wer eine
 Kopie ändert, will meist diese Kopie ändern.
@@ -1714,7 +1729,7 @@ damit auf beide.
 
 ## 2026-09-21 · D-20: Befund — die HDR-Vorschau wirkt auf dem Pixel
 
-Wie geprüft: App (Stand `151a316` + HDR-Knopf) im Release-Build auf dem Pixel 7 Pro des
+Wie geprüft: App (Stand `8aef457` + HDR-Knopf) im Release-Build auf dem Pixel 7 Pro des
 Besitzers, Editor mit `testfoto-a-hdr.jpg` (Ultra HDR, D-12) offen.
 
 - `dumpsys window`: Fenster `colorMode=COLOR_MODE_HDR`.
@@ -1903,9 +1918,9 @@ Wie geprüft:
 
 - `flutter doctor` auf dem Entwicklungsrechner: „No issues found" (Versionen in
   [STATUS.md](STATUS.md)).
-- `ci.yml` grün auf GitHub für `cd7972f` und `5166b58` (format, analyze, test, Debug-APK),
+- `ci.yml` grün auf GitHub für `7adb2e8` und `741c2ee` (format, analyze, test, Debug-APK),
   je etwa 6½ Minuten.
-- Tag `v0.0.1` auf `5166b58`: `release.yml` grün (Lauf 35618926008), Release mit vier APKs
+- Tag `v0.0.1` auf `741c2ee`: `release.yml` grün (Lauf 35618926008), Release mit vier APKs
   (arm64-v8a, armeabi-v7a, x86_64, universal) und `SHA256SUMS.txt`. Heruntergeladen,
   `sha256sum -c` für alle vier OK; `apksigner verify` für arm64-v8a: Schema v2, Zertifikat
   `CN=Construxz`, SHA-256 `9adfffc3…149a131f` — nicht der Debug-Schlüssel.

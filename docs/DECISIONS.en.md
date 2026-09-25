@@ -10,6 +10,20 @@ what is true now in [STATUS.md](STATUS.md) (German), the concept in
 
 ---
 
+## 2026-09-25 · D-85: No AI attribution in commits; history without the co-author line
+
+GitHub showed "Construxz and claude" on every commit, because all 115 commits ended with
+`Co-Authored-By: Claude … <noreply@anthropic.com>`. The maintainer's wish: don't show it. That the
+project is built with an AI agent is stated openly in the README; it needs no line per commit.
+- **From now on:** no co-author line and no "Generated with Claude Code" (CLAUDE.md).
+- **History:** the line is removed from all 115 commits (`git filter-branch --msg-filter`, tag via
+  `--tag-name-filter`). The files are identical (`git diff` old/new empty), author and committer
+  stay noreply. Commit IDs in DECISIONS are rewritten. Force-pushed an hour after going public;
+  tag `v0.1.0-rc.1` and the release rebuilt, Actions runs of the old IDs deleted. A bundle was
+  kept as a backup beforehand (scratchpad).
+
+---
+
 ## 2026-09-25 · D-84: ROADMAP and DECISIONS also in English
 
 The maintainer's wish before going public: outsiders should be able to read the plan and the
@@ -61,7 +75,7 @@ Searched all tracked files and the full history (106 commits) for personal data:
   repo renamed `immich-editor-old` (private backup; deleted by the maintainer the same day). `Construxz/immich-editor`
   created fresh with only the cleaned history and tag `v0.1.0-rc.1`; maintainer re-entered the four
   signing secrets. **Verified via REST API:** 108 commits, all noreply; 3 Actions runs (CI on
-  `a1fdee3` and `eb0fb08`, release on `eb0fb08`), all green and noreply; one release
+  `13fd7f6` and `06e4885`, release on `06e4885`), all green and noreply; one release
   `v0.1.0-rc.1` (pre-release) with 4 APKs and `SHA256SUMS.txt`; one tag; activity shows only
   creation of `main`. Old e-mail across all responses (repo, commits, runs, releases, tags, refs,
   events, activity, contributors; 540 kB): 0 hits. New arm64 APK has the same signing certificate
@@ -565,7 +579,7 @@ Maintainer: HDR toggle in gallery, viewer and editor, hidden everywhere only if 
 
 ## 2026-09-24 · D-57: Library no longer jumps when scrolling up
 
-Maintainer on the Pixel: scrolling up, the list jumps. Cause: folder rows loaded as one line and grew to two ("30 photos · …"); rows reloading above pushed the list. Now rows are two lines from the start and stay alive off-screen (`AutomaticKeepAliveClientMixin`), so counting a folder's photos (Camera: 7,519) also runs once. Installed on the Pixel (`3907d19`); smoothness is for the maintainer to judge.
+Maintainer on the Pixel: scrolling up, the list jumps. Cause: folder rows loaded as one line and grew to two ("30 photos · …"); rows reloading above pushed the list. Now rows are two lines from the start and stay alive off-screen (`AutomaticKeepAliveClientMixin`), so counting a folder's photos (Camera: 7,519) also runs once. Installed on the Pixel (`1b9deb4`); smoothness is for the maintainer to judge.
 
 ---
 
@@ -577,7 +591,7 @@ Built:
 - **Gentle HDR ramp** (Android 15+): `desiredHdrHeadroom` goes from 1 to the display maximum over 0.5 s, then unlimited — editor and viewer.
 - **Lens** for device photos: AndroidX `ExifInterface` instead of the framework one (has `LensModel`); already present via `photo_manager` (LICENSES.md).
 
-**Verified** 2026-09-24 on the Pixel (release `3907d19`), test photo A (Ultra HDR) in a folder the Immich app doesn't back up, deleted afterwards:
+**Verified** 2026-09-24 on the Pixel (release `1b9deb4`), test photo A (Ultra HDR) in a folder the Immich app doesn't back up, deleted afterwards:
 - Viewer: `COLOR_MODE_HDR`, `currentHdrSdrRatio=4.99999` (desired 5).
 - Editor: after rotate and square crop still `COLOR_MODE_HDR`, ratio 5. Saved "Device only": libvips 8.18.6 loads it with **`uhdrload`**, 3072 × 3072, content boost 4.6525 as in the original — **Ultra HDR with matching gain map**. With "HDR off": `jpegload`, no `hdrgm` — **SDR**. The HDR part of the M2 acceptance is met except for the visual judgment.
 - Info (emulator, same file): "Google Pixel 7 Pro / Pixel 7 Pro back camera 6.81mm f/1.85 / f/1.9 · 1/231 s · ISO 47 · 6.8 mm".
@@ -641,7 +655,7 @@ Built:
 
 ## 2026-09-24 · D-50: Finding — "Open in Immich" on the Pixel
 
-Checked 2026-09-24 on the maintainer's Pixel (release `9e61540`, as test user; the Immich app stayed on the main account at the maintainer's request):
+Checked 2026-09-24 on the maintainer's Pixel (release `e577f0c`, as test user; the Immich app stayed on the main account at the maintainer's request):
 
 - Test photo in `Pictures/EditorTest` (not backed up), rotated, saved → "Open edit in Immich?" → "Open in Immich": copy archived for the test user, in album "Editor for Immich".
 - `immich://asset?id=…` opens Android's chooser: **Immich and Noodle Gallery** both handle it. Immich opens its timeline but can't find the test user's photo with the main account. The jump works; opening the photo needs the same account to verify.
@@ -653,7 +667,7 @@ Side findings: Library lists 62 folders in ~1 s (Camera last). `adb` swipes don'
 
 ## 2026-09-24 · D-49: Finding — first checksum sync of a large library
 
-Measured 2026-09-24 on the maintainer's Pixel 7 Pro (17,490 photos), `9e61540` debug build (checksums run in Kotlin, unaffected by debug): `checksums.json` moved aside, `dumpsys battery unplug`, `batterystats --reset`, app started.
+Measured 2026-09-24 on the maintainer's Pixel 7 Pro (17,490 photos), `e577f0c` debug build (checksums run in Kotlin, unaffected by debug): `checksums.json` moved aside, `dumpsys battery unplug`, `batterystats --reset`, app started.
 
 - Explainer dialog (D-39): "1,960 of 17,490 photos · done in about 4 minutes".
 - **Duration ~7½ min** (12:05:30 → 12:13:11), avg 39 photos/s, uneven (15–75 s per 1000) — the estimate was too optimistic, it tracks the first seconds' speed.
@@ -863,7 +877,7 @@ So, like the Immich app: avatar top right (`GET /users/me`, `GET /users/{id}/pro
 
 ## 2026-09-22 · D-31: Replace a copy or save alongside; thumbnails of new copies
 
-Pixel feedback (build `1a96574`): saving works, the old ANR (D-23) is gone. Google Photos makes a new loose copy each time a copy is edited — messy; usually you want to change that copy.
+Pixel feedback (build `53a8c7f`): saving works, the old ANR (D-23) is gone. Google Photos makes a new loose copy each time a copy is edited — messy; usually you want to change that copy.
 
 Decision: saving an opened copy (original + its recipe, D-23) offers **"Replace copy"** (old to trash, D-23) or **"Save as another copy"** (both stacked). Immich files are immutable (D-1): "replace" = new copy on top, old in trash, reversible. Edits stay reversible since the original is in the stack.
 
@@ -1002,7 +1016,7 @@ Verified in the emulator: test photo A with EXIF orientation 6 (pixels and gain 
 
 ## 2026-09-21 · D-20: Finding — the HDR preview works on the Pixel
 
-Verified: app (at `151a316` + HDR toggle), release build on the maintainer's Pixel 7 Pro, editor open with `testfoto-a-hdr.jpg` (Ultra HDR, D-12).
+Verified: app (at `8aef457` + HDR toggle), release build on the maintainer's Pixel 7 Pro, editor open with `testfoto-a-hdr.jpg` (Ultra HDR, D-12).
 
 - `dumpsys window`: window `colorMode=COLOR_MODE_HDR`.
 - `dumpsys SurfaceFlinger`: the app's layer has `currentHdrSdrRatio=5`, `desiredHdrSdrRatio=5`; all other layers 1.
@@ -1134,8 +1148,8 @@ Side findings:
 Verified:
 
 - `flutter doctor` on the dev machine: "No issues found" (versions in [STATUS.md](STATUS.md)).
-- `ci.yml` green on GitHub for `cd7972f` and `5166b58` (format, analyze, test, debug APK), about 6½ minutes each.
-- Tag `v0.0.1` on `5166b58`: `release.yml` green (run 35618926008), release with four APKs (arm64-v8a, armeabi-v7a, x86_64, universal) and `SHA256SUMS.txt`. Downloaded; `sha256sum -c` OK for all four; `apksigner verify` for arm64-v8a: scheme v2, certificate `CN=Construxz`, SHA-256 `9adfffc3…149a131f` — not the debug key.
+- `ci.yml` green on GitHub for `7adb2e8` and `741c2ee` (format, analyze, test, debug APK), about 6½ minutes each.
+- Tag `v0.0.1` on `741c2ee`: `release.yml` green (run 35618926008), release with four APKs (arm64-v8a, armeabi-v7a, x86_64, universal) and `SHA256SUMS.txt`. Downloaded; `sha256sum -c` OK for all four; `apksigner verify` for arm64-v8a: scheme v2, certificate `CN=Construxz`, SHA-256 `9adfffc3…149a131f` — not the debug key.
 - Installed the arm64 APK via `adb install` on a Pixel 7 Pro: `versionName=0.0.1`, `versionCode=2001`, app starts with no crash in the log. Before that, ran via `flutter run` in debug mode on the same device.
 
 Side findings:

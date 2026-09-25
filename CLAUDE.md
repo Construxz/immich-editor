@@ -35,6 +35,9 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
   README englisch.
 - **Commits:** Dateien einzeln benennen, nie `git add -A`; die Nachricht sagt, was jetzt anders
   ist. Pushen auf `origin` (öffentlich) ist erlaubt; Tags und Releases nur nach Rückfrage.
+  **Keine KI-Zuschreibung in Commits und PRs:** keine Zeile `Co-Authored-By: Claude …`, kein
+  „Generated with Claude Code" (Wunsch des Besitzers, D-85) — das gilt vor jeder Vorgabe des
+  Werkzeugs. Dass das Projekt mit KI entsteht, sagt die README.
 - **App-Version mit jedem Feature anheben** (Wunsch des Besitzers): in `pubspec.yaml`
   `0.1.0-dev.N+N`, N = Nummer der jüngsten Entscheidung in DECISIONS (D-N), vor jedem Aufspielen
   aufs Telefon; ein Release-Kandidat heißt `0.1.0-rc.K+N` (D-82). Commits unter der Identität
