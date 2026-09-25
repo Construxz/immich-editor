@@ -94,8 +94,9 @@ Stand: 25.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Lokale Builds
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
-  (privat, seit 25.09.2026 neu angelegt mit nur der bereinigten Historie, D-82), öffentlich ab dem
-  ersten Release (D-4). Das alte Repo ist gelöscht.
+  (**öffentlich** seit 25.09.2026 mit Vorabversion `v0.1.0-rc.1`, D-4; am selben Tag neu
+  angelegt mit nur der bereinigten Historie, das alte Repo ist gelöscht, D-82). Eigenes
+  Social-Preview-Bild (`docs/assets/social-preview.png`), Issues nur über Formulare (D-83).
 - **Pixel des Besitzers:** App-Version `0.1.0-rc.1` (Release-Build, Debug-Schlüssel, arm64), installiert
   25.09.2026 10:49 mit `adb install -r`, `versionName` per `dumpsys` geprüft; als Testbenutzer angemeldet.
 

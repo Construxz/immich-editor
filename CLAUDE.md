@@ -34,7 +34,7 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
   deutsche ändert, zieht die englische im selben Commit nach (DECISIONS gestrafft).
   README englisch.
 - **Commits:** Dateien einzeln benennen, nie `git add -A`; die Nachricht sagt, was jetzt anders
-  ist. Pushen auf `origin` (privat) ist erlaubt; Tags und Releases nur nach Rückfrage.
+  ist. Pushen auf `origin` (öffentlich) ist erlaubt; Tags und Releases nur nach Rückfrage.
 - **App-Version mit jedem Feature anheben** (Wunsch des Besitzers): in `pubspec.yaml`
   `0.1.0-dev.N+N`, N = Nummer der jüngsten Entscheidung in DECISIONS (D-N), vor jedem Aufspielen
   aufs Telefon; ein Release-Kandidat heißt `0.1.0-rc.K+N` (D-82). Commits unter der Identität
@@ -43,7 +43,7 @@ Fotos bearbeitet: lokal und auf dem Server, nicht-destruktiv. Das Konzept steht 
 ## Umgebung
 
 - Windows, Projekt unter `<Projektordner>`. Shells: PowerShell und Git Bash.
-- Remote: `https://github.com/Construxz/immich-editor.git` (privat bis zum ersten Release, D-4).
+- Remote: `https://github.com/Construxz/immich-editor.git` (öffentlich seit 25.09.2026, D-4).
 - **Ausprobieren im Emulator** `editor_pixel7pro` (STATUS), `adb` immer mit `-s emulator-5554`;
   Steuerung über `tool/emu.sh`. Das Telefon des Besitzers nur nach Rückfrage steuern — er benutzt
   es nebenher; HDR sieht man nur dort (Emulator ohne HDR-Display, Screenshots ohne HDR).
