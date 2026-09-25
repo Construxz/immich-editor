@@ -7,6 +7,36 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-78: Sicherheit — HTTP nur mit Rückfrage, Abmelden widerruft das Token, fremde Rezepte begrenzt
+
+Durchsicht der ganzen App auf Sicherheitsrisiken (Client, Login, Speicher, Hintergrund-Job,
+nativer Kanal, Einlesen von Rezept und JPEG, Manifest, CI, Git-Historie). In Ordnung: Token in
+`flutter_secure_storage`, keine Zertifikatsausnahme, kein Geheimnis in der Git-Historie (nur
+Variablennamen), keine privaten Hostnamen in der Doku, außer dem Launcher nichts exportiert.
+Behoben, weil echte Risiken:
+
+- **Klartext beim Login.** Cleartext ist im Manifest erlaubt, und `http://` ging ohne Hinweis
+  durch: Passwort und Bearer-Token wären lesbar übers Internet gegangen. Jetzt: ohne Schema gilt
+  `https://` (`Immich.address`). Bei `http://` fragt die App nach, außer die Adresse ist privat
+  (`Immich.isPrivate`: 10/8, 172.16/12, 192.168/16, Loopback, Link-local, fc00::/7, `localhost`,
+  `.local`/`.lan`/`.home.arpa`/`.internal`, Tailscale 100.64/10 und `.ts.net`, dort verschlüsselt
+  WireGuard). Cleartext bleibt im Manifest, weil Immich per HTTP im Heimnetz üblich ist und
+  die Network-Security-Config keine IP-Bereiche kennt.
+- **Abmelden ließ die Sitzung auf dem Server gültig.** Jetzt zuerst `POST /api/auth/logout`
+  (5 s, Fehler nur im Log, das Abmelden läuft trotzdem), dann `cancelBackgroundStacking`.
+  Gemessen per `curl` mit dem Testbenutzer: `GET /users/me` gibt vor dem Abmelden 200, danach 401.
+- **Rezepte aus fremden Dateien.** Den Namensraum im XMP kann jeder schreiben (geteiltes Album,
+  Download). `crop:[0,0,1000,1000]` hätte im Renderer eine riesige Bitmap angelegt und die App
+  mit OOM beendet. Kaputtes JSON oder EXIF brach Öffnen oder Speichern ab. Jetzt begrenzt
+  `Recipe.fromJson` und ebenso `Geometry.from` in Kotlin: Regler −1…1, Winkel ±45, Viertel mod 4,
+  Filterstärke 0…1. Ein Zuschnitt außerhalb des Rahmens oder ohne Fläche wird zum ganzen Bild,
+  falsche Typen zählen als fehlend. `recipeFrom` liest kaputtes JSON als „keine Kopie“.
+  Zeigt das EXIF des Originals ins Leere, wird die Kopie ohne EXIF gespeichert, statt abzubrechen.
+  Tests: `test/recipe_test.dart`, `test/jpeg_test.dart`, `test/immich_test.dart`, `GeometryTest.kt`.
+
+Nicht im Emulator ausprobiert: Das Fenster beim Login mit `http://` ist nur per Test der
+Einteilung abgesichert. Was offen bleibt, steht in [ROADMAP.md](ROADMAP.md), M2 (*Sicherheit*).
+
 ## 2026-09-25 · D-77: Nach einem Netzfehler neue Verbindung; Gerätefotos auch ohne Server
 
 Befund des Besitzers (25.09.2026, Pixel, direkt nach einem Android-Update): Die Galerie blieb

@@ -55,6 +55,34 @@ class Immich {
   Uri _uri(String path, [Map<String, String>? query]) =>
       Uri.parse('$baseUrl/api$path').replace(queryParameters: query);
 
+  /// The server address as typed, without trailing slashes; without a scheme HTTPS (D-78).
+  static String address(String typed) {
+    final s = typed.trim().replaceAll(RegExp(r'/+$'), '');
+    return s.contains('://') ? s : 'https://$s';
+  }
+
+  /// Whether plain HTTP to [server] stays off the internet: home network, this device, or
+  /// Tailscale (100.64.0.0/10, `*.ts.net` — WireGuard encrypts it anyway). Elsewhere password and
+  /// token would travel readable (D-78).
+  static bool isPrivate(Uri server) {
+    final host = server.host.toLowerCase();
+    if (host == 'localhost' ||
+        RegExp(r'\.(local|lan|home\.arpa|internal|ts\.net)$').hasMatch(host)) {
+      return true;
+    }
+    final ip = InternetAddress.tryParse(host);
+    if (ip == null) return false;
+    if (ip.isLoopback || ip.isLinkLocal) return true;
+    final b = ip.rawAddress;
+    if (ip.type == InternetAddressType.IPv6) {
+      return b[0] & 0xFE == 0xFC; // fc00::/7
+    }
+    return b[0] == 10 ||
+        b[0] == 172 && b[1] & 0xF0 == 16 ||
+        b[0] == 192 && b[1] == 168 ||
+        b[0] == 100 && b[1] & 0xC0 == 64;
+  }
+
   static Future<Immich> login(
     String server,
     String email,
@@ -70,6 +98,21 @@ class Immich {
       _short,
     );
     return Immich(baseUrl, _json(r)['accessToken'] as String);
+  }
+
+  /// Ends the session on the server, so the token stops working (D-78). Offline it stays
+  /// valid until revoked in Immich — logging out goes ahead anyway.
+  Future<void> logout() async {
+    try {
+      _ok(
+        await _await(
+          _http.post(_uri('/auth/logout'), headers: headers),
+          const Duration(seconds: 5),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Immich: logout on the server failed: $e');
+    }
   }
 
   /// Major version of the server, e.g. 3.

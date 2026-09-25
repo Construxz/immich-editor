@@ -135,6 +135,23 @@ void main() {
     expect(recipeFrom(rotated), isNull); // no recipe
   });
 
+  test('recipeFrom: our namespace with broken JSON is no copy (D-78)', () {
+    Uint8List withRecipe(String recipe) {
+      final xmp = utf8.encode(
+        'http://ns.adobe.com/xap/1.0/\x00<x:xmpmeta xmlns:ife="$recipeNamespace"'
+        ' ife:originalSha1="x" ife:recipe="$recipe"/>',
+      );
+      final n = xmp.length + 2;
+      return Uint8List.fromList([
+        0xFF, 0xD8, 0xFF, 0xE1, n >> 8, n & 0xFF, ...xmp, 0xFF, 0xDA, //
+      ]);
+    }
+
+    expect(recipeFrom(withRecipe('{&quot;v&quot;:1}'))?.recipe, {'v': 1});
+    expect(recipeFrom(withRecipe('{broken')), isNull);
+    expect(recipeFrom(withRecipe('[1,2]')), isNull);
+  });
+
   test('recipeFrom also reads from the head of a file', () {
     final copy = assemble(ultraHdr, recipe: {'v': 1}, originalSha1: 's');
     final xmpEnd = copy.length ~/ 2; // cut somewhere after the XMP

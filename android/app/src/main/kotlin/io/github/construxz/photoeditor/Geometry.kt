@@ -69,16 +69,25 @@ data class Geometry(
     }
 
     companion object {
+        /**
+         * Held to the ranges the editor can set, like `Recipe.fromJson` (D-78): a crop larger than
+         * the frame would otherwise allocate a giant bitmap and kill the app.
+         */
         fun from(recipe: JSONObject): Geometry {
             val g = recipe.optJSONObject("geometry") ?: return Geometry()
             val c = g.optJSONArray("crop")
+            val crop = if (c == null || c.length() != 4) null else List(4) { c.optDouble(it) }
+            val whole = listOf(0.0, 0.0, 1.0, 1.0)
             return Geometry(
-                quarterTurns = g.optInt("quarterTurns", 0),
+                quarterTurns = g.optInt("quarterTurns", 0).mod(4),
                 flip = g.optBoolean("flip", false),
-                angle = g.optDouble("angle", 0.0),
-                crop = if (c == null) listOf(0.0, 0.0, 1.0, 1.0) else List(4) { c.getDouble(it) },
+                angle = g.optDouble("angle", 0.0).let { if (it.isFinite()) it.coerceIn(-45.0, 45.0) else 0.0 },
+                crop = if (crop != null && isCrop(crop)) crop else whole,
             )
         }
+
+        fun isCrop(c: List<Double>) = c.all { it.isFinite() } && c[0] >= 0 && c[1] >= 0 &&
+            c[2] > 0 && c[3] > 0 && c[0] + c[2] <= 1 + 1e-9 && c[1] + c[3] <= 1 + 1e-9
 
         fun translation(x: Double, y: Double) = doubleArrayOf(1.0, 0.0, x, 0.0, 1.0, y, 0.0, 0.0, 1.0)
         fun scaling(x: Double, y: Double) = doubleArrayOf(x, 0.0, 0.0, 0.0, y, 0.0, 0.0, 0.0, 1.0)

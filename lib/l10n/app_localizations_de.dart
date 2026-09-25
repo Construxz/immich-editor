@@ -629,6 +629,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get loginButton => 'Anmelden';
 
   @override
+  String get loginInsecureTitle => 'Unverschlüsselte Verbindung';
+
+  @override
+  String get loginInsecureText =>
+      'Die Adresse beginnt mit http:// und liegt nicht im Heimnetz. Passwort und Fotos gingen lesbar durchs Internet. Mit https:// ist die Verbindung verschlüsselt.';
+
+  @override
+  String get loginInsecureContinue => 'Trotzdem anmelden';
+
+  @override
   String get settingsFoldersTitle => 'Geräteordner';
 
   @override

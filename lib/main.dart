@@ -67,6 +67,8 @@ class _StartState extends State<Start> {
   }
 
   Future<void> _logout() async {
+    await _immich?.logout(); // the token stops working on the server too (D-78)
+    await cancelBackgroundStacking();
     await storage.deleteAll();
     await setLanguage(appLocale.value); // the language outlives the session
     setState(() => _immich = null);
@@ -103,8 +105,16 @@ class _LoginPageState extends State<LoginPage> {
     final messenger = ScaffoldMessenger.of(context);
     final l = AppLocalizations.of(context);
     try {
+      final server = Immich.address(_server.text);
+      final uri = Uri.parse(server);
+      if (uri.scheme == 'http' &&
+          !Immich.isPrivate(uri) &&
+          !await _allowPlainHttp(l)) {
+        setState(() => _busy = false);
+        return;
+      }
       final immich = await Immich.login(
-        _server.text.trim(),
+        server,
         _email.text.trim(),
         _password.text,
       );
@@ -122,6 +132,27 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _busy = false);
     }
   }
+
+  /// HTTP to an address on the internet: password and token would travel readable (D-78).
+  Future<bool> _allowPlainHttp(AppLocalizations l) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text(l.loginInsecureTitle),
+          content: Text(l.loginInsecureText),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: Text(l.loginInsecureContinue),
+            ),
+          ],
+        ),
+      ) ==
+      true;
 
   @override
   Widget build(BuildContext context) {

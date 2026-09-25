@@ -147,27 +147,28 @@ class Recipe {
     filter: filter,
   );
 
-  /// Reads a recipe as [toJson] writes it; unknown fields are skipped.
+  /// Reads a recipe as [toJson] writes it; unknown fields are skipped. The recipe comes from a
+  /// file that anyone may have made (shared album, download): wrong types count as missing, values
+  /// are held to their ranges, an impossible crop becomes the whole image (D-78).
   factory Recipe.fromJson(Map<String, dynamic> j) {
-    final g = j['geometry'] as Map<String, dynamic>?;
-    final f = j['filter'] as Map<String, dynamic>?;
+    double? number(Object? v, double lo, double hi) =>
+        v is num && v.isFinite ? v.toDouble().clamp(lo, hi) : null;
+    final g = j['geometry'] is Map ? j['geometry'] as Map : const {};
+    final f = j['filter'] is Map ? j['filter'] as Map : const {};
+    final c = g['crop'];
+    final crop = c is List && c.length == 4 && c.every((x) => x is num)
+        ? [for (final x in c) (x as num).toDouble()]
+        : null;
     return Recipe(
-      adjustments: {
-        for (final t in tools)
-          if (j[t.key] is num) t.key: (j[t.key] as num).toDouble(),
-      },
-      quarterTurns: (g?['quarterTurns'] as num?)?.toInt() ?? 0,
-      flip: g?['flip'] == true,
-      angle: (g?['angle'] as num?)?.toDouble() ?? 0,
-      crop: [
-        for (final c in (g?['crop'] as List?) ?? const [0, 0, 1, 1])
-          (c as num).toDouble(),
-      ],
-      filter: f?['id'] is String
-          ? (
-              id: f!['id'] as String,
-              strength: (f['strength'] as num?)?.toDouble() ?? 1,
-            )
+      adjustments: {for (final t in tools) t.key: ?number(j[t.key], -1, 1)},
+      quarterTurns: g['quarterTurns'] is int
+          ? (g['quarterTurns'] as int) % 4
+          : 0,
+      flip: g['flip'] == true,
+      angle: number(g['angle'], -45, 45) ?? 0,
+      crop: crop != null && isCrop(crop) ? crop : const [0, 0, 1, 1],
+      filter: f['id'] is String
+          ? (id: f['id'] as String, strength: number(f['strength'], 0, 1) ?? 1)
           : null,
     );
   }
@@ -211,6 +212,16 @@ Recipe withOptimized(Recipe recipe, Map<String, double> values) =>
         ...values,
       },
     );
+
+/// Whether [c] (x, y, width, height) lies inside the frame and has an area.
+bool isCrop(List<double> c) =>
+    c.every((v) => v.isFinite) &&
+    c[0] >= 0 &&
+    c[1] >= 0 &&
+    c[2] > 0 &&
+    c[3] > 0 &&
+    c[0] + c[2] <= 1 + 1e-9 &&
+    c[1] + c[3] <= 1 + 1e-9;
 
 /// Largest centered crop with aspect [ratio] (width/height) in a
 /// [width]×[height] frame; `null` means free (whole frame).

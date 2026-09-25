@@ -26,6 +26,47 @@ void main() {
     });
   });
 
+  test('fromJson holds a foreign recipe to its ranges (D-78)', () {
+    final r = Recipe.fromJson({
+      'contrast': 7,
+      'warmth': 'hot',
+      'geometry': {
+        'quarterTurns': -3,
+        'flip': 'yes',
+        'angle': 1000,
+        'crop': [0, 0, 1000, 1000],
+      },
+      'filter': {'id': 'warm@1', 'strength': -2},
+    });
+    expect(r.value('contrast'), 1);
+    expect(r.adjustments.containsKey('warmth'), isFalse);
+    expect(r.quarterTurns, 1);
+    expect(r.flip, isFalse);
+    expect(r.angle, 45);
+    expect(r.crop, [0, 0, 1, 1]);
+    expect(r.filter?.strength, 0);
+
+    // wrong types throughout: an unchanged photo, no exception
+    final wrong = Recipe.fromJson({'geometry': 'x', 'filter': 3});
+    expect(wrong.isNeutral, isTrue);
+    expect(
+      Recipe.fromJson({
+        'geometry': {
+          'crop': [0.5, 0.5, 0.6, 0.2],
+        }, // past the right edge
+      }).crop,
+      [0, 0, 1, 1],
+    );
+    expect(
+      Recipe.fromJson({
+        'geometry': {
+          'crop': [0.25, 0, 0.5, 1],
+        },
+      }).crop,
+      [0.25, 0, 0.5, 1],
+    );
+  });
+
   test('crop by aspect ratio: largest centered', () {
     // portrait 3000×4000, square: full width, 3/4 of the height
     expect(cropFor(1, 3000, 4000), [0, 0.125, 1, 0.75]);

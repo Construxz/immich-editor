@@ -44,6 +44,22 @@ Reihenfolge:
 - ⬜ HDR im Betrachter auch für reine Server-Fotos (Original laden, nach Einstellung „Mobile Daten").
 - ⬜ Blättern durch eine große Bibliothek messen (Bildraten auf dem Pixel, der Besitzer wischt —
   per `adb` scrollt dort nichts, D-50).
+- ⬜ **Sicherheit, Rest aus der Durchsicht** (D-78), vor dem ersten Release:
+  - `android:allowBackup="false"`: Sonst kommt der Speicher von `flutter_secure_storage` in
+    Geräte- und ADB-Backups. *Abnahme:* `adb backup` enthält keine App-Daten.
+  - Fehlermeldungen: `Immich._ok` zeigt den ganzen Antworttext. Hinter einem Proxy kann das eine
+    HTML-Seite mit internen Details sein. Nur Status und Immichs `message` zeigen, gekürzt
+    auf etwa 200 Zeichen. *Abnahme:* Test mit einer HTML-Antwort.
+  - CI: Alle `uses:` in `.github/workflows/` auf Commit-SHAs festlegen, den Tag als Kommentar
+    dahinter. `release.yml` läuft mit `contents: write` und den Signier-Secrets.
+    *Abnahme:* kein `@v…` mehr ohne SHA.
+  - Redirects: Folgt `dart:io` einer Umleitung auf einen anderen Host samt
+    `Authorization`-Header? *Abnahme:* mit einem Endpunkt gemessen, der per 302 umleitet. Geht
+    der Header mit, nur Umleitungen auf denselben Host folgen.
+  - Eine fremde Datei mit unserem XMP wählt über `originalSha1` selbst, welches eigene Foto als
+    Original gilt, und landet bei einem Preset auf eine Auswahl (`applyPreset`, immer „ersetzen“)
+    im Papierkorb. Wiederherstellbar, betrifft nur eigene Assets. Zu klären: ersetzen nur, wenn die
+    Kopie schon mit dem Original gestapelt ist. *Abnahme:* Test mit einer untergeschobenen Kopie.
 
 *Abnahme* — erfüllt bis auf das Urteil des Auges zum HDR (D-40, D-54): 20 Bilder wählen, ein eigenes Preset anwenden, 20 Stapel entstehen — auch für ein
 Foto, das nur auf dem Gerät lag, sobald die Immich-App es gesichert hat. Auf dem Pixel zeigt die

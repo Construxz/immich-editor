@@ -10,7 +10,8 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
 - **Eine Flutter-App** (nur Android, D-14; Application-ID `io.github.construxz.photoeditor`,
   Dart-Paket `immich_editor`, D-10), `minSdk 34` (D-18):
   - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
-    Immich-Hauptversion nicht 3 ist.
+    Immich-Hauptversion nicht 3 ist. Ohne Schema gilt `https://`, `http://` außerhalb des
+    Heimnetzes nur nach Rückfrage. Abmelden beendet auch die Sitzung auf dem Server (D-78).
   - Aussehen der Immich-App (Farben, Google Sans, D-35), Bedienung nach Google Fotos.
   - Galerie wie die Immich-App (D-36): „Fotos" ist eine Zeitleiste über Gerät und Server,
     über die Prüfsumme zusammengeführt (einmal gerechnet, zwischengespeichert; beim Start sofort
@@ -74,9 +75,9 @@ Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   `MainActivity.kt` (Kanal `immich_editor/renderer`). **Code, Dateinamen und Kommentare auf
   Englisch** (D-42). Anzeigesprache Deutsch oder Englisch nach dem Gerät, in den Einstellungen
   umstellbar (D-43); Texte in `lib/l10n/app_{de,en}.arb`. Keine Google-Play-Dienste, kein Firebase.
-- Tests: `test/` (28 — Ordnerreihenfolge, Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept, Presets, Lineal, Warteschlange, Zoom im Betrachter,
-  Prüfsummen-Abgleich, Start),
-  `android/app/src/test/` (20 — Geometrie, `.cube`-Filter, Optimieren, Pop, JVM, auch in der CI) und `android/app/src/androidTest/`
+- Tests: `test/` (32 — Ordnerreihenfolge, Sprachwahl, JPEG-Segmente, Ultra-HDR-Aufbau, Rezept samt fremder Rezepte, Presets, Lineal, Warteschlange, Zoom im Betrachter,
+  Prüfsummen-Abgleich, Server-Adresse, Start),
+  `android/app/src/test/` (21 — Geometrie, `.cube`-Filter, Optimieren, Pop, JVM, auch in der CI) und `android/app/src/androidTest/`
   (15 — Renderer samt Filter, Pop und Messpunkten von Google Fotos auf der GPU, nur im Emulator:
   `gradlew connectedDebugAndroidTest`; dort liefert der Renderer ab und zu ein leeres Bild, dann
   schlagen 1–3 Tests zufällig fehl — einzeln wiederholen, D-73).

@@ -23,6 +23,19 @@ class GeometryTest {
         assertEquals(w to h, g.output(w, h))
     }
 
+    @Test fun foreignRecipeHeldToRanges() { // D-78: no giant bitmap from a crafted recipe
+        val g = Geometry.from(org.json.JSONObject(
+            """{"geometry":{"quarterTurns":-3,"angle":1000,"crop":[0,0,1000,1000]}}""",
+        ))
+        assertEquals(1, g.quarterTurns)
+        assertEquals(45.0, g.angle, 0.0)
+        assertEquals(listOf(0.0, 0.0, 1.0, 1.0), g.crop)
+        val short = Geometry.from(org.json.JSONObject("""{"geometry":{"crop":[0.1,0.2]}}"""))
+        assertEquals(listOf(0.0, 0.0, 1.0, 1.0), short.crop)
+        val fine = Geometry.from(org.json.JSONObject("""{"geometry":{"crop":[0.25,0,0.5,1]}}"""))
+        assertEquals(listOf(0.25, 0.0, 0.5, 1.0), fine.crop)
+    }
+
     @Test fun quarterTurnClockwise() {
         val g = Geometry(quarterTurns = 1)
         assertEquals(h to w, g.output(w, h))

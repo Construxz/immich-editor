@@ -62,12 +62,21 @@ Uint8List? exifFrom(Uint8List jpeg) {
             .replaceAll('&amp;', '&');
     final recipe = value('recipe'), sha1 = value('originalSha1');
     if (recipe == null || sha1 == null) return null;
-    return (
-      recipe: jsonDecode(recipe) as Map<String, dynamic>,
-      originalSha1: sha1,
-    );
+    // Anyone can write this namespace: broken JSON means no copy of ours (D-78).
+    final json = _tryJson(recipe);
+    return json is Map<String, dynamic>
+        ? (recipe: json, originalSha1: sha1)
+        : null;
   }
   return null;
+}
+
+Object? _tryJson(String s) {
+  try {
+    return jsonDecode(s);
+  } on FormatException {
+    return null;
+  }
 }
 
 /// Sets the orientation in the EXIF payload [exif] to 1 ("normal"): the renderer has already

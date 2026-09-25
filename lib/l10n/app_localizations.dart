@@ -1076,6 +1076,24 @@ abstract class AppLocalizations {
   /// **'Log in'**
   String get loginButton;
 
+  /// No description provided for @loginInsecureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unencrypted connection'**
+  String get loginInsecureTitle;
+
+  /// No description provided for @loginInsecureText.
+  ///
+  /// In en, this message translates to:
+  /// **'The address starts with http:// and is not on your home network. Your password and photos would travel across the internet readably. With https:// the connection is encrypted.'**
+  String get loginInsecureText;
+
+  /// No description provided for @loginInsecureContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in anyway'**
+  String get loginInsecureContinue;
+
   /// No description provided for @settingsFoldersTitle.
   ///
   /// In en, this message translates to:

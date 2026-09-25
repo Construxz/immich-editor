@@ -20,8 +20,12 @@ Future<Uint8List> exportJpeg(
     'quality': 95,
     'hdr': hdr,
   });
-  final exif = exifFrom(original);
-  if (exif != null) normalizeOrientation(exif);
+  var exif = exifFrom(original);
+  try {
+    if (exif != null) normalizeOrientation(exif);
+  } on RangeError {
+    exif = null; // offsets pointing outside: the copy goes without EXIF rather than not at all (D-78)
+  }
   return assemble(
     encoded!,
     exif: exif,

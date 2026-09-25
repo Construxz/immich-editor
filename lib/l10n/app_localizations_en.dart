@@ -626,6 +626,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginButton => 'Log in';
 
   @override
+  String get loginInsecureTitle => 'Unencrypted connection';
+
+  @override
+  String get loginInsecureText =>
+      'The address starts with http:// and is not on your home network. Your password and photos would travel across the internet readably. With https:// the connection is encrypted.';
+
+  @override
+  String get loginInsecureContinue => 'Log in anyway';
+
+  @override
   String get settingsFoldersTitle => 'Device folders';
 
   @override
