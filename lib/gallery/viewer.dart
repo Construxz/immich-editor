@@ -30,7 +30,7 @@ class ViewerPage extends StatefulWidget {
     this.more,
   });
 
-  final Immich immich;
+  final Immich? immich; // null: without a server (D-79), device photos only
   final int count;
   final Future<Entry> Function(int) entryAt;
   final int start;
@@ -209,7 +209,7 @@ class _Page extends StatefulWidget {
     required this.onEdit,
   });
 
-  final Immich immich;
+  final Immich? immich; // null: without a server (D-79), device photos only
   final Entry entry;
 
   /// The page on screen: only it lays the HDR image over (D-54).
@@ -255,8 +255,8 @@ class _PageState extends State<_Page> {
   final _infos = <String, Future<PhotoInfo>>{};
   var _infoDrag = 0.0; // how far the info's handle is pulled down
   Future<PhotoInfo> get _photoInfo => _infos[_shown] ??= _entry.onDevice
-      ? deviceInfo(_shown, widget.immich.placeAt)
-      : widget.immich.info(_shown);
+      ? deviceInfo(_shown, widget.immich?.placeAt ?? (_, _) async => null)
+      : widget.immich!.info(_shown);
 
   Future<PhotoStack> _load() => widget.entry.onDevice
       ? Future.value((
@@ -264,7 +264,7 @@ class _PageState extends State<_Page> {
           primary: widget.entry.id,
           photos: const <Photo>[],
         ))
-      : widget.immich.stackOf(
+      : widget.immich!.stackOf(
           _shown,
         ); // after "Rest löschen" starting from the kept one
 
@@ -310,7 +310,7 @@ class _PageState extends State<_Page> {
     final l = AppLocalizations.of(context);
     try {
       if (action == 'primary') {
-        await widget.immich.setPrimary(s.id!, _shown);
+        await widget.immich!.setPrimary(s.id!, _shown);
       } else {
         final rest = [
           for (final f in s.photos)
@@ -323,8 +323,8 @@ class _PageState extends State<_Page> {
         )) {
           return;
         }
-        await widget.immich.trash(rest);
-        await widget.immich.deleteStack(s.id!);
+        await widget.immich!.trash(rest);
+        await widget.immich!.deleteStack(s.id!);
       }
       setState(() {
         _stack = _load();
@@ -351,11 +351,11 @@ class _PageState extends State<_Page> {
       children: widget.entry.onDevice
           ? [bytes(_deviceSmall), bytes(_deviceImage)]
           : [
-              bytes(serverThumbnail(widget.immich, _shown)),
+              bytes(serverThumbnail(widget.immich!, _shown)),
               Image.network(
-                widget.immich.previewUri(_shown).toString(),
+                widget.immich!.previewUri(_shown).toString(),
                 key: ValueKey(_shown),
-                headers: widget.immich.headers,
+                headers: widget.immich!.headers,
                 fit: BoxFit.contain,
                 gaplessPlayback: true,
               ),
@@ -566,8 +566,8 @@ class _PageState extends State<_Page> {
                           fit: StackFit.expand,
                           children: [
                             Image.network(
-                              widget.immich.thumbnailUri(f.id).toString(),
-                              headers: widget.immich.headers,
+                              widget.immich!.thumbnailUri(f.id).toString(),
+                              headers: widget.immich!.headers,
                               fit: BoxFit.cover,
                               excludeFromSemantics: true,
                             ),

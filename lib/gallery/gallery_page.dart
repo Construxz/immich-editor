@@ -49,7 +49,7 @@ String _monthKey(DateTime d) =>
 class GalleryPage extends StatefulWidget {
   const GalleryPage({super.key, required this.immich, required this.onLogout});
 
-  final Immich immich;
+  final Immich? immich;
   final VoidCallback onLogout;
 
   @override
@@ -57,7 +57,7 @@ class GalleryPage extends StatefulWidget {
 }
 
 class _GalleryPageState extends State<GalleryPage> with WidgetsBindingObserver {
-  late Future<List<Month>> _months = _watch(widget.immich.months());
+  late Future<List<Month>> _months = _watch(_serverMonths());
   var _serverFailed =
       false; // the last load reached no server: again when the app returns
   final _loaded = <String, Future<List<Tile>>>{};
@@ -69,6 +69,10 @@ class _GalleryPageState extends State<GalleryPage> with WidgetsBindingObserver {
   BackupState _backup = emptyBackupState;
   late Future<int?> _deviceCount = _countDevice();
   final _devicePages = <int, Future<List<AssetEntity>>>{};
+
+  /// The server's months; without a server (D-79) none.
+  Future<List<Month>> _serverMonths() =>
+      widget.immich?.months() ?? Future.value(const <Month>[]);
 
   /// Notes whether the server answered, for [didChangeAppLifecycleState].
   Future<List<Month>> _watch(Future<List<Month>> months) {
@@ -160,8 +164,10 @@ class _GalleryPageState extends State<GalleryPage> with WidgetsBindingObserver {
 
   /// Stack copies saved on the device as soon as the Immich app has backed them up.
   Future<void> _stackPending() async {
+    final immich = widget.immich;
+    if (immich == null) return;
     try {
-      await stackPending(widget.immich);
+      await stackPending(immich);
     } catch (e) {
       debugPrint('Stacking later: $e');
     }
@@ -175,7 +181,7 @@ class _GalleryPageState extends State<GalleryPage> with WidgetsBindingObserver {
     setState(() {
       _loaded.clear();
       _mergedLoaded.clear();
-      _months = _watch(widget.immich.months());
+      _months = _watch(_serverMonths());
       _devicePages.clear();
       _deviceCount = _countDevice();
     });
@@ -188,8 +194,8 @@ class _GalleryPageState extends State<GalleryPage> with WidgetsBindingObserver {
     ]);
   }
 
-  Future<List<Tile>> _month(String start) =>
-      _loaded[start] ??= widget.immich.month(start);
+  Future<List<Tile>> _month(String start) => _loaded[start] ??= widget.immich!
+      .month(start); // server months only with a server
 
   static const _pageSize = 120; // device photos per request
 
@@ -570,9 +576,11 @@ class _GalleryPageState extends State<GalleryPage> with WidgetsBindingObserver {
                       key: ValueKey(z.e),
                       image: z.local != null
                           ? DeviceThumbnail(z.local!)
-                          : ServerThumbnail(widget.immich, z.e.id),
+                          : ServerThumbnail(widget.immich!, z.e.id),
                       stackSize: z.stackSize,
-                      presence: z.presence,
+                      presence: widget.immich == null
+                          ? null
+                          : z.presence, // no clouds without a server
                       selected: _selection.contains(z.e),
                       selecting: _selection.isNotEmpty,
                       onTap: () => _selection.isEmpty
@@ -704,7 +712,7 @@ class _GalleryPageState extends State<GalleryPage> with WidgetsBindingObserver {
                     if (i >= tiles.length) return const SizedBox();
                     final k = tiles[i];
                     return PhotoTile(
-                      image: ServerThumbnail(widget.immich, k.id),
+                      image: ServerThumbnail(widget.immich!, k.id),
                       stackSize: k.stackSize,
                       presence: _backup.serverOnDevice.contains(k.id)
                           ? Presence.both

@@ -40,7 +40,8 @@ class MainApp extends StatelessWidget {
   }
 }
 
-/// Shows the login or, with a stored session, the gallery.
+/// Shows the login or, with a stored session, the gallery — also without a server, when that
+/// was chosen (D-79).
 class Start extends StatefulWidget {
   const Start({super.key});
 
@@ -50,6 +51,7 @@ class Start extends StatefulWidget {
 
 class _StartState extends State<Start> {
   Immich? _immich;
+  var _withoutServer = false;
   var _loaded = false;
 
   @override
@@ -59,8 +61,10 @@ class _StartState extends State<Start> {
       // persisted: do not rename
       final server = await storage.read(key: 'server');
       final token = await storage.read(key: 'token');
+      final withoutServer = await storage.read(key: 'withoutServer') == 'yes';
       setState(() {
         if (server != null && token != null) _immich = Immich(server, token);
+        _withoutServer = withoutServer;
         _loaded = true;
       });
     }();
@@ -74,21 +78,49 @@ class _StartState extends State<Start> {
     setState(() => _immich = null);
   }
 
+  /// Without a server (D-79): the device's photos, nothing goes online; remembered.
+  Future<void> _useWithoutServer(bool yes) async {
+    if (yes) {
+      await storage.write(key: 'withoutServer', value: 'yes');
+    } else {
+      await storage.delete(key: 'withoutServer');
+    }
+    setState(() => _withoutServer = yes);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_loaded) return const Scaffold();
     final immich = _immich;
+    if (immich == null && _withoutServer) {
+      // "Connect to a server" in the account dialog leads to the login.
+      return GalleryPage(
+        immich: null,
+        onLogout: () => _useWithoutServer(false),
+      );
+    }
     if (immich == null) {
-      return LoginPage(onLoggedIn: (i) => setState(() => _immich = i));
+      return LoginPage(
+        onLoggedIn: (i) {
+          storage.delete(key: 'withoutServer');
+          setState(() => _immich = i);
+        },
+        onWithoutServer: () => _useWithoutServer(true),
+      );
     }
     return GalleryPage(immich: immich, onLogout: _logout);
   }
 }
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, required this.onLoggedIn});
+  const LoginPage({
+    super.key,
+    required this.onLoggedIn,
+    required this.onWithoutServer,
+  });
 
   final ValueChanged<Immich> onLoggedIn;
+  final VoidCallback onWithoutServer;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -187,6 +219,11 @@ class _LoginPageState extends State<LoginPage> {
           FilledButton(
             onPressed: _busy ? null : _login,
             child: Text(l.loginButton),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: _busy ? null : widget.onWithoutServer,
+            child: Text(l.loginWithoutServer),
           ),
         ],
       ),

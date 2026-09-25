@@ -733,4 +733,20 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0$_temp1';
   }
+
+  @override
+  String get accountNoServer => 'Without a server';
+
+  @override
+  String get accountNoServerText =>
+      'Edit the photos on this device, nothing goes online';
+
+  @override
+  String get accountConnect => 'Connect to a server';
+
+  @override
+  String get loginWithoutServer => 'Use without a server';
+
+  @override
+  String get saveDoneDeviceOnly => 'Saved on the device';
 }

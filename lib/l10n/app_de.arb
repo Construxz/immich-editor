@@ -208,5 +208,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accountNoServer": "Ohne Server",
+  "accountNoServerText": "Fotos auf diesem Gerät bearbeiten, nichts geht ins Netz",
+  "accountConnect": "Mit Server verbinden",
+  "loginWithoutServer": "Ohne Server nutzen",
+  "saveDoneDeviceOnly": "Auf dem Gerät gespeichert"
 }

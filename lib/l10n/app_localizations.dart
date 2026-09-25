@@ -1249,6 +1249,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 folder} other{{count} folders}}{hidden, plural, =0{} other{ · {hidden} hidden}}'**
   String foldersAppCount(int count, int hidden);
+
+  /// No description provided for @accountNoServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Without a server'**
+  String get accountNoServer;
+
+  /// No description provided for @accountNoServerText.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the photos on this device, nothing goes online'**
+  String get accountNoServerText;
+
+  /// No description provided for @accountConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a server'**
+  String get accountConnect;
+
+  /// No description provided for @loginWithoutServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use without a server'**
+  String get loginWithoutServer;
+
+  /// No description provided for @saveDoneDeviceOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on the device'**
+  String get saveDoneDeviceOnly;
 }
 
 class _AppLocalizationsDelegate

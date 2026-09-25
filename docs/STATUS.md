@@ -9,7 +9,8 @@ Stand: 25.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
 
 - **Eine Flutter-App** (nur Android, D-14; Application-ID `io.github.construxz.photoeditor`,
   Dart-Paket `immich_editor`, D-10), `minSdk 34` (D-18):
-  - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Warnt, wenn die
+  - Anmelden mit Server, E-Mail, Passwort; Token in `flutter_secure_storage`. Oder „Ohne
+    Server nutzen": nur Gerätefotos, Kopien aufs Gerät, kein Netzverkehr (D-79). Warnt, wenn die
     Immich-Hauptversion nicht 3 ist. Ohne Schema gilt `https://`, `http://` außerhalb des
     Heimnetzes nur nach Rückfrage. Abmelden beendet auch die Sitzung auf dem Server (D-78).
   - Aussehen der Immich-App (Farben, Google Sans, D-35), Bedienung nach Google Fotos.
@@ -27,7 +28,8 @@ Stand: 25.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
     mit der App, die Android anbietet, oder einer in den Einstellungen festgelegten (D-52).
   - Anzeigesprache wie das Gerät (Deutsch, sonst Englisch) oder fest gewählt (D-43).
   - Oben rechts das Profilbild → Konto-Fenster wie in der Immich-App (Profil,
-    Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden) und
+    Speicherplatz, App- und Server-Version, Server-Adresse, wartende Bearbeitungen, Abmelden;
+    ohne Server „Mit Server verbinden", D-79) und
     **Einstellungen** als Karten: Bearbeiten (HDR), Speichern (Online-Fotos übers Gerät), Netzwerk
     (mobile Daten, D-30), Stapeln („Jetzt stapeln") — D-32, D-35. Antippen öffnet den **Betrachter**
     (D-33): wischen, auch über Monatsgrenzen (D-47), HDR aus dem lokalen Original, nur bei Fotos mit Gain-Map und erst, wenn die Seite ruht; dort auch der HDR-Knopf und „Ultra HDR" in den Infos (D-54, D-63, D-64), zoomen mit zwei Fingern — ein Finger blättert, eigener Zoom auf rohen Berührungen (D-65, D-66), Nachbarn vorgeladen, kleiner Platzhalter, Spalt beim Wischen (D-68), Stapel wie bei Google Fotos (Original, V1, V2; Hauptfoto festlegen,
@@ -92,7 +94,7 @@ Stand: 25.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
   ohne `android/key.properties` signieren mit dem Debug-Schlüssel.
 - Git-Repository, Zweig `main`, Remote `origin` = `https://github.com/Construxz/immich-editor.git`
   (privat), öffentlich ab dem ersten Release (D-4).
-- **Pixel des Besitzers:** App-Version `0.1.0-dev.78` (Release-Build, Debug-Schlüssel, arm64), installiert
+- **Pixel des Besitzers:** App-Version `0.1.0-dev.79` (Release-Build, Debug-Schlüssel, arm64), installiert
   25.09.2026 10:49 mit `adb install -r`, `versionName` per `dumpsys` geprüft; als Testbenutzer angemeldet.
 
 ## Entwicklungsumgebung

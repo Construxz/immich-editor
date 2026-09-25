@@ -27,7 +27,7 @@ typedef Loaded = ({
 });
 
 Future<Loaded> loadPhoto(
-  Immich immich,
+  Immich? immich, // null: without a server (D-79), device photos only
   String id, {
   required bool onDevice,
   bool preview = false,
@@ -60,10 +60,10 @@ Future<Loaded> loadPhoto(
   // Server: details and head (EXIF, XMP) at once. The preview (the slow part, ~1 s) loads
   // alongside unless the name says copy — only a guess for prefetching, the XMP decides.
   Future<Uint8List?> shown(String id) async =>
-      preview ? await immich.preview(id) : null;
+      preview ? await immich!.preview(id) : null;
   // Started together, awaited one by one: an error surfaces as itself, not as a
   // ParallelWaitError, and ignore() keeps the others from being reported unhandled.
-  final details = immich.photo(id);
+  final details = immich!.photo(id);
   final early = details.then(
     (p) => p.fileName.contains('.edit') ? null : shown(id),
   )..ignore();
@@ -126,7 +126,7 @@ Future<Loaded?> _onDevice(String checksum, Photo? oldCopy, Recipe start) async {
 /// and stacked on top of the original. With [replace] the [oldCopy] goes to the trash
 /// (D-31), on the device or the server, wherever it lives. [onStep] reports what is happening.
 Future<({Entry entry, Uint8List copy})> saveCopy(
-  Immich immich, {
+  Immich? immich, { // null: without a server (D-79), only toDevice
   required Photo photo,
   required Uint8List original,
   required Recipe recipe,
@@ -140,12 +140,15 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
   final copy = await exportJpeg(recipe, original, photo.checksum, hdr: hdr);
   if (toDevice) {
     final local = await saveToDevice(copy, photo);
-    await enqueue((
-      copy: await sha1(copy),
-      original: photo.checksum,
-      old: replace ? oldCopy?.checksum : null,
-      removeLocal: photo.folder != null ? null : local,
-    ));
+    // Without a server there is nothing to stack on.
+    if (immich != null) {
+      await enqueue((
+        copy: await sha1(copy),
+        original: photo.checksum,
+        old: replace ? oldCopy?.checksum : null,
+        removeLocal: photo.folder != null ? null : local,
+      ));
+    }
     // The old copy leaves the device: itself, or its twin when it was opened from the server
     // (D-24). The server's goes when stacking (old).
     if (replace && oldCopy != null) {
@@ -157,7 +160,7 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
     return (entry: (id: local, onDevice: true), copy: copy);
   }
   onStep?.call(l10n.stepUploading);
-  final id = await immich.upload(
+  final id = await immich!.upload(
     copy,
     photo.fileName.replaceFirst(RegExp(r'(\.[^.]*)?$'), '.edit.jpg'),
     photo.takenAt,
@@ -185,7 +188,7 @@ Future<({Entry entry, Uint8List copy})> saveCopy(
 /// one error does not stop the rest.
 // ponytail: sequential, with a waiting gallery; in the background once large selections get annoying.
 Future<List<Object>> applyPreset(
-  Immich immich,
+  Immich? immich,
   List<Entry> photos,
   Preset? preset, {
   void Function(int done)? onDone,
@@ -196,7 +199,7 @@ Future<List<Object>> applyPreset(
   for (final (i, e) in photos.indexed) {
     try {
       final l = await loadPhoto(immich, e.id, onDevice: e.onDevice);
-      final original = l.original ?? await immich.original(l.photo.id);
+      final original = l.original ?? await immich!.original(l.photo.id);
       await saveCopy(
         immich,
         photo: l.photo,
@@ -205,7 +208,7 @@ Future<List<Object>> applyPreset(
             ? withPreset(l.start, preset)
             : withOptimized(l.start, await optimize(original)),
         hdr: hdr,
-        toDevice: l.original != null || online,
+        toDevice: l.original != null || online || immich == null,
         oldCopy: l.oldCopy,
         replace: true,
       );

@@ -445,5 +445,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accountNoServer": "Without a server",
+  "accountNoServerText": "Edit the photos on this device, nothing goes online",
+  "accountConnect": "Connect to a server",
+  "loginWithoutServer": "Use without a server",
+  "saveDoneDeviceOnly": "Saved on the device"
 }

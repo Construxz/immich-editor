@@ -181,7 +181,7 @@ class AccountButton extends StatefulWidget {
     required this.onSettings,
   });
 
-  final Immich immich;
+  final Immich? immich; // null: without a server (D-79)
   final VoidCallback onLogout;
 
   /// After leaving the settings — the gallery rereads them.
@@ -192,7 +192,28 @@ class AccountButton extends StatefulWidget {
 }
 
 class _AccountButtonState extends State<AccountButton> {
-  late final Future<Account> _account = widget.immich.me();
+  late Future<Account>? _account = _fetch();
+  var _failed = false;
+
+  Future<Account>? _fetch() {
+    final account = widget.immich?.me();
+    account?.then(
+      (_) => _failed = false,
+      onError: (Object _) => _failed = true,
+    );
+    return account;
+  }
+
+  /// The gallery rebuilds after a reload: a failed attempt (no network) is tried again instead
+  /// of an empty avatar until the app restarts (D-77, D-79).
+  @override
+  void didUpdateWidget(AccountButton old) {
+    super.didUpdateWidget(old);
+    if (_failed) {
+      _failed = false;
+      _account = _fetch();
+    }
+  }
 
   @override
   Widget build(BuildContext context) => FutureBuilder(
@@ -223,19 +244,18 @@ class _AccountButtonState extends State<AccountButton> {
                 ),
           child: account == null
               ? const Icon(Icons.account_circle)
-              : Avatar(immich: widget.immich, account: account, size: 32),
+              : Avatar(immich: widget.immich!, account: account, size: 32),
         ),
-        onPressed: account == null
-            ? null
-            : () => showDialog<void>(
-                context: context,
-                builder: (_) => _AccountDialog(
-                  immich: widget.immich,
-                  account: account,
-                  onLogout: widget.onLogout,
-                  onSettings: widget.onSettings,
-                ),
-              ),
+        // Also without an account (no server, or unreachable): the settings stay reachable.
+        onPressed: () => showDialog<void>(
+          context: context,
+          builder: (_) => _AccountDialog(
+            immich: widget.immich,
+            account: account,
+            onLogout: widget.onLogout,
+            onSettings: widget.onSettings,
+          ),
+        ),
       );
     },
   );
@@ -262,8 +282,8 @@ class _AccountDialog extends StatefulWidget {
     required this.onSettings,
   });
 
-  final Immich immich;
-  final Account account;
+  final Immich? immich; // null: without a server (D-79)
+  final Account? account; // null: no server, or not reachable
   final VoidCallback onLogout, onSettings;
 
   @override
@@ -271,8 +291,10 @@ class _AccountDialog extends StatefulWidget {
 }
 
 class _AccountDialogState extends State<_AccountDialog> {
-  late final _storage = widget.immich.storageUsage(widget.account);
-  late final _server = widget.immich.version();
+  late final _storage = widget.account == null
+      ? null
+      : widget.immich!.storageUsage(widget.account!);
+  late final _server = widget.immich?.version();
   final _app = appVersion();
   final _pending = pendingCount();
 
@@ -379,68 +401,90 @@ class _AccountDialogState extends State<_AccountDialog> {
                 margin: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
                 child: Column(
                   children: [
-                    ListTile(
-                      minLeadingWidth: 50,
-                      leading: Avatar(
-                        immich: widget.immich,
-                        account: widget.account,
-                        border: true,
-                      ),
-                      title: Text(
-                        widget.account.name,
-                        style: text.titleMedium?.copyWith(
-                          color: colors.primary,
-                          fontWeight: FontWeight.w500,
+                    if (widget.immich == null)
+                      ListTile(
+                        minLeadingWidth: 50,
+                        leading: Icon(Icons.cloud_off, color: colors.primary),
+                        title: Text(
+                          l.accountNoServer,
+                          style: text.titleMedium?.copyWith(
+                            color: colors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      subtitle: Text(
-                        widget.account.email,
-                        style: text.bodySmall?.copyWith(
-                          color: colors.onSurfaceSecondary,
+                        subtitle: Text(
+                          l.accountNoServerText,
+                          style: text.bodySmall?.copyWith(
+                            color: colors.onSurfaceSecondary,
+                          ),
                         ),
-                      ),
-                    ),
-                    Divider(thickness: 4, color: colors.surfaceContainer),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      child: FutureBuilder(
-                        future: _storage,
-                        builder: (context, s) {
-                          final p = s.data;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            spacing: 12,
-                            children: [
-                              Text(
-                                l.accountStorageTitle,
-                                style: text.labelLarge,
+                      )
+                    else ...[
+                      ListTile(
+                        minLeadingWidth: 50,
+                        leading: widget.account == null
+                            ? const Icon(Icons.account_circle, size: 40)
+                            : Avatar(
+                                immich: widget.immich!,
+                                account: widget.account!,
+                                border: true,
                               ),
-                              LinearProgressIndicator(
-                                minHeight: 10,
-                                value: p == null || p.total == 0
-                                    ? 0
-                                    : p.used / p.total,
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(10),
+                        title: Text(
+                          widget.account?.name ?? '--',
+                          style: text.titleMedium?.copyWith(
+                            color: colors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: Text(
+                          widget.account?.email ?? '--',
+                          style: text.bodySmall?.copyWith(
+                            color: colors.onSurfaceSecondary,
+                          ),
+                        ),
+                      ),
+                      Divider(thickness: 4, color: colors.surfaceContainer),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: FutureBuilder(
+                          future: _storage,
+                          builder: (context, s) {
+                            final p = s.data;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: 12,
+                              children: [
+                                Text(
+                                  l.accountStorageTitle,
+                                  style: text.labelLarge,
                                 ),
-                              ),
-                              Text(
-                                p == null
-                                    ? '--'
-                                    : l.accountStorageUsed(
-                                        _bytes(p.used, l.localeName),
-                                        _bytes(p.total, l.localeName),
-                                      ),
-                                style: text.bodySmall,
-                              ),
-                            ],
-                          );
-                        },
+                                LinearProgressIndicator(
+                                  minHeight: 10,
+                                  value: p == null || p.total == 0
+                                      ? 0
+                                      : p.used / p.total,
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
+                                Text(
+                                  p == null
+                                      ? '--'
+                                      : l.accountStorageUsed(
+                                          _bytes(p.used, l.localeName),
+                                          _bytes(p.total, l.localeName),
+                                        ),
+                                  style: text.bodySmall,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
+                    ],
                     ValueListenableBuilder(
                       valueListenable: checksumProgress,
                       builder: (context, progress, _) => progress == null
@@ -481,40 +525,49 @@ class _AccountDialogState extends State<_AccountDialog> {
                       child: Column(
                         children: [
                           row(l.accountAppVersion, _app),
-                          const Divider(thickness: 1),
-                          row(
-                            l.accountServerVersion,
-                            _server.then(
-                              (v) => '${v.major}.${v.minor}.${v.patch}',
+                          if (widget.immich case final immich?) ...[
+                            const Divider(thickness: 1),
+                            row(
+                              l.accountServerVersion,
+                              _server!.then(
+                                (v) => '${v.major}.${v.minor}.${v.patch}',
+                              ),
                             ),
-                          ),
-                          const Divider(thickness: 1),
-                          row(
-                            l.accountServerAddress,
-                            Future.value(widget.immich.baseUrl),
-                          ),
+                            const Divider(thickness: 1),
+                            row(
+                              l.accountServerAddress,
+                              Future.value(immich.baseUrl),
+                            ),
+                          ],
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              FutureBuilder(
-                future: _pending,
-                builder: (context, s) => (s.data ?? 0) == 0
-                    ? const SizedBox()
-                    : button(
-                        Icons.hourglass_top,
-                        l.settingsPendingEdits(s.data!),
-                        () => _openSettings(context, _Section.stacking),
-                      ),
-              ),
+              if (widget.immich != null)
+                FutureBuilder(
+                  future: _pending,
+                  builder: (context, s) => (s.data ?? 0) == 0
+                      ? const SizedBox()
+                      : button(
+                          Icons.hourglass_top,
+                          l.settingsPendingEdits(s.data!),
+                          () => _openSettings(context, _Section.stacking),
+                        ),
+                ),
               button(
                 Icons.settings_outlined,
                 l.settings,
                 () => _openSettings(context, null),
               ),
-              button(Icons.logout_rounded, l.accountLogout, _logout),
+              if (widget.immich == null)
+                button(Icons.login, l.accountConnect, () {
+                  Navigator.pop(context);
+                  widget.onLogout(); // to the login; the settings stay
+                })
+              else
+                button(Icons.logout_rounded, l.accountLogout, _logout),
               Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 20),
                 child: InkWell(
@@ -593,6 +646,9 @@ enum _Section {
 
   final IconData icon;
 
+  /// Saving to the server, the network and stacking only matter with a server.
+  bool get needsServer => this == save || this == network || this == stacking;
+
   String title(AppLocalizations l) => switch (this) {
     language => l.languageTitle,
     view => l.settingsViewTitle,
@@ -618,8 +674,9 @@ enum _Section {
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.immich, required this.account});
 
-  final Immich immich;
-  final Account account;
+  final Immich?
+  immich; // null: without a server — its sections are left out (D-79)
+  final Account? account;
 
   @override
   Widget build(BuildContext context) {
@@ -632,45 +689,48 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.only(top: 10, bottom: 60),
         children: [
           for (final b in _Section.values)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Card(
-                elevation: 0,
-                clipBehavior: Clip.antiAlias,
-                color: colors.surfaceContainer,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  leading: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(16)),
-                      color: colors.brightness == Brightness.dark
-                          ? Colors.black26
-                          : Colors.white.withAlpha(100),
+            if (immich != null || !b.needsServer)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Card(
+                  elevation: 0,
+                  clipBehavior: Clip.antiAlias,
+                  color: colors.surfaceContainer,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                  ),
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    leading: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(16),
+                        ),
+                        color: colors.brightness == Brightness.dark
+                            ? Colors.black26
+                            : Colors.white.withAlpha(100),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Icon(b.icon, color: colors.primary),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    child: Icon(b.icon, color: colors.primary),
-                  ),
-                  title: Text(
-                    b.title(l),
-                    style: text.titleMedium!.copyWith(color: colors.primary),
-                  ),
-                  subtitle: Text(b.text(l), style: text.bodyMedium),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => _SectionPage(
-                        section: b,
-                        immich: immich,
-                        account: account,
+                    title: Text(
+                      b.title(l),
+                      style: text.titleMedium!.copyWith(color: colors.primary),
+                    ),
+                    subtitle: Text(b.text(l), style: text.bodyMedium),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => _SectionPage(
+                          section: b,
+                          immich: immich,
+                          account: account,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
         ],
       ),
     );
@@ -686,8 +746,8 @@ class _SectionPage extends StatefulWidget {
   });
 
   final _Section section;
-  final Immich immich;
-  final Account account;
+  final Immich? immich;
+  final Account? account;
 
   @override
   State<_SectionPage> createState() => _SectionPageState();
@@ -772,7 +832,7 @@ class _SectionPageState extends State<_SectionPage> {
     setState(() => _stacking = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await stackPending(widget.immich);
+      await stackPending(widget.immich!); // stacking section only with a server
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('$e')));
     }
@@ -851,7 +911,9 @@ class _SectionPageState extends State<_SectionPage> {
           contentPadding: const EdgeInsets.symmetric(horizontal: 20),
           leading: const Icon(Icons.hourglass_top),
           title: Text(l.settingsPendingEdits(_pending)),
-          subtitle: Text(l.settingsStackingExplanation(widget.account.email)),
+          subtitle: Text(
+            l.settingsStackingExplanation(widget.account?.email ?? '--'),
+          ),
         ),
         if (_pending > 0)
           Padding(

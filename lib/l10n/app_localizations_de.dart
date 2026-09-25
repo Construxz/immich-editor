@@ -737,4 +737,20 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0$_temp1';
   }
+
+  @override
+  String get accountNoServer => 'Ohne Server';
+
+  @override
+  String get accountNoServerText =>
+      'Fotos auf diesem Gerät bearbeiten, nichts geht ins Netz';
+
+  @override
+  String get accountConnect => 'Mit Server verbinden';
+
+  @override
+  String get loginWithoutServer => 'Ohne Server nutzen';
+
+  @override
+  String get saveDoneDeviceOnly => 'Auf dem Gerät gespeichert';
 }

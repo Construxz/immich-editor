@@ -10,14 +10,8 @@ steht in [DECISIONS.md](DECISIONS.md), die Geschichte im `git log`.
 **M2. Galerie lokal + Server, Mehrfachauswahl, Stufe-1-Regler, Presets.** 🔶
 Gebaut und geprüft: nativer Renderer mit HDR-Vorschau, Geometrie samt Gain-Map, zwölf Regler,
 Editor nach Google Fotos, Gerätefotos und Online-Fotos, eine Zeitleiste über Gerät und Server,
-Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server, Filter, Optimieren, Betrachter wie Google Fotos, Regler und Optimieren nach Google kalibriert, Pop (D-17 bis D-75). Offen, in dieser
+Bibliothek, Betrachter mit Stapeln, Aussehen der Immich-App, Presets, Code auf Englisch, Deutsch und Englisch in der App, Kopien schneller öffnen, Serverfotos mit lokalem Original lokal, Stapeln im Hintergrund, Betrachter über Monate und mit HDR, Geräteordner, Noodle als Server, Filter, Optimieren, Betrachter wie Google Fotos, Regler und Optimieren nach Google kalibriert, Pop, ohne Server nutzbar (D-17 bis D-79). Offen, in dieser
 Reihenfolge:
-- ⬜ **Ohne Server nutzbar** (Wunsch des Besitzers, 25.09.2026, D-77): Ohne Immich- oder
-  Noodle-Konto als reiner Editor für Gerätefotos, ohne Google-Dienste und ohne Werbung. Beim Start
-  „Ohne Server nutzen" neben der Anmeldung; die Zeitleiste zeigt alle Gerätefotos, auch ohne
-  Abgleich mit einem Server; Speichern legt die Kopie aufs Gerät; anmelden kann man später in den
-  Einstellungen. *Abnahme:* frisch installiert, ohne Anmeldung ein Foto bearbeiten und die Kopie
-  auf dem Gerät finden, ohne eine einzige Anfrage an einen Server (Logcat).
 - ⬜ **Noodle:** bei Noodle anfragen, ob ihr Editor das Rezept-Format übernimmt (D-27, D-56).
 - 🔶 **Regler kalibrieren nach Google Fotos:** 8 von 11 Reglern liegen bei ±100 unter 10 % zu
   Google (D-73), „Optimieren" in derselben Größenordnung (D-74). Offen:

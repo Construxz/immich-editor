@@ -27,7 +27,7 @@ class EditorPage extends StatefulWidget {
     this.onDevice = false,
   });
 
-  final Immich immich;
+  final Immich? immich; // null: without a server (D-79), device photos only
   final String id;
 
   /// [id] is a device photo: edit without a server, copy into the device gallery (D-24).
@@ -191,7 +191,7 @@ class _EditorPageState extends State<EditorPage> {
   /// Fetches the original from the server and swaps it for the preview image in the renderer —
   /// only now is there HDR and full resolution. Saving waits for it.
   Future<Uint8List> _fetchOriginal(String id) async {
-    final original = await widget.immich.original(id);
+    final original = await widget.immich!.original(id); // server photos only
     if (!mounted) return original;
     final loaded = await loadOriginal(
       original,
@@ -379,7 +379,7 @@ class _EditorPageState extends State<EditorPage> {
         original: await _originalReady!,
         recipe: _recipe,
         hdr: hdrOn.value,
-        toDevice: _toDevice,
+        toDevice: _toDevice || immich == null,
         oldCopy: _oldCopy,
         replace: replace,
         onStep: (s) => setState(() => _step = s),
@@ -391,7 +391,7 @@ class _EditorPageState extends State<EditorPage> {
       }
       // A folder the Immich app does not back up: on request upload archived and open in
       // the Immich app (D-36).
-      if (photo.folder != null) {
+      if (photo.folder != null && immich != null) {
         setState(() => _step = l.stepChecking);
         final backedUp = await folderBackedUp(
           immich,
@@ -403,7 +403,14 @@ class _EditorPageState extends State<EditorPage> {
           return;
         }
       }
-      messenger.showSnackBar(SnackBar(content: Text(l.saveDoneOnDevice)));
+      // Without a server nothing is stacked later (D-79).
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            immich == null ? l.saveDoneDeviceOnly : l.saveDoneOnDevice,
+          ),
+        ),
+      );
       navigator.pop(entry);
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(l.saveFailed('$e'))));
@@ -445,7 +452,7 @@ class _EditorPageState extends State<EditorPage> {
     ScaffoldMessengerState messenger,
     AppLocalizations l,
   ) async {
-    final immich = widget.immich;
+    final immich = widget.immich!;
     setState(() => _step = l.stepUploading);
     final id = await immich.upload(
       copy,

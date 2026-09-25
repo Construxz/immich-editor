@@ -7,6 +7,49 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-79: Ohne Server nutzbar
+
+Wunsch des Besitzers (D-77): Auch ohne Immich- oder Noodle-Konto soll die App als Editor für
+Gerätefotos taugen, ohne Google-Dienste und ohne Werbung. Bisher zeigte sie ohne gespeicherte
+Anmeldung nur den Login, und die Zeitleiste kannte Gerätefotos nur über den Abgleich mit dem
+Server.
+
+**Gebaut:**
+- **Einstieg:** Die Anmeldeseite hat „Ohne Server nutzen". Die Wahl wird gespeichert
+  (`withoutServer`), die App startet dann direkt in der Galerie. Im Konto-Fenster steht „Ohne
+  Server" mit „Mit Server verbinden", das zur Anmeldung führt. Einstellungen und die gespeicherte
+  Wahl bleiben dabei erhalten. Eine Anmeldung löscht die Wahl.
+- **`Immich?` überall:** Galerie, Bibliothek, Betrachter, Editor, Speichern, Presets und
+  Einstellungen nehmen „kein Server" an. Der Compiler hat jede Stelle gezeigt; Wege, die nur
+  Serverfotos betreffen, tragen ein `!`.
+- **Zeitleiste:** `checkBackup(null)` listet alle Gerätefotos ohne Prüfsummen. Die Kacheln
+  tragen ohne Server kein Wolken-Symbol.
+- **Betrachter:** Ortsnamen gibt es ohne Server nicht (`placeAt` läuft über Immich), die
+  Koordinaten bleiben.
+- **Speichern:** Ohne Server immer aufs Gerät. Nichts wird zum Stapeln vorgemerkt, die Frage
+  „in Immich öffnen?" entfällt, die Meldung lautet „Auf dem Gerät gespeichert".
+- **Einstellungen:** Ohne Server fehlen „Speichern", „Netz" und „Stapeln".
+- **Nebenbei:** Das Konto-Fenster ließ sich nur öffnen, wenn das Konto geladen war. War der
+  Server nicht erreichbar, waren also auch die Einstellungen unerreichbar, und ein gescheitertes
+  Laden des Kontos blieb bis zum Neustart leer (das leere Profilbild aus D-77). Jetzt öffnet es
+  immer, und ein gescheitertes Laden wird beim nächsten Neuladen der Galerie wiederholt.
+
+**Geprüft** 25.09.2026 im Emulator, nach der Abnahme der ROADMAP:
+- App-Daten gelöscht (`pm clear`), Fotorecht erteilt, „Ohne Server nutzen": Die Galerie zeigt
+  die Gerätefotos ohne Wolken.
+- Ein Foto geöffnet, Helligkeit geändert, gespeichert: Die Kopie steht als neueste Zeile im
+  MediaStore (`optimize-blau.edit (2).edit.jpg`, `DCIM/Camera/`).
+- **Kein Netzverkehr:** Die Summe der empfangenen und gesendeten Bytes der App-UID in
+  `dumpsys netstats` (nach `--poll`) war vor und nach dem ganzen Ablauf gleich (516.309).
+- Konto-Fenster ohne Server mit „Mit Server verbinden", Einstellungen mit vier Abschnitten.
+  „Mit Server verbinden" führt zur Anmeldung, danach wieder mit dem Testbenutzer angemeldet:
+  Galerie mit Server und Wolken.
+- `flutter analyze` sauber, `flutter test` 32 grün.
+
+App-Version `0.1.0-dev.79`.
+
+---
+
 ## 2026-09-25 · D-78: Sicherheit — HTTP nur mit Rückfrage, Abmelden widerruft das Token, fremde Rezepte begrenzt
 
 Durchsicht der ganzen App auf Sicherheitsrisiken (Client, Login, Speicher, Hintergrund-Job,

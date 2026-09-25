@@ -16,7 +16,7 @@ import 'viewer.dart';
 class LibraryView extends StatefulWidget {
   const LibraryView({super.key, required this.immich, required this.backup});
 
-  final Immich immich;
+  final Immich? immich;
   final BackupState backup;
 
   @override
@@ -84,7 +84,7 @@ class _FolderRow extends StatefulWidget {
   });
 
   final AssetPathEntity folder;
-  final Immich immich;
+  final Immich? immich;
   final BackupState backup;
 
   @override
@@ -177,7 +177,7 @@ class FolderPage extends StatefulWidget {
   });
 
   final AssetPathEntity folder;
-  final Immich immich;
+  final Immich? immich;
   final BackupState backup;
 
   @override

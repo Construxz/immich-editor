@@ -36,9 +36,20 @@ Future<bool> folderBackedUp(Immich immich, String folder) async {
 }
 
 /// Matches the device photos against the server by checksum; computing new checksums is shown
-/// by [checksumProgress]. Without permission for device photos: empty.
-Future<BackupState> checkBackup(Immich immich) async {
+/// by [checksumProgress]. Without permission for device photos: empty. Without a server
+/// (D-79) every device photo is "only here", listed without computing checksums.
+Future<BackupState> checkBackup(Immich? immich) async {
   if (!await devicePermitted()) return emptyBackupState;
+  if (immich == null) {
+    final count = await deviceCount();
+    return (
+      deviceOnly: count == 0
+          ? const <AssetEntity>[]
+          : await devicePhotos(0, count),
+      deviceBackedUp: const <String>{},
+      serverOnDevice: const <String>{},
+    );
+  }
   final sums = await deviceChecksums();
   final found = await immich.existing(sums); // device ID → server ID
   final all = lastListed; // listed by the checksum pass just now

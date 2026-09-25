@@ -16,6 +16,8 @@ What works today:
   Google Photos (including Pop), filters, presets, "Optimize", pinch zoom, HDR (Ultra HDR) kept.
 - **Saving** a non-destructive copy with the recipe in XMP, stacked in front of the original —
   on the device or on the server.
+- **Without a server:** skip the login and use it as a plain editor for the photos on the
+  device — no account, no network traffic.
 
 Details and the current version: [docs/STATUS.md](docs/STATUS.md).
 
