@@ -58,7 +58,7 @@ Searched all tracked files and the full history (106 commits) for personal data:
 - **New GitHub repo instead of cleanup** (addendum, 2026-09-25): in the old repo 96 of 108 Actions
   runs still referenced old commits whose author the API returned with the old e-mail; GitHub keeps
   rewritten commits reachable by hash indefinitely, and the activity log shows the force push. Old
-  repo renamed `immich-editor-old` (private backup, maintainer deletes it). `Construxz/immich-editor`
+  repo renamed `immich-editor-old` (private backup; deleted by the maintainer the same day). `Construxz/immich-editor`
   created fresh with only the cleaned history and tag `v0.1.0-rc.1`; maintainer re-entered the four
   signing secrets. **Verified via REST API:** 108 commits, all noreply; 3 Actions runs (CI on
   `a1fdee3` and `eb0fb08`, release on `eb0fb08`), all green and noreply; one release

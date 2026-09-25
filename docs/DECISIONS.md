@@ -66,8 +66,8 @@ persönlichen Daten durchsucht:
 - **Neues GitHub-Repo statt Bereinigung** (Nachtrag, 25.09.2026): Im alten Repo zeigten 96 von 108
   Actions-Läufen noch auf alte Commits, deren Autor die API mit der alten E-Mail lieferte. GitHub
   hält überschriebene Commits außerdem ohne Frist per Kennung erreichbar, und die Aktivität zeigt
-  den Force-Push. Deshalb heißt das alte Repo jetzt `immich-editor-old` (privat, Sicherung, der
-  Besitzer löscht es). `Construxz/immich-editor` ist neu angelegt, darin nur die bereinigte
+  den Force-Push. Deshalb heißt das alte Repo jetzt `immich-editor-old` (privat, Sicherung; vom
+  Besitzer am selben Tag gelöscht). `Construxz/immich-editor` ist neu angelegt, darin nur die bereinigte
   Historie und der Tag `v0.1.0-rc.1`; die vier Signier-Secrets hat der Besitzer neu eingetragen.
   **Geprüft über die REST-API:** 108 Commits, alle Autor und Committer noreply; 3 Actions-Läufe
   (CI auf `a1fdee3` und `eb0fb08`, Release auf `eb0fb08`), alle erfolgreich und alle mit noreply;
