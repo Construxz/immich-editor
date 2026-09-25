@@ -3,7 +3,7 @@
 **Diese Datei wird überschrieben, nicht fortgeschrieben.** Warum etwas so ist, steht in
 [DECISIONS.md](DECISIONS.md), was noch fehlt, in [ROADMAP.md](ROADMAP.md).
 
-Stand: 24.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
+Stand: 25.09.2026, M2 in Arbeit (offen: [ROADMAP.md](ROADMAP.md), M2).
 
 ## Was es gibt
 
