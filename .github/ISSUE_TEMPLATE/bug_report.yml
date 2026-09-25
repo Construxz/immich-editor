@@ -1,0 +1,65 @@
+name: Bug report
+description: Something does not work as expected.
+labels: [bug]
+body:
+  - type: input
+    id: phone
+    attributes:
+      label: Phone model
+      placeholder: e.g. Pixel 7 Pro
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version
+      placeholder: e.g. Android 16
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: App version
+      description: Shown in the account screen of the app.
+      placeholder: e.g. 0.1.0-rc.1
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Where is the photo?
+      options:
+        - On the phone only
+        - On my Immich server
+        - Both
+        - Not photo-related
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Tap …
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What happened, and what did you expect?
+      description: Screenshots help. Remove personal details first.
+    validations:
+      required: true
+  - type: input
+    id: immich
+    attributes:
+      label: Immich server version (if used)
+      placeholder: e.g. v2.5.0
+  - type: checkboxes
+    id: ai
+    attributes:
+      label: AI assistance
+      options:
+        - label: I used an AI tool to write this report (fine, see CONTRIBUTING.md; please say which and for what above).

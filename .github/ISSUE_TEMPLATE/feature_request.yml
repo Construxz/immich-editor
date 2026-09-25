@@ -1,0 +1,29 @@
+name: Feature request
+description: An idea or wish for the app.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What do you want to do?
+      description: Describe the goal and why it matters to you, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you do it today?
+      description: Another app, a workaround, or not at all.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea for the app
+      description: Optional. Mockups or screenshots from other apps are welcome.
+  - type: checkboxes
+    id: build
+    attributes:
+      label: Contributing
+      options:
+        - label: I would like to build this myself (we'll agree on the approach in this issue first).

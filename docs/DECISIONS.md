@@ -7,6 +7,21 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-83: Beiträge: CONTRIBUTING, Issue-Formulare, KI-Beiträge erlaubt mit Kennzeichnung
+
+Vor dem Öffentlichschalten, gegen Rauschen durch generierte Issues und PRs:
+- **[CONTRIBUTING.md](../CONTRIBUTING.md)** (englisch, für Außenstehende): Fehler melden, Wünsche,
+  größere Änderungen erst im Issue abstimmen. KI-Beiträge sind **erlaubt** — anders als bei
+  Immich, weil das Projekt selbst vibe-coded ist (README) —, aber offen gekennzeichnet, selbst
+  getestet und verstanden.
+- **Issue-Formulare** statt freier Issues (`.github/ISSUE_TEMPLATE/`, `blank_issues_enabled:
+  false`): Fehlerbericht mit Pflichtfeldern Handymodell, Android-Version, App-Version, Ort des
+  Fotos, Schritte, erwartet/passiert; Wunsch mit Ziel und heutigem Weg. Generierte Beiträge füllen
+  solche Felder selten sinnvoll.
+- **Fremde PRs:** Nichts eingestellt. Bei öffentlichen Repos startet GitHub die Actions für
+  Erstbeitragende erst nach Freigabe, und Secrets bekommen PRs aus Forks nie; der Release-Workflow
+  läuft nur auf Tags.
+
 ## 2026-09-25 · D-82: Persönliches aus Repo und Historie entfernt; erste Vorabversion 0.1.0-rc.1
 
 Vor dem Veröffentlichen alle versionierten Dateien und die ganze Historie (106 Commits) nach
