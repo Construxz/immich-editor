@@ -495,123 +495,123 @@ Maintainer's finding: "Ultra HDR" was off in the Pixel camera; with an Ultra HDR
 
 ## 2026-09-24 · D-63: Viewer — HDR only with a gain map, info stays open while swiping
 
-Maintainer's finding on the Pixel (`0.1.0-dev.62`): the viewer's HDR button changes nothing visible, only "like sharpening"; zoomed in, nothing at all. Swiping works only one photo at a time with a pause. With info open, swiping doesn't work.
+Maintainer on the Pixel (`0.1.0-dev.62`): the viewer's HDR button only looks "like sharpening", zoomed in nothing; swiping pauses after each photo; with info open, no swiping.
 
-Measured (read-only via `adb`): our window in the viewer was in standard mode, not HDR, display `hdrSdrRatio 1.0`. The shown photo and **all 61 newest JPEGs** in the camera folder have no gain map (`grep -c hdrgm` on the phone; tool cross-checked on an Ultra HDR copy: 12 hits) — the camera currently saves no Ultra HDR, probably "Ultra HDR" is off there. The "sharpness" difference was the native view (D-54), which laid even SDR photos at full resolution over Flutter's 1440 px preview; it disappears on zoom by design. It was created over **every** resting photo and decoded it fully — the likely cause of the swipe pause.
+Measured (read-only `adb`): viewer window in standard mode, display `hdrSdrRatio 1.0`. The photo and **all 61 newest JPEGs** in the camera folder have no gain map (`grep -c hdrgm`; cross-checked on an Ultra HDR copy: 12 hits) — the camera's "Ultra HDR" is probably off. The "sharpness" was the native view (D-54) laying even SDR photos at full resolution over Flutter's 1440 px preview (hidden on zoom by design). It was created and fully decoded for **every** resting photo — likely the swipe pause.
 
 Changed:
-- Native view only for photos **with a gain map**. Checked natively (`hasGainmap`): `ImageDecoder` downscaled to 1/16 — Android still reports the gain map. Scanning the file header for `hdrgm` isn't enough: ISO 21496-1 files carry it only in the second image (test photo `geraet-preset.jpg`: MPF at byte 638, `hdrgm` only at 2.4 MB; libvips reads it as Ultra HDR, Android finds no gain map there — not even fully decoded).
-- Native view only after the page **rests for 300 ms** — fast swiping creates none.
-- **Info inline** instead of a modal sheet: swipe up or ⓘ opens it below the photo (max 40 % of the height, scrollable), swipe down or ⓘ closes it; it stays open while swiping and shows the current photo — for comparing.
-- Log `immich_editor: hdr window on/off` to follow HDR on the Pixel.
+- Native view only for photos **with a gain map**, checked natively (`hasGainmap`): `ImageDecoder` at 1/16 size still reports it. Scanning the header for `hdrgm` isn't enough: ISO 21496-1 files carry it only in the second image (`geraet-preset.jpg`: MPF at byte 638, `hdrgm` at 2.4 MB; libvips sees Ultra HDR, Android sees no gain map even fully decoded).
+- Native view only after the page **rests 300 ms**.
+- **Info inline** instead of a modal sheet: swipe up or ⓘ opens it below the photo (max 40 % height, scrollable), swipe down or ⓘ closes; stays open while swiping, for comparing.
+- Log `immich_editor: hdr window on/off`.
 
-**Verified** 2026-09-24 in the emulator: device photos with a gain map report `true`, copies without report `false`; "hdr window on" only for the former, button "off" → "off", "on" → "on". Swiping with info open: `preset-10` → `-09` → `-08` → `-07`, info follows. Finding: very fast `adb` swipes (120 ms) over the image don't page, over the header they do — the `InteractiveViewer` (zoom) wins the gesture arena when the motion arrives in a few large steps; at 400 ms it pages. Whether this matters with a finger on the Pixel, the maintainer will say. The gain map check takes 1.8 s per photo in the emulator (in the background, only after the rest). App version `0.1.0-dev.63`.
+**Verified** 2026-09-24 in the emulator: gain-map device photos → `true`, copies → `false`; "hdr window on" only for the former, button toggles off/on. Swiping with info open `preset-10` → `-07`, info follows. Very fast `adb` swipes (120 ms) over the image don't page (the zoom `InteractiveViewer` wins the gesture arena with few large steps), over the header or at 400 ms they do; the maintainer judges the finger case. Gain map check: 1.8 s per photo in the emulator, in the background after the rest. App version `0.1.0-dev.63`.
 
 ---
 
 ## 2026-09-24 · D-62: Filters (3D LUT), own looks
 
-Agreed with the maintainer (2026-09-24): **own looks** instead of third-party LUTs; the recipe stores only **ID and strength**; "Enhance" ("Optimieren") becomes the first entry under "Presets" (like "Auto" in Google Photos, there before "Crop"; only "Enhance", "Dynamic" is too strong for him) — a separate step. **Sharing** (presets/LUTs as files, public server with ratings) stays an idea, not M2.
+Agreed with the maintainer (2026-09-24): **own looks**, no third-party LUTs; recipe stores only **ID and strength**; "Enhance" ("Optimieren") becomes a separate first entry under "Presets" (like Google Photos' "Auto"; "Dynamic" too strong). **Sharing** (preset/LUT files, public rated server) stays an idea, not M2.
 
-Image Toolbox finding (Apache-2.0, source checked 2026-09-24): its built-in 512×512 LUTs are named like Photoshop's "Color Lookup" presets (Bleach Bypass, Candlelight, Drop Blues, Edgy Amber, Fall Colors, Filmstock 50, Foggy Night, Kodak 5218) — probably Adobe's, not free; the downloaded package `ImageToolboxRemoteResources` has no license. Only Amatorka comes from GPUImage (BSD). Nothing taken.
+Image Toolbox (Apache-2.0, source checked 2026-09-24): its built-in 512×512 LUTs carry Photoshop "Color Lookup" names (Bleach Bypass, Candlelight, Drop Blues, Edgy Amber, Fall Colors, Filmstock 50, Foggy Night, Kodak 5218) — probably Adobe's, not free; `ImageToolboxRemoteResources` has no license; only Amatorka is from GPUImage (BSD). Nothing taken.
 
 Built:
-- **Eight looks** — Vivid, Warm, Cool, Film, Faded, Black & White, Noir, Sepia — computed by `tool/make_luts.py` as `.cube` (17³, 100 KB each) into `android/app/src/main/assets/luts/`. The ID carries a version (`warm@1`); a changed look gets a new ID, old recipes render the same.
-- **Renderer:** `Lut.kt` reads `.cube` and lays the table out as a strip (17 slices side by side); the AGSL shader interpolates trilinearly — the GPU filters red and green, the shader blends blue between two slices. The filter runs **after the sliders, before the vignette**, `mix`ed by strength. Unknown ID (recipe from a newer app): no filter instead of an error.
-- **HDR:** like the sliders, the filter acts on the SDR image; the gain map stays. With a single-channel gain map (Pixel), B&W stays grey in HDR too; a three-channel one could bring color back — not verified, no test image.
-- **Recipe:** `"filter":{"id":"bw@1","strength":0.8}`, only if strength > 0. **Presets** include the filter; a preset without a filter removes it.
-- **Editor:** "Filter" tab after "Adjust" (Spec, *Bedienung*): "No filter", then the looks as round previews of the photo (192 px, a ring marks the choice); once chosen, the ruler for strength 0 … 100 appears.
-- Previews in **one** GPU pass, all looks as tiles side by side: rendered individually they took 9.5 s in the emulator (about 1 s per look, almost all for setting up `HardwareRenderer` and `ImageReader`; reading a LUT 50–150 ms); together **2.7 s** from switching to the tab (log `editor: filters after`), once per editor session.
+- **Eight looks** (Vivid, Warm, Cool, Film, Faded, B&W, Noir, Sepia), generated by `tool/make_luts.py` as `.cube` (17³, 100 KB each) into `android/app/src/main/assets/luts/`. IDs are versioned (`warm@1`); a changed look gets a new ID so old recipes don't change.
+- **Renderer:** `Lut.kt` reads `.cube` into a strip of 17 slices; the AGSL shader interpolates trilinearly (GPU filters red/green, shader blends blue between slices). Runs **after the sliders, before the vignette**, `mix`ed by strength. Unknown ID (newer app's recipe): no filter, no error.
+- **HDR:** applied to the SDR image; gain map unchanged. With a single-channel gain map (Pixel) B&W stays grey in HDR; three-channel might reintroduce color — untested, no test image.
+- **Recipe:** `"filter":{"id":"bw@1","strength":0.8}`, only if strength > 0. **Presets** carry the filter; a preset without one removes it.
+- **Editor:** "Filter" tab after "Adjust" (Spec, *Bedienung*): "No filter", then round 192 px previews of the photo per look (ring marks the choice); choosing one shows the 0 … 100 strength ruler.
+- Previews in **one** GPU pass as side-by-side tiles: individually 9.5 s in the emulator (~1 s per look, mostly `HardwareRenderer`/`ImageReader` setup; LUT read 50–150 ms), together **2.7 s** from tab switch (log `editor: filters after`), once per editor session.
 
-**Verified** 2026-09-24 in the emulator, test user: `preset-11` (Ultra HDR, server only) with "Warm" — image mean R/G/B 99/91/91 → 100/88/83; saved with "Black & White": `preset-11.edit.jpg` in the camera folder, recipe `{"v":1,"filter":{"id":"bw@1","strength":1.0}}`, libvips (`uhdrload`) detects Ultra HDR, single-channel gain map (697×926), SDR image colorless (max channel difference 0). Tests: 24 Flutter (new: filter in recipe and preset), 12 JVM (new: reading `.cube`, all eight looks complete, B&W grey), 13 on GPU (new: B&W and half strength, Warm, unknown ID). App version `0.1.0-dev.62`.
+**Verified** 2026-09-24, emulator, test user: `preset-11` (Ultra HDR, server only) with Warm — mean R/G/B 99/91/91 → 100/88/83; saved with B&W: `preset-11.edit.jpg` in the camera folder, recipe `{"v":1,"filter":{"id":"bw@1","strength":1.0}}`, libvips (`uhdrload`) sees Ultra HDR, single-channel gain map (697×926), SDR colorless (max channel difference 0). Tests: 24 Flutter (new: filter in recipe/preset), 12 JVM (new: `.cube` parsing, all eight looks, B&W grey), 13 GPU (new: B&W, half strength, Warm, unknown ID). App version `0.1.0-dev.62`.
 
 ---
 
 ## 2026-09-24 · D-61: Device folders by app
 
-Maintainer's wish: Obsidian stores images in many attachment folders, each listed separately; better to hide a whole app or only certain subfolders, with the app's icon and name. Finding on the Pixel (`content query`, `owner_package_name`): Android records per image the app that created it — Google Camera 9,347, a camera companion app 3,148, Google Photos 2,235, system (screenshots) 964, WhatsApp 902, Obsidian (`md.obsidian`) 70, 467 without (copied via cable or sync).
+Maintainer: Obsidian's many attachment folders each show separately; wanted: hide a whole app or some subfolders, with app icon and name. Pixel (`content query`, `owner_package_name`): Android records each image's creating app — Google Camera 9,347, a camera companion app 3,148, Google Photos 2,235, system (screenshots) 964, WhatsApp 902, Obsidian (`md.obsidian`) 70, 467 none (cable/sync).
 
-Built: native `folderOwners` (per folder the app that created at least 60 % of its images, else none) and `appInfo` (name, icon as PNG). For Android to expose other apps, the manifest has `<queries>` for apps with a launcher icon — not the broad "query all packages" permission. Settings → Device folders → Library has "Folders | Apps" at the top: "Apps" lists each app with icon, name and "3 folders · 1 hidden", an eye for all its folders, expanded each folder with its own eye; folders without a clear app go under "Other and unknown". It writes to the same hide list as the folder view's eye (D-59). The Library itself doesn't group — hidden folders are already missing there. App version `0.1.0-dev.61`.
+Built: native `folderOwners` (the app that created ≥ 60 % of a folder's images, else none) and `appInfo` (name, PNG icon). Manifest `<queries>` for launcher apps, not the broad "query all packages" permission. Settings → Device folders → Library has "Folders | Apps": each app with icon, name, "3 folders · 1 hidden", one eye for all its folders, expandable with per-folder eyes; unclear folders under "Other and unknown". Writes the same hide list as D-59. The Library itself doesn't group. App version `0.1.0-dev.61`.
 
-**Verified** 2026-09-24 on the Pixel: the app reads the origin and gets names and icons — Bimostitch Pro, Camera Connect, ChatGPT, Day One, eBay, Photos (4 folders), PhotoScan, Instagram, Camera (2 folders) … alphabetically. Obsidian is further down; `adb` can't scroll there (D-50) — the maintainer checks the Obsidian case.
+**Verified** 2026-09-24 on the Pixel: names and icons load (Bimostitch Pro, Camera Connect, ChatGPT, Day One, eBay, Photos (4 folders), PhotoScan, Instagram, Camera (2 folders) …). Obsidian is further down and `adb` can't scroll there (D-50); the maintainer checks it.
 
 ---
 
 ## 2026-09-24 · D-60: Device folders on two pages
 
-Maintainer's wish: "Show under 'Photos'" and "Library" not on one long page (62 folders per list on the Pixel) but split one level deeper. Settings → Device folders shows two entries, each opens its list; the hint text is at the top, the title in the app bar. App version `0.1.0-dev.60`.
+Maintainer: "Show under 'Photos'" and "Library" (62 folders each on the Pixel) on separate pages instead of one long one. Settings → Device folders now has two entries, each opening its list; hint text on top, title in the app bar. App version `0.1.0-dev.60`.
 
-**Verified** 2026-09-24 in the emulator: overview with both entries; "Library" opens sort option and list with eye, pin, handle (Test15 pinned at top).
+**Verified** 2026-09-24 in the emulator: both entries; "Library" shows sort option and list with eye, pin, handle (Test15 pinned on top).
 
 ---
 
 ## 2026-09-24 · D-59: Pin, arrange, hide device folders
 
-Maintainer's wish: pin favorite folders on top, arrange others manually, everything neither pinned nor arranged below, alphabetical or by recency; hiding in the same menu. Settings → Device folders → **Library**: per row an eye in front (closed: row greyed, folder not in the Library), a pin and a drag handle at the end; above, the choice "Rest: newest first / A–Z". Order is computed by `arrangeFolders` (tested): pinned, then arranged, then the rest. Dragging a folder also arranges everything above it; previously arranged and pinned folders keep their place (`orderAfterMove`, tested). Stored as `pinnedFolders`, `folderOrder`, `folderSort`, `hiddenFolders`.
+Maintainer: favorites pinned on top, others arranged manually, the rest below alphabetically or by recency; hiding in the same menu. Settings → Device folders → **Library**: per row an eye (closed: greyed, not in Library), a pin and a drag handle; above, "Rest: newest first / A–Z". `arrangeFolders` (tested) orders pinned, arranged, rest. Dragging a folder also fixes everything above it; existing arranged/pinned entries keep their place (`orderAfterMove`, tested). Stored as `pinnedFolders`, `folderOrder`, `folderSort`, `hiddenFolders`.
 
-Deviation from the wish: Flutter's `SliverReorderableList` shows the drop target as a gap and the dragged item with an accent-colored border — no colored line. In exchange the list auto-scrolls while dragging (62 folders on the Pixel); a line would mean building drag and auto-scroll ourselves.
+Deviation: Flutter's `SliverReorderableList` shows a gap and an accent border, not a colored line — but it auto-scrolls while dragging (62 folders on the Pixel); a line would mean building both ourselves.
 
-**Verified** 2026-09-24 in the emulator (20 folders): Test15 pinned → at top; Test13 hidden via eye → greyed, missing from the Library; Test12 dragged by the handle after Test5 → Library "Test15, Camera, Privat, Screenshots, Test1 … Test5, Test12, Test6 …".
+**Verified** 2026-09-24 in the emulator (20 folders): Test15 pinned → on top; Test13 hidden → greyed, gone from Library; Test12 dragged after Test5 → "Test15, Camera, Privat, Screenshots, Test1 … Test5, Test12, Test6 …".
 
 ---
 
 ## 2026-09-24 · D-58: HDR button everywhere, can be turned off
 
-Maintainer's wish: the HDR toggle in gallery, viewer and editor; nowhere only if disabled in settings — a first step towards customizable buttons. One shared state (`lib/hdr.dart`: `hdrOn`, `hdrButton`, read at startup like the language), one `HdrButton` for all three; the editor listens to the state and switches the renderer. Settings → Editing: "HDR" and new "Show HDR button" (`hdrButton`).
+Maintainer: HDR toggle in gallery, viewer and editor, hidden everywhere only if disabled in settings — a first step towards customizable buttons. Shared state in `lib/hdr.dart` (`hdrOn`, `hdrButton`, read at startup like the language), one `HdrButton` widget; the editor listens and switches the renderer. Settings → Editing: "HDR" and new "Show HDR button" (`hdrButton`).
 
-**Verified** 2026-09-24 in the emulator: gallery "HDR on" → tap → "HDR off", the viewer shows "off", its tap switches back, gallery shows "on" again; "Show HDR button" off → no button in gallery and viewer, on again → back.
+**Verified** 2026-09-24 in the emulator: gallery toggle reflects in viewer and back; "Show HDR button" off → no button in gallery and viewer, on → back.
 
 ---
 
 ## 2026-09-24 · D-57: Library no longer jumps when scrolling up
 
-Maintainer's finding on the Pixel: scrolling down is smooth, scrolling up the list jumps — the partly visible thumbnail hops fully into view. Cause: a folder row was one line while loading and became two lines with "30 photos · …"; scrolling up, rows above reloaded, grew and pushed the list. Now the row is two lines from the start (empty second line) and stays loaded when scrolled out of view (`AutomaticKeepAliveClientMixin`) — so counting all photos of a folder (Camera: 7,519) also happens only once. Installed on the Pixel (`3907d19`); the maintainer will say whether it's smooth.
+Maintainer on the Pixel: scrolling up, the list jumps. Cause: folder rows loaded as one line and grew to two ("30 photos · …"); rows reloading above pushed the list. Now rows are two lines from the start and stay alive off-screen (`AutomaticKeepAliveClientMixin`), so counting a folder's photos (Camera: 7,519) also runs once. Installed on the Pixel (`3907d19`); smoothness is for the maintainer to judge.
 
 ---
 
 ## 2026-09-24 · D-54: HDR in the viewer; lens; M2 HDR acceptance on the Pixel
 
 Built:
-- **Viewer:** while a page rests and isn't zoomed, a native view (`HdrImageView`, `immich_editor/hdr`) lies over Flutter's image and draws the local original via `ImageDecoder` with gain map and EXIF rotation; if it has a gain map and "HDR" is on, the window switches to HDR, and back on leaving (a counter across all such views, so editor and viewer don't switch each other off). Source: device photos, and server photos whose original is also on the device (checksum). Server-only photos stay SDR — the viewer doesn't download originals.
-- Finding while building: if the native view is created mid-swipe (`onPageChanged` fires halfway), the page gets stuck between two photos (Hybrid Composition). Now it disappears when a swipe starts and returns only once the page rests (`ScrollEndNotification`).
-- **Ramp HDR up gently** (Android 15+): `desiredHdrHeadroom` rises from 1 to the display maximum over 0.5 s, then unlimited — for editor and viewer.
-- **Lens** for device photos: AndroidX `ExifInterface` instead of the framework's (provides `LensModel`); already in the app via `photo_manager` (LICENSES.md).
+- **Viewer:** while a page rests unzoomed, a native view (`HdrImageView`, `immich_editor/hdr`) over Flutter's image draws the local original via `ImageDecoder` with gain map and EXIF rotation; with a gain map and "HDR" on, the window switches to HDR and back on leaving (a counter over all such views so editor and viewer don't switch each other off). Sources: device photos and server photos whose original is on the device (checksum). Server-only photos stay SDR — the viewer doesn't download originals.
+- Creating the native view mid-swipe (`onPageChanged` fires halfway) left the page stuck between photos (Hybrid Composition). Now it goes away when a swipe starts and returns on `ScrollEndNotification`.
+- **Gentle HDR ramp** (Android 15+): `desiredHdrHeadroom` goes from 1 to the display maximum over 0.5 s, then unlimited — editor and viewer.
+- **Lens** for device photos: AndroidX `ExifInterface` instead of the framework one (has `LensModel`); already present via `photo_manager` (LICENSES.md).
 
 **Verified** 2026-09-24 on the Pixel (release `3907d19`), test photo A (Ultra HDR) in a folder the Immich app doesn't back up, deleted afterwards:
-- Viewer: window `COLOR_MODE_HDR`, `currentHdrSdrRatio=4.99999` (desired 5).
-- Editor: after rotate and square crop still `COLOR_MODE_HDR`, ratio 5. Saved ("Device only"): libvips 8.18.6 loads the copy with **`uhdrload`**, 3072 × 3072, content boost 4.6525 like the original (4.6525) — **Ultra HDR with matching gain map**. With "HDR off" another copy: `jpegload`, no `hdrgm` — **SDR**. The HDR part of the M2 acceptance is thus met, except for the visual judgment.
+- Viewer: `COLOR_MODE_HDR`, `currentHdrSdrRatio=4.99999` (desired 5).
+- Editor: after rotate and square crop still `COLOR_MODE_HDR`, ratio 5. Saved "Device only": libvips 8.18.6 loads it with **`uhdrload`**, 3072 × 3072, content boost 4.6525 as in the original — **Ultra HDR with matching gain map**. With "HDR off": `jpegload`, no `hdrgm` — **SDR**. The HDR part of the M2 acceptance is met except for the visual judgment.
 - Info (emulator, same file): "Google Pixel 7 Pro / Pixel 7 Pro back camera 6.81mm f/1.85 / f/1.9 · 1/231 s · ISO 47 · 6.8 mm".
-- In the emulator: swiping back and forth across several pages without getting stuck.
+- Emulator: swiping back and forth over several pages without getting stuck.
 
-Pitfall: after a `system_server` restart in the emulator (compositor reported "Binder buffer full") the launcher hung; restarting helped. The emulator has no HDR — `dumpsys` doesn't show the color mode there.
+Pitfall: after a `system_server` restart in the emulator ("Binder buffer full") the launcher hung; restarting it helped. The emulator has no HDR; `dumpsys` shows no color mode there.
 
 ---
 
 ## 2026-09-24 · D-56: Noodle Gallery as server — verified
 
-A local Noodle server in Docker, without touching the maintainer's library: compose file from Noodle release `v5.7.0`, own project and container name, no machine-learning service, own database password, data in `%USERPROFILE%\noodle-test` (STATUS). Admin and test user created via API, one test photo (test photo A, Ultra HDR) uploaded.
+Local Noodle server in Docker, without touching the maintainer's library: compose from Noodle release `v5.7.0`, own project/container name, no machine-learning service, own DB password, data in `%USERPROFILE%\noodle-test` (STATUS). Admin and test user via API, test photo A (Ultra HDR) uploaded.
 
 Findings and changes:
-- Noodle reports `/server/version` **5.7.0**; `/server/about` says `repository: open-noodle/gallery`. The app used to warn for every major version except 3; now known means Immich 3 or Noodle 5 (`isKnownServer`) — a future Immich 5 still warns.
-- The app didn't allow cleartext HTTP (Android default) — home-network servers without HTTPS didn't work at all. Now allowed, like the Immich app (`usesCleartextTraffic="true"`, v3.2.2).
+- Noodle reports `/server/version` **5.7.0**, `/server/about` `repository: open-noodle/gallery`. The app warned for every major version except 3; now Immich 3 or Noodle 5 count as known (`isKnownServer`) — a future Immich 5 still warns.
+- The app blocked cleartext HTTP (Android default), so home servers without HTTPS failed. Now allowed like the Immich app (`usesCleartextTraffic="true"`, v3.2.2).
 
-**Verified** 2026-09-24 in the emulator against Noodle (`http://10.0.2.2:2283`): login without warning; timeline with the server photo and the device photos; account window with storage, "5.7.0" and address; editor with the original incl. gain map (HDR button); rotated and saved directly to the server → viewer with stack original + V1. Via API: copy on top of the stack, recipe in XMP, `hdrgm`, SHA-1 matches. Afterwards logged back in as the Immich test user, containers stopped.
+**Verified** 2026-09-24 in the emulator against `http://10.0.2.2:2283`: login without warning; timeline with server and device photos; account window with storage, "5.7.0" and address; editor with the original and gain map (HDR button); rotated and saved to the server → stack original + V1. Via API: copy on top, recipe in XMP, `hdrgm`, SHA-1 matches. Then back to the Immich test user, containers stopped.
 
 ---
 
 ## 2026-09-24 · D-55: Server thumbnails on disk
 
-The gallery loads server thumbnails through the keep-alive client (`Immich.thumbnail`) and stores them in Android's cache folder (`cache/thumbnails`); the newest thousand stay in memory so Flutter's image cache recognizes them. Scrolling back or reopening the app loads them from disk. Failed fetches aren't remembered (new copies get their thumbnail only seconds after upload, D-31).
+The gallery fetches server thumbnails via the keep-alive client (`Immich.thumbnail`) and stores them in Android's cache folder (`cache/thumbnails`); the newest thousand stay in memory so Flutter's image cache recognizes them. Scrolling back or reopening loads from disk. Failed fetches aren't cached (new copies get thumbnails only seconds after upload, D-31).
 
-**Verified** 2026-09-24 in the emulator: 20 files in the cache after startup, the gallery shows all thumbnails. Limit: offline the timeline stays empty — it needs Immich's month list, which the app doesn't cache yet.
+**Verified** 2026-09-24 in the emulator: 20 cache files after startup, all thumbnails shown. Limit: offline the timeline is empty — it needs Immich's month list, not cached yet.
 
 ---
 
 ## 2026-09-24 · D-53: Show pending edits individually
 
-ROADMAP: show in settings queued edits whose backup doesn't happen although the file exists (backup off, folder not backed up). Settings → Stacking now lists each pending copy with thumbnail, file name and folder ("Copy in Pictures/Privat/ — not in Immich yet"); × removes it from the queue, the file stays. The app finds the copy by its checksum in the stored device checksums.
+ROADMAP: show queued edits whose backup doesn't happen although the file exists (backup off, folder not backed up). Settings → Stacking lists each pending copy with thumbnail, file name and folder ("Copy in Pictures/Privat/ — not in Immich yet"); × removes it from the queue, the file stays. Copies are found by checksum in the stored device checksums.
 
-**Verified** 2026-09-24 in the emulator: 7 pending copies with folders, including `privat-test` from the non-backed-up `Pictures/Privat`; × → "6 edits waiting", the file is still in the folder.
+**Verified** 2026-09-24 in the emulator: 7 pending copies, incl. `privat-test` from non-backed-up `Pictures/Privat`; × → "6 edits waiting", file still there.
 
 ---
 
@@ -619,165 +619,165 @@ ROADMAP: show in settings queued edits whose backup doesn't happen although the 
 
 Maintainer's decisions:
 
-1. **"Open in Immich"** still lets Android choose, with "Just once" / "Always" (on the Pixel, Immich and Noodle Gallery both handle `immich://`, D-50). New: Settings → Saving → "Open edits with": "Ask Android" (default) or one of the apps Android knows for `immich://` (`queryIntentActivities`, hence `<queries>` in the manifest). A fixed app applies even if Android has "Always" set to another — so a wrong "Always" can be overridden in the app. Stored as `openWith`.
-2. **Device folder order** as in the Immich app: its source (`v3.2.2`, `providers/infrastructure/album.provider.dart`): `localAlbumProvider` sorts by `SortLocalAlbumsBy.newestAsset` — folder with the newest photo first; the perceived "importance" (Camera, then Screenshots) is recency. Adopted for Library and settings. The date comes from the list of all photos (newest first, like the timeline); the first photo photo_manager returns per folder isn't reliably the newest — the first attempt using it put Screenshots (Sept 22) before Camera (Sept 23).
+1. **"Open in Immich"** still uses Android's chooser with "Just once"/"Always" (Immich and Noodle Gallery both handle `immich://` on the Pixel, D-50). New: Settings → Saving → "Open edits with": "Ask Android" (default) or an app Android knows for `immich://` (`queryIntentActivities`, hence `<queries>` in the manifest). A fixed app overrides a wrong Android "Always". Stored as `openWith`.
+2. **Folder order** as in the Immich app (`v3.2.2`, `providers/infrastructure/album.provider.dart`): `localAlbumProvider` sorts by `SortLocalAlbumsBy.newestAsset`; the perceived "importance" (Camera, then Screenshots) is recency. Adopted for Library and settings. The date comes from the all-photos list (newest first); photo_manager's first photo per folder isn't reliably the newest — the first attempt put Screenshots (Sept 22) before Camera (Sept 23).
 
-**Verified** 2026-09-24 on the Pixel (release): Library "Camera, Screenshots, Telegram Images, Camera Remote, WhatsApp …"; Settings → Saving → "Open edits with" shows Ask Android, Immich, Noodle Gallery; "Immich" chosen, shown, back to "Ask Android".
+**Verified** 2026-09-24 on the Pixel (release): Library "Camera, Screenshots, Telegram Images, Camera Remote, WhatsApp …"; "Open edits with" lists Ask Android, Immich, Noodle Gallery; selecting and resetting works.
 
 ---
 
 ## 2026-09-24 · D-51: Device photos right at startup
 
-Maintainer's finding on the Pixel: on opening, only server stacks show; device photos appear about 3 s later. **Measured** 2026-09-24 on the Pixel (17,490 photos, profile build, timestamps): device photos only after **5.6–6.2 s** — listing all photos 1.1–2.1 s, reading the checksum file < 0.1 s, `bulk-upload-check` in 18 sequential requests **2.7–3.3 s**, listing all photos a second time **1.1 s**.
+Maintainer: at launch only server stacks show, device photos ~3 s later. **Measured** 2026-09-24 on the Pixel (17,490 photos, profile build, timestamps): device photos after **5.6–6.2 s** — listing all photos 1.1–2.1 s, reading the checksum file < 0.1 s, `bulk-upload-check` as 18 sequential requests **2.7–3.3 s**, listing all photos again **1.1 s**.
 
 Built:
-- `existing` sends the requests (1,000 each) concurrently.
-- The sync uses the checksum run's list (`lastListed`) instead of listing again.
-- It stores its result in `backup.json` (device photos only here with date, dimensions, folder; plus the sets for the cloud icons). The gallery shows this state immediately and replaces it once the fresh sync is done. New photos appear after the sync.
+- `existing` sends the 1,000-item requests concurrently.
+- The sync reuses the checksum run's list (`lastListed`).
+- Its result is cached in `backup.json` (device photos with date, size, folder, plus the cloud-icon sets). The gallery shows it immediately and swaps in the fresh sync; new photos appear after the sync.
 
-**Result** on the Pixel: fresh sync after **2.3–2.8 s**; the cached state is shown **0.6–0.7 s** after tapping the app icon (log: `START` → state loaded), together with the window appearing — the screenshot at 1.5 s shows the full timeline with camera photos.
+**Result** on the Pixel: fresh sync after **2.3–2.8 s**; cached state **0.6–0.7 s** after tapping the icon (log `START` → state loaded), as the window appears — the screenshot at 1.5 s shows the full timeline.
 
 ---
 
 ## 2026-09-24 · D-50: Finding — "Open in Immich" on the Pixel
 
-Checked 2026-09-24 on the maintainer's Pixel (release `9e61540`, as test user; the Immich app there logged in to the main account, not switched at the maintainer's request):
+Checked 2026-09-24 on the maintainer's Pixel (release `9e61540`, as test user; the Immich app stayed on the main account at the maintainer's request):
 
-- Test photo in `Pictures/EditorTest` (not backed up), rotated in the app, saved → prompt "Open edit in Immich?" → "Open in Immich": copy archived for the test user, in album "Editor for Immich".
-- `immich://asset?id=…` triggers Android's chooser: **Immich and Noodle Gallery** both handle the link. "Immich" chosen → the Immich app opens its timeline; it can't find the test user's photo with the main account. The jump works; whether it opens the photo can only be checked with the same account.
-- Cleaned up: test folder deleted on the phone, copy in the test user's trash.
+- Test photo in `Pictures/EditorTest` (not backed up), rotated, saved → "Open edit in Immich?" → "Open in Immich": copy archived for the test user, in album "Editor for Immich".
+- `immich://asset?id=…` opens Android's chooser: **Immich and Noodle Gallery** both handle it. Immich opens its timeline but can't find the test user's photo with the main account. The jump works; opening the photo needs the same account to verify.
+- Cleanup: test folder deleted, copy in the test user's trash.
 
-Side findings: the Library lists 62 folders on the Pixel in about 1 s (Camera at the very bottom). `adb` swipes scroll neither timeline nor Library there, taps work — scrolling by hand works (maintainer: somewhat jerky in the debug build).
+Side findings: Library lists 62 folders in ~1 s (Camera last). `adb` swipes don't scroll timeline or Library there, taps work; manual scrolling works (somewhat jerky in debug).
 
 ---
 
 ## 2026-09-24 · D-49: Finding — first checksum sync of a large library
 
-Measured 2026-09-24 on the maintainer's Pixel 7 Pro (17,490 photos), app `9e61540` as debug build (checksums are computed in Kotlin, debug doesn't affect that): `checksums.json` moved aside, `dumpsys battery unplug`, `batterystats --reset`, app started.
+Measured 2026-09-24 on the maintainer's Pixel 7 Pro (17,490 photos), `9e61540` debug build (checksums run in Kotlin, unaffected by debug): `checksums.json` moved aside, `dumpsys battery unplug`, `batterystats --reset`, app started.
 
-- The explainer dialog (D-39) appeared: "1,960 of 17,490 photos · done in about 4 minutes".
-- **Duration: about 7½ minutes** (12:05:30 start to 12:13:11 all 17,490 in the file), average 39 photos/s, uneven (steps of 1000 took 15–75 s) — the first estimate was too optimistic; it follows the speed of the first seconds.
-- **Battery: 10.4 mAh** for the app per `batterystats` (foreground 3 min, background 4½ min), about 0.24 % of 4,370 mAh; the gauge stayed at 95 %.
-- The run continued with the screen off and the app in the background.
+- Explainer dialog (D-39): "1,960 of 17,490 photos · done in about 4 minutes".
+- **Duration ~7½ min** (12:05:30 → 12:13:11), avg 39 photos/s, uneven (15–75 s per 1000) — the estimate was too optimistic, it tracks the first seconds' speed.
+- **Battery: 10.4 mAh** per `batterystats` (3 min foreground, 4½ min background), ~0.24 % of 4,370 mAh; gauge stayed at 95 %.
+- Continued with screen off and app in background.
 
-Release build reinstalled afterwards; the new file stays, the old one is deleted.
+Release build reinstalled; new file kept, old one deleted.
 
-**Takeaway:** the first sync is a one-time acceptable cost; no reason to move it into WorkManager. The remaining-time estimate could average the speed over a longer window.
+**Takeaway:** the first sync is an acceptable one-time cost; no need for WorkManager. The remaining-time estimate could average over a longer window.
 
 ---
 
 ## 2026-09-24 · D-48: Which device folders appear under "Photos" and in the Library
 
-Maintainer's finding on the Pixel: "Photos" showed everything from the device mixed — screenshots, downloads, messengers. Google Photos shows camera photos there. Wanted: choose which folders appear under "Photos", and hide folders from the Library.
+Maintainer: "Photos" mixed everything from the device (screenshots, downloads, messengers); Google Photos shows camera photos there. Wanted: choose folders for "Photos", hide folders from the Library.
 
-- **Settings → Device folders**: two checkbox lists, "Show under 'Photos'" (default `DCIM/Camera/`) and "Hide in Library". A folder is its relative path, as the app already uses when saving; stored as `photoFolders` and `hiddenFolders`.
-- "Photos" still shows everything from the server (Immich's timeline) and from the device only what's in the chosen folders and not yet backed up. The separate "Device" view stays complete.
+- **Settings → Device folders**: checkbox lists "Show under 'Photos'" (default `DCIM/Camera/`) and "Hide in Library". A folder is its relative path, as used when saving; stored as `photoFolders`, `hiddenFolders`.
+- "Photos" shows everything from the server (Immich timeline) and from the device only non-backed-up photos in the chosen folders. The "Device" view stays complete.
 
-**Verified** 2026-09-24 in the emulator: created folder `Pictures/Screenshots` with a photo without EXIF date — not shown under "Photos"; settings show Privat, Camera, Screenshots, with Camera checked. Screenshots enabled under "Photos", Privat hidden → "Photos" shows the photo at the top, the Library only Camera and Screenshots.
+**Verified** 2026-09-24 in the emulator: `Pictures/Screenshots` with a photo without EXIF date — not under "Photos"; settings list Privat, Camera, Screenshots, Camera checked. Screenshots enabled, Privat hidden → "Photos" shows the photo on top, Library only Camera and Screenshots.
 
 ---
 
 ## 2026-09-23 · D-47: Swipe across month boundaries in the viewer
 
-Previously swiping stopped at the edge of the month the server photo was opened from. Now the viewer loads the adjacent month at the edge (`more` in `ViewerPage`, `_openAcross` in the gallery): older months are appended, newer ones prepended with the page index shifted by their count; a month with only videos is skipped. Applies to the timeline and the separate server view; the device photos view was already continuous.
+Swiping used to stop at the edge of the server photo's month. Now the viewer loads the adjacent month at the edge (`more` in `ViewerPage`, `_openAcross` in the gallery): older months appended, newer prepended with the page index shifted; video-only months skipped. Timeline and server view; the device view was already continuous.
 
-**Verified** 2026-09-23 in the emulator: opened the first photo in October 2022, shows "Oct 30, 2022"; swipe right → "May 3, 2026", back → "Oct 30, 2022".
+**Verified** 2026-09-23 in the emulator: first October 2022 photo "Oct 30, 2022" → right → "May 3, 2026" → back → "Oct 30, 2022".
 
 ---
 
 ## 2026-09-23 · D-46: Stacking in the background
 
-ROADMAP: stack without opening the app. Via Android's **WorkManager** (plugin `workmanager`, MIT; AndroidX WorkManager, Apache-2.0; no Play services — [LICENSES.md](LICENSES.md)):
+ROADMAP: stack without opening the app. Via Android **WorkManager** (plugin `workmanager`, MIT; AndroidX WorkManager, Apache-2.0; no Play services — [LICENSES.md](LICENSES.md)):
 
-- A periodic task (Android minimum 15 minutes, network required) calls `stackPending` in a Flutter engine without an Activity. Scheduled when something enters the queue or something still waits after a run; cancelled when the queue is empty — nothing runs without pending work.
-- Without an Activity there's no renderer channel (checksums) and no delete dialog: the background only stacks. Local copies that should then leave the device (D-28) are remembered (`deviceTrashLater`); on the next start Android asks once for all. Only the foreground discards unreachable entries (D-45).
-- Foreground and background may overlap (two isolates); stacking twice is harmless.
+- A periodic task (Android minimum 15 min, network required) runs `stackPending` in an Activity-less Flutter engine. Scheduled when the queue gets an entry or still has one after a run; cancelled when empty.
+- Without an Activity there's no renderer channel (checksums) and no delete dialog, so the background only stacks. Local copies due to leave the device (D-28) go into `deviceTrashLater`; Android asks once for all at next start. Only the foreground discards unreachable entries (D-45).
+- Foreground and background may overlap (two isolates); double stacking is harmless.
 
-**Verified** 2026-09-23 in the emulator: app on the home screen, backup of copy `preset-11.edit (1).jpg` simulated. Forcing (`cmd jobscheduler run -f -n androidx.work.systemjobscheduler …`) is rejected by WorkManager for periodic work ("executed before schedule"); the regular run came 14 minutes after scheduling: `Worker result SUCCESS` after 2.4 s, via API the copy on top of the stack with `preset-11.jpg`, the replaced copy gone. On next app open Android asked to move the local copy to the trash; afterwards it was off the device. Pitfall: `am force-stop` clears the app's scheduled tasks until the next start (swiping away doesn't).
+**Verified** 2026-09-23 in the emulator: app on home screen, backup of `preset-11.edit (1).jpg` simulated. Forcing (`cmd jobscheduler run -f -n androidx.work.systemjobscheduler …`) is refused for periodic work ("executed before schedule"); the regular run came 14 min after scheduling: `Worker result SUCCESS` after 2.4 s, via API the copy on top of the stack with `preset-11.jpg`, replaced copy gone. At next app open Android asked to trash the local copy; then it was gone. Pitfall: `am force-stop` clears the app's scheduled work until the next start (swiping away doesn't).
 
 ---
 
 ## 2026-09-23 · D-45: Edit server photos locally if the original is local; discard unreachable entries
 
-Per D-24 ("original is on the device: the app edits the local file and asks the server nothing") — until now this applied only to photos opened from the device.
+Extends D-24 ("original on the device: edit the local file, don't ask the server") from photos opened on the device to server photos.
 
-- `loadPhoto` looks up the original's checksum — for a copy, the one from its recipe — in the **stored** device checksums (`deviceIdWithChecksum`; never computes, so the editor doesn't wait for a sync). On a hit it loads the local file and uses it only if its SHA-1 still matches. Then: full resolution and HDR immediately, no server preview, the copy goes into the original's folder and is queued — as with device photos.
-- `saveCopy` now derives whether a photo is on the device from the photo (`folder`), not from the entry point. **Replace** also hits a server copy's twin on the device (by checksum; Android asks); the server part goes to the trash during stacking.
-- **Queue:** after stacking, entries that can never arrive are dropped — copy or original neither on the server nor on the device (`unreachable`, tested). Only a checksum run started after reading the queue counts, otherwise a just-saved copy would be lost; without photo access nothing is discarded. A copy that exists but isn't backed up keeps waiting.
+- `loadPhoto` looks up the original's checksum (for a copy, from its recipe) in the **stored** device checksums (`deviceIdWithChecksum`; never computes, so the editor doesn't wait for a sync). On a hit it uses the local file if its SHA-1 still matches: full resolution and HDR at once, no server preview, the copy goes into the original's folder and is queued, as for device photos.
+- `saveCopy` derives "on device" from the photo (`folder`), not the entry point. **Replace** also hits a server copy's local twin (by checksum; Android asks); the server part is trashed during stacking.
+- **Queue:** after stacking, entries that can never arrive (copy or original neither on server nor device; `unreachable`, tested) are dropped. Only a checksum run started after reading the queue counts, else a just-saved copy would be lost; without photo access nothing is dropped. A present but non-backed-up copy keeps waiting.
 
-**Verified** 2026-09-23 in the emulator: opened the top copy of stack `geraet-preset` (original also on device) — image after 1.4 s instead of 2 s, saved: `geraet-preset.edit (1).jpg` in the camera folder, no upload. Stack `preset-11` (original server-only, old copy also as a local file) → "Replace copy" → Android asks, old file gone, new one there. Queue: 10 entries stay 10 (all copies still on device); `testfoto-a-lokal.edit.jpg` deleted → 9.
+**Verified** 2026-09-23 in the emulator: top copy of stack `geraet-preset` (original also local) — image after 1.4 s instead of 2 s; saved `geraet-preset.edit (1).jpg` to the camera folder, no upload. Stack `preset-11` (original server-only, old copy also local) → "Replace copy" → Android asks, old file gone, new one present. Queue: 10 stays 10 (all copies local); `testfoto-a-lokal.edit.jpg` deleted → 9.
 
 ---
 
 ## 2026-09-23 · D-44: A copy opens in 2 s
 
-ROADMAP: opening an older copy from the viewer took "about 8 s". **Measured** 2026-09-23 in the emulator (debug build, from tapping "Edit" to the image in the editor, externally via `adb`; plus the timestamp `editor: image after … ms` in the debug log): before **2.5–2.9 s** (top copies 2.5 and 2.7 s, older copy V1 2.9 s) — the 8 s came from an older build. Individual steps: details and file head 0.1–0.5 s each, finding the original 0.1 s, **Immich's preview about 1.1 s** — the largest item.
+ROADMAP: opening an older copy from the viewer took "about 8 s". **Measured** 2026-09-23 in the emulator (debug build, tap "Edit" to image, externally via `adb` plus debug-log timestamp `editor: image after … ms`): before **2.5–2.9 s** (top copies 2.5/2.7 s, older copy V1 2.9 s) — the 8 s was an older build. Steps: details and file head 0.1–0.5 s each, finding the original 0.1 s, **Immich's preview ~1.1 s** — the largest item.
 
 Built (`loadPhoto` in `lib/editor/save.dart`):
-- Details and file head concurrently; for a copy, the original's details and preview concurrently. The editor no longer loads the original's file head — it was never needed. Settings and presets load alongside.
-- The preview starts loading as soon as the details show the name doesn't look like a copy (`.edit`). Only a guess for prefetching; whether it's a copy is still decided by the recipe in the XMP.
-- Rejected: always prefetching the preview — downloading the copy crowded out the other requests, copies then took 3.0–3.3 s. Also no effect: keeping idle connections longer (Dart default 15 s).
-- Parallel requests are started and awaited individually, so a network error surfaces as itself, not as `ParallelWaitError`.
+- Details and file head concurrently; for a copy, the original's details and preview concurrently. The original's file head is no longer loaded (never used). Settings and presets load alongside.
+- The preview starts as soon as details show a name not looking like a copy (`.edit`) — only a prefetch guess; the XMP recipe still decides.
+- Rejected: always prefetching the preview (the copy download crowded other requests, 3.0–3.3 s); longer idle connections (Dart default 15 s) — no effect.
+- Parallel requests are awaited individually so network errors surface as themselves, not `ParallelWaitError`.
 
-**Result**, two runs: top copies **2.0–2.3 s**, older copy V1 **1.9–2.0 s**, original 1.8–2.0 s — acceptance (< 3 s) met. An opened copy is still recognized as a copy (⋮ "Go to saved edit").
+**Result**, two runs: top copies **2.0–2.3 s**, older copy V1 **1.9–2.0 s**, original 1.8–2.0 s — acceptance (< 3 s) met. An opened copy is still recognized (⋮ "Go to saved edit").
 
 ---
 
 ## 2026-09-23 · D-43: Display language German and English
 
-Maintainer's wish: make the app internationally usable — display language follows the device, German and English first, switchable in settings.
+Maintainer: app usable internationally — language follows the device, German and English first, switchable in settings.
 
-- Flutter's standard approach: `flutter_localizations` (SDK) and `intl`, both BSD-3-Clause ([LICENSES.md](LICENSES.md)); strings in `lib/l10n/app_en.arb` (template) and `app_de.arb`, 147 keys, plurals as ICU plural; `flutter gen-l10n` generates `AppLocalizations`.
+- Flutter's standard: `flutter_localizations` (SDK) and `intl`, both BSD-3-Clause ([LICENSES.md](LICENSES.md)); strings in `lib/l10n/app_en.arb` (template) and `app_de.arb`, 147 keys, ICU plurals; `flutter gen-l10n` generates `AppLocalizations`.
 - Settings → **Language**: "Device language" (default), Deutsch, English; stored as `language`, kept on logout. Other device languages get English.
-- Widgets get strings via `AppLocalizations.of(context)` and rebuild on switch; code without context (error messages, save steps) uses `l10n` from `lib/language.dart`.
-- Dates, months, weekdays and numbers via `intl` instead of hand-written German lists ("Mi., 23. Sept. 2026 · 12:00", "f/1,9" vs. "f/1.9").
-- In the emulator the app is set to German (setting), because `tool/emu.sh` looks for German strings.
+- Widgets use `AppLocalizations.of(context)` and rebuild on switch; context-free code (errors, save steps) uses `l10n` from `lib/language.dart`.
+- Dates, months, weekdays, numbers via `intl` instead of German lists ("Mi., 23. Sept. 2026 · 12:00", "f/1,9" vs. "f/1.9").
+- The emulator app is set to German, since `tool/emu.sh` matches German strings.
 
-**Verified** 2026-09-23: widget test — test device English → "Log in", switched to German → "Anmelden" without restart; `fr` → English. In the emulator (device English): gallery and account window in English ("8 edits are waiting for the backup"); Settings → Language → Deutsch → German immediately, including the page underneath; still German after restart; viewer info with German date and decimal comma.
+**Verified** 2026-09-23: widget test — English device → "Log in", switched to German → "Anmelden" without restart; `fr` → English. Emulator (English device): gallery and account window English ("8 edits are waiting for the backup"); Settings → Language → Deutsch → German at once, including the page below; still German after restart; viewer info with German date and decimal comma.
 
 ---
 
 ## 2026-09-23 · D-42: Code in English
 
-The maintainer wants the app to be readable internationally, so all file names, identifiers and comments in the code are English: Dart, Kotlin (including the AGSL shader), tests, `tool/emu.sh` (`tap`, `shot`, `open_photo` …), `doccheck.py`. Docs stay German until translated (D-15); older entries here use the old names.
+Maintainer's request: all file names, identifiers and comments in English — Dart, Kotlin (incl. AGSL shader), tests, `tool/emu.sh` (`tap`, `shot`, `open_photo` …), `doccheck.py`. Docs stay German until translated (D-15); older entries use old names.
 
-- Persisted data keeps its names so existing installs (Pixel) lose nothing: the `flutter_secure_storage` keys and values (`hdr`, `mobil`, `online`, `zusammen`, `stapeln` with fields `kopie`, `original`, `alt`, `entfernen`), marked `// persisted: do not rename`.
-- Renamed because never shipped: `abgleichErklaert` → `checksumsExplained`, field `rezept` in `presets.json` → `recipe`. `pruefsummen.json` is now `checksums.json`; the app renames the old file on first read.
-- The stack type is `PhotoStack` (not `Stack`, which is Flutter's widget).
-- Next: display language follows the device, German and English, switchable (ROADMAP).
+- Persisted names stay, so installs (Pixel) lose nothing: `flutter_secure_storage` keys and values (`hdr`, `mobil`, `online`, `zusammen`, `stapeln` with `kopie`, `original`, `alt`, `entfernen`), marked `// persisted: do not rename`.
+- Never shipped, renamed: `abgleichErklaert` → `checksumsExplained`, `presets.json` field `rezept` → `recipe`, `pruefsummen.json` → `checksums.json` (renamed on first read).
+- Stack type: `PhotoStack` (`Stack` is Flutter's widget).
+- Next: UI language follows the device, German/English, switchable (ROADMAP).
 
-**Verified** 2026-09-23: `flutter analyze` clean, 18 Flutter and 9 JVM tests green. In the emulator: gallery, editor (shader renders, HDR button after the original loads), save as copy with recipe and `hdrgm`, `checksums.json` migrated from the old file. Instrumented tests (`RendererTest`) are translated and compile but were not run (they uninstall the app).
+**Verified** 2026-09-23: `flutter analyze` clean, 18 Flutter + 9 JVM tests green; emulator: gallery, editor (shader, HDR button after original), save as copy with recipe and `hdrgm`, `checksums.json` migrated. `RendererTest` (instrumented) compiles, not run (uninstalls the app).
 
 ---
 
 ## 2026-09-23 · D-41: The rulers' zero point is visible
 
-The maintainer's request: zero snaps with a short haptic tick but was hard to see (just a lighter tick). Now in all rulers (sliders, angle) it is a thick amber tick with a dot, distinct from the blue center. The center is drawn first; at 0 the zero lies on top and the center turns amber.
+Zero snapped with haptics but was barely visible. Now on all rulers (sliders, angle) a thick amber tick with dot, distinct from the blue center. Center drawn first; at 0 the zero lies on top, center turns amber.
 
-**Verified** 2026-09-23 in the emulator: brightness 32 → zero visible left of center; dragged to 0 → snaps, center amber.
+**Verified** 2026-09-23, emulator: brightness 32 → zero visible left of center; dragged to 0 → snaps, center amber.
 
 ---
 
 ## 2026-09-23 · D-40: Presets — save in the editor, apply to a multi-selection
 
-Built per the spec (*Presets*: a recipe without geometry and masks):
-- **Editor**, tab **"Presets"** first (spec, *Bedienung*): "Save" asks for a name and stores the changed sliders; tapping a preset sets its sliders, crop and rotation stay; long press deletes (with confirmation). Names instead of thumbnails — the renderer only processes one image at a time.
-- Stored in `presets.json` in the app folder, recipe JSON per preset (`v: 1`); not in `flutter_secure_storage`, which is cleared on logout.
-- **Gallery**: multi-select (long press) → ✨ "Apply preset" → pick preset → progress "3 of 20 photos". Each photo takes the same path as from the editor: load/save logic now lives in `lib/editor/speichern.dart` (`fotoLaden`, `kopieSpeichern`), called by both. Native export gets the original as bytes and no longer needs an editor session.
-- A selected **copy made by this app** is **replaced** (original with the copy's crop and the preset's sliders; old copy to trash) — the default from D-31, without per-photo confirmation. One failure doesn't stop the rest; the message gives the count.
+Per spec (*Presets*: recipe without geometry or masks):
+- **Editor**, tab **"Presets"** first (spec, *Bedienung*): "Save" asks a name, stores changed sliders; tap applies sliders (crop, rotation kept); long press deletes (confirmed). Names, not thumbnails — the renderer does one image at a time.
+- `presets.json` in the app folder (recipe JSON, `v: 1`), not `flutter_secure_storage` (cleared on logout).
+- **Gallery**: long-press multi-select → ✨ "Apply preset" → progress "3 of 20 photos". Same path as the editor: `lib/editor/speichern.dart` (`fotoLaden`, `kopieSpeichern`). Native export takes the original as bytes, no editor session.
+- A selected **copy by this app** is **replaced** (original + its crop + preset sliders; old copy to trash) — D-31 default, no per-photo prompt. Failures don't stop the rest; message gives the count.
 
-**Acceptance (M2) measured** 2026-09-23 in the emulator, test user: preset "Contrast" saved; 20 photos selected — 19 from the server (8 edited stacks, 11 new `preset-01` … `-11`) plus `geraet-preset.jpg`, device-only. Apply: **233 s** (~12 s per photo: load original, render, write to camera folder, default "via device", D-28); 20 copies, no errors, each with the preset's recipe and `hdrgm`. Immich app backup simulated (files uploaded unchanged via `POST /assets`); after app restart, checked by asset ID: **20 of 20 copies on top of the stack with their original**, including `geraet-preset.edit.jpg`; replaced copies in trash.
+**Acceptance (M2) measured** 2026-09-23, emulator, test user: preset "Contrast" on 20 photos — 19 server (8 edited stacks, 11 new `preset-01` … `-11`) + device-only `geraet-preset.jpg`. **233 s** (~12 s/photo: load original, render, write to camera folder, default "via device", D-28); 20 copies, no errors, each with recipe and `hdrgm`. Backup simulated (unchanged via `POST /assets`); after restart, by asset ID: **20/20 copies on top of the stack with their original**, incl. `geraet-preset.edit.jpg`; replaced copies in trash.
 
 ---
 
 ## 2026-09-23 · D-39: The first checksum scan explains itself
 
-Maintainer's finding on the Pixel: on first launch only "6000/17400" appeared next to the avatar — nobody knows what's running. Requested and built:
-- When the scan (D-36) runs for the first time, a **"Photo scan" dialog** explains: one checksum per photo to detect what's already in Immich (clouds); only the first time, afterwards only new photos; nothing is uploaded, only checksums go to the server. Below: progress bar, "200 of 1,211 photos", time remaining at the current rate. Once per install (storage key `abgleichErklaert`); closes when the scan finishes.
-- **"In background"** minimizes it into the profile: a progress ring around the avatar like Immich's backup indicator, and a "Photo scan" section with bar and status in the account dialog. The number in the app bar is gone.
-- One state for all three: `abgleichStand` (`ValueNotifier`) in `pruefsummen.dart` replaces the old callback.
+On the Pixel, first launch showed only "6000/17400" next to the avatar, unexplained. Built:
+- First scan (D-36) opens a **"Photo scan" dialog**: one checksum per photo to see what's in Immich (clouds); first time only, then new photos; nothing uploaded, only checksums sent. Bar, "200 of 1,211 photos", ETA. Once per install (key `abgleichErklaert`); closes when done.
+- **"In background"**: progress ring around the avatar (like Immich's backup), "Photo scan" section in the account dialog. App-bar number removed.
+- Shared state `abgleichStand` (`ValueNotifier`) in `pruefsummen.dart` replaces the callback.
 
-**Verified** 2026-09-23 in the emulator: `pruefsummen.json` deleted, 400 and then 1,200 copies of a test photo in `DCIM/Abgleichtest`. First launch → dialog with explanation and "0 of 411 photos", closes itself when done. Second run (1,211 photos, no dialog) → ring grows; account dialog "200 of 1,211 photos · done in about 2 minutes"; afterwards ring and section gone, `pruefsummen.json` has 1,211 entries. Test photos deleted.
+**Verified** 2026-09-23, emulator: `pruefsummen.json` deleted, 400 then 1,200 test-photo copies in `DCIM/Abgleichtest`. First launch → dialog, "0 of 411 photos", auto-closes. Second run (1,211, no dialog) → ring; account dialog "200 of 1,211 photos · done in about 2 minutes"; then ring and section gone, 1,211 entries. Test photos deleted.
 
 ---
 
@@ -785,136 +785,136 @@ Maintainer's finding on the Pixel: on first launch only "6000/17400" appeared ne
 
 Maintainer's guidelines:
 
-1. **Coexist with the Immich app.** The app never modifies existing files on the device, only its own copies (new files; it deletes only its own copies, with Android's confirmation). It shares nothing with the Immich app except the server; each app keeps its own checksums (ours in `pruefsummen.json` in the app folder). Since originals stay unchanged, neither app has to rescan because of the other — the Immich app sees the copy as a new camera photo. Checksums match because both read the unmodified file including location (`ACCESS_MEDIA_LOCATION`, D-26). On the server, the app doesn't change the Immich app's assets except to stack them and add them to albums.
-2. **Immich as information source**, as far as it causes no complications: the public server API (timeline, stacks, EXIF and place names, storage, users, `bulk-upload-check`). The Immich app's on-phone database is unreachable (Android sandbox, no ContentProvider) — hence our own checksums (D-36; the maintainer rejected the device ID as a shortcut: too unreliable). No local copies of server data Immich already provides.
+1. **Coexist with the Immich app.** Never modify existing device files; only create and delete own copies (deletion confirmed by Android). Only the server is shared; each app keeps its own checksums (ours: `pruefsummen.json`). Unchanged originals mean no rescans — the Immich app sees a copy as a new camera photo. Checksums match because both read the unmodified file incl. location (`ACCESS_MEDIA_LOCATION`, D-26). Server assets of the Immich app are only stacked and added to albums.
+2. **Immich as information source** where simple: public API (timeline, stacks, EXIF, place names, storage, users, `bulk-upload-check`). The Immich app's phone DB is unreachable (sandbox, no ContentProvider) — hence own checksums (D-36; device ID rejected as too unreliable). No local copies of data Immich serves.
 
-**Apply:** before the app computes or stores something itself, check the API spec (`open-api/immich-openapi-specs.json`, tag `v3.2.2`) for whether Immich provides it.
+**Apply:** before computing or storing anything, check `open-api/immich-openapi-specs.json` (tag `v3.2.2`) for whether Immich provides it.
 
 ---
 
 ## 2026-09-23 · D-37: All editing happens here — Immich is gallery and backup
 
-Proposal (agent): save pure geometry changes (crop, 90° rotate, flip) via Immich's `PUT /assets/{id}/edits` on the original instead of as a copy — no second photo, as Google Photos does for reversible edits. Maintainer's decision: **no.** Every edit, geometry included, is made in this editor and saved as a copy with recipe (D-2); Immich stays gallery and backup, nobody should switch between two editors.
+Agent proposal: save geometry-only edits (crop, 90° rotate, flip) via `PUT /assets/{id}/edits` on the original, like Google Photos' reversible edits. Maintainer: **no.** All edits are made here and saved as a copy with recipe (D-2); Immich is gallery and backup, no switching editors.
 
-**Apply:** don't propose routes via Immich's editing features; new tools go into the recipe.
+**Apply:** don't propose Immich's editing features; new tools go into the recipe.
 
 ---
 
 ## 2026-09-23 · D-36: One timeline across device and server; folders Immich doesn't back up
 
-Maintainer's decisions (2026-09-23): like the Immich app, the gallery shows **one timeline** with cloud icons for status; separated only via a setting. Device photos count as backed up if the server knows their **checksum** — as in the Immich app, not via device ID. Photos from folders the Immich app doesn't back up can be edited; afterwards the app **asks** and optionally uploads **archived**, into the album "Editor for Immich", and opens the copy in the Immich app. Folders live in the **"Library"** tab.
+Maintainer's decisions: **one timeline** with cloud icons like the Immich app, split only via setting. Device photos are backed up if the server knows their **checksum** (not device ID). Photos in folders the Immich app skips can be edited; then the app **asks**, optionally uploads **archived** to album "Editor for Immich" and opens it in the Immich app. Folders: **"Library"** tab.
 
 Built:
-- **Checksums** native (`MainActivity`, own thread, streamed from the file, with `setRequireOriginal`), cached in `pruefsummen.json` in the app folder with each photo's modification time; only new or changed photos are recomputed (`abgleichen`, tested). Server lookup via `POST /assets/bulk-upload-check` in batches of 1000 — returns the server ID also for archived photos, not for trashed ones. Stacking (D-26) now uses this too: one request instead of three per copy.
-- **Timeline** "Photos": the server's months plus device-only photos, merged by capture time (`fileCreatedAt` from the timeline). Cloud bottom right as in Immich's `thumbnail_tile`: `cloud_off` device only, `cloud` server only, `cloud_done` both. While checksums are computed, the app bar shows progress. Settings → View: "Device and server together" off → tabs "Device", "Immich", "Library" as before.
-- **Library**: "On this device", each folder with count and how much is backed up; open folder, view photo, edit.
-- **Not backed up** means neither the original nor any other photo in the folder (up to 200) is on the server. Then after saving: "Open edit in Immich?"; on yes `POST /assets` with `visibility: archive`, verify, album "Editor for Immich" (created if missing), `immich://asset?id=…` — the Immich app handles the link (`deep_link.service.dart`).
-- Limit: archived copies don't appear in the timeline (as in the Immich app), only in the album and the folder.
+- **Checksums** native (`MainActivity`, own thread, streamed, `setRequireOriginal`), cached in `pruefsummen.json` with mtime; only new/changed recomputed (`abgleichen`, tested). Lookup via `POST /assets/bulk-upload-check`, batches of 1000 — finds archived, not trashed. Stacking (D-26) uses it too: one request instead of three per copy.
+- **Timeline** "Photos": server months + device-only photos, merged by `fileCreatedAt`. Cloud as in Immich's `thumbnail_tile`: `cloud_off` device, `cloud` server, `cloud_done` both. App bar shows checksum progress. Settings → View: "Device and server together" off → tabs "Device", "Immich", "Library".
+- **Library**: "On this device", folders with count and backed-up share; open, view, edit.
+- **Not backed up** = neither original nor any other folder photo (up to 200) on the server. After save: "Open edit in Immich?" → `POST /assets` with `visibility: archive`, verify, album (created if missing), `immich://asset?id=…` (Immich's `deep_link.service.dart`).
+- Limit: archived copies aren't in the timeline (as in the Immich app), only album and folder.
 
-**Verified** 2026-09-23 in the emulator: timeline with server stacks (cloud), device photos (crossed-out cloud), the backed-up test photo B stack (check mark), no duplicates; library "Camera · 9 photos · 2 backed up". Created folder `Pictures/Privat`, edited a photo → prompt → copy in the folder and archived on the server (same SHA-1), album "Editor for Immich" with 1 photo. The jump into the Immich app can only be checked on the Pixel (emulator has no Immich app → message).
+**Verified** 2026-09-23, emulator: server stacks (cloud), device photos (crossed cloud), backed-up test photo B stack (check), no duplicates; library "Camera · 9 photos · 2 backed up". `Pictures/Privat` photo edited → prompt → copy in folder and archived on server (same SHA-1), album with 1 photo. Immich-app jump only testable on the Pixel.
 
 ---
 
 ## 2026-09-23 · D-35: Immich app look, Google Photos interaction
 
-Maintainer's guideline: the app follows the **Immich app's design** — colors, font, account dialog, settings — but takes **features and key areas from Google Photos** (black editor with tools at the bottom, D-22; viewer and stacks, D-33, D-34).
+Guideline: **Immich app design** (colors, font, account dialog, settings), **features and key areas from Google Photos** (black editor, bottom tools, D-22; viewer, stacks, D-33, D-34).
 
-Taken from the Immich app source (tag `v3.2.2`, AGPL-3.0 like this app, D-3):
-- **Theme** (`lib/thema.dart`): brand color `#4150AF` / dark `#ACCBFA`, desaturated surfaces, text sizes, AppBar title in brand color, font **Google Sans** (SIL Open Font License 1.1, in `fonts/GoogleSans/` with `OFL.txt`). Editor and viewer: same theme in dark, editor on black.
-- **Account dialog** like `ImmichAppBarDialog`: close and name at top; a card with profile (avatar like `UserCircleAvatar`, Immich's avatar colors), storage (user quota, else `GET /server/storage`), app version, server version, server URL; below: pending edits, settings, log out (with confirmation), licenses at the bottom. Not taken: Immich's logo (trademark, D-5), profile picture upload, app log, "Free up space".
-- **Settings** like `SettingsPage`: one card per section (Editing, Saving, Network, Stacking) with switches like `SettingsSwitchListTile`.
-- App version via platform channel (`PackageManager`), no new dependency.
+From Immich app source (tag `v3.2.2`, AGPL-3.0, D-3):
+- **Theme** (`lib/thema.dart`): brand `#4150AF` / dark `#ACCBFA`, desaturated surfaces, text sizes, brand-colored AppBar title, **Google Sans** (SIL OFL 1.1, `fonts/GoogleSans/` + `OFL.txt`). Editor and viewer dark, editor on black.
+- **Account dialog** like `ImmichAppBarDialog`: close + name; card with profile (avatar like `UserCircleAvatar`, Immich colors), storage (quota, else `GET /server/storage`), app and server version, server URL; then pending edits, settings, log out (confirmed), licenses. Not taken: Immich logo (trademark, D-5), avatar upload, app log, "Free up space".
+- **Settings** like `SettingsPage`: card per section (Editing, Saving, Network, Stacking), `SettingsSwitchListTile`-style switches.
+- App version via platform channel (`PackageManager`), no dependency.
 
-**Verified** 2026-09-23 in the emulator: gallery with left-aligned brand-color title; account dialog with "104.4 MiB of 10.0 GiB used", "0.0.1 build.1", "3.2.2", server URL, "6 edits waiting for backup"; settings as cards, "Saving" section with switch.
+**Verified** 2026-09-23, emulator: brand-color title left; "104.4 MiB of 10.0 GiB used", "0.0.1 build.1", "3.2.2", server URL, "6 edits waiting for backup"; settings as cards.
 
 ---
 
 ## 2026-09-22 · D-34: Stacks in the viewer like Google Photos' long exposures
 
-Maintainer's request (Google Photos screenshot as template): date and time (local) at the top, below it the version of the shown photo; stack thumbnails under the image, tap to show that member. Fixed order: **Original, V1, V2 …** — copies by creation (`createdAt`), the primary photo marked with a star. ⋮ on the selected thumbnail: **"Set as primary"** (`PUT /stacks/{id}`, not on the primary) and **"Keep this photo, delete the rest"** (after confirmation: the others go to Immich's trash, `DELETE /stacks/{id}` dissolves the stack). Google-style multi-select dropped — not needed (maintainer).
+From a Google Photos screenshot: date and local time on top, shown version below; stack thumbnails under the image. Order **Original, V1, V2 …** (copies by `createdAt`), primary starred. ⋮ on a thumbnail: **"Set as primary"** (`PUT /stacks/{id}`) and **"Keep this photo, delete the rest"** (confirmed; rest to Immich trash, `DELETE /stacks/{id}`). No multi-select — not needed.
 
-**Verified** 2026-09-22 in the emulator on stack `testfoto-a-hdr` (original + 2 copies): V1 as primary → server reports V1 on top; keep original → both copies in trash, no stack, date still visible. Test data restored afterwards.
+**Verified** 2026-09-22, emulator, `testfoto-a-hdr` (original + 2 copies): V1 primary → server confirms; keep original → copies in trash, no stack, date still shown. Test data restored.
 
-Two bugs found: `setState(() => _x = future)` returns the Future and Flutter aborts — write it as a block; after "delete the rest" the page reloaded the stack from the deleted copy — now from the shown photo.
+Bugs: `setState(() => _x = future)` returns the Future, Flutter aborts — use a block; "delete the rest" reloaded from the deleted copy — now from the shown photo.
 
 ---
 
 ## 2026-09-22 · D-33: Viewer between gallery and editor
 
-Maintainer's decision: view photos full-size first, then edit; see the result after saving. Sharing, albums, trash and map stay with the Immich app.
+Maintainer: view first, then edit, see the result after saving. Sharing, albums, trash, map stay in the Immich app.
 
-Built: tapping a tile opens the viewer — swipe through photos (device: all; server: the month, for now), zoom up to 8×, for server stacks the members at the bottom ("Original", "Edit", "Edit 2" — recognized by `.edit` in the name). "Edit" opens the editor on the shown member; the editor returns the new copy and the viewer shows it. Swiping up shows date and time, name, megapixels, dimensions, size, camera, lens, exposure, location — for server photos from Immich's `exifInfo` (local time from `localDateTime`, location as city and country), for device photos from Android's `ExifInterface` via platform channel (location as place name from Immich's `GET /map/reverse-geocode` — the server's own geodata, no third-party service; raw coordinates aren't shown, they mean nothing to anyone (maintainer); ISO is under the old framework name `ISOSpeedRatings`). No new dependency.
+Tile tap → viewer: swipe (device: all; server: the month, for now), zoom to 8×, server stack members at bottom ("Original", "Edit", "Edit 2", by `.edit` in the name). "Edit" opens the shown member; the new copy comes back and is shown. Swipe up: date/time, name, MP, dimensions, size, camera, lens, exposure, location — server: Immich's `exifInfo` (`localDateTime`, city/country); device: Android `ExifInterface` via platform channel, place from Immich's `GET /map/reverse-geocode` (server's own geodata, no third party). No raw coordinates (meaningless, maintainer). ISO is `ISOSpeedRatings` in the framework. No dependency.
 
-Pitfall: swipe-up in a `GestureDetector` never reaches the app because the `InteractiveViewer` takes the gesture; it's handled in its `onInteractionEnd`, only when unzoomed.
+Pitfall: `InteractiveViewer` swallows swipe-up from `GestureDetector`; handled in `onInteractionEnd`, unzoomed only.
 
-**Verified** 2026-09-22 in the emulator: opened a server photo, stack with three members, info (Google Pixel 7 Pro, f/1.9 · 1/231 s · ISO 47 · 6.8 mm, <place>), swipe sideways to the next stack; Edit → "Replace copy" → back in the viewer with the new copy; device photo with EXIF info.
+**Verified** 2026-09-22, emulator: 3-member stack, info (Google Pixel 7 Pro, f/1.9 · 1/231 s · ISO 47 · 6.8 mm, <place>), swipe to next; Edit → "Replace copy" → new copy shown; device photo EXIF.
 
 ---
 
 ## 2026-09-22 · D-32: Avatar, account and a settings page
 
-Maintainer's finding: an edit from the device was backed up but never stacked. Cause: the app was logged in as the test user, the Immich app with his own account — stacking only happens in the account the app is logged into (D-26). Nothing showed this.
+A device edit was backed up but never stacked: the app used the test user, the Immich app the maintainer's account — stacking only happens in the app's account (D-26). Nothing showed this.
 
-So, at the maintainer's request and modeled on the Immich app: avatar top right (`GET /users/me`, `GET /users/{id}/profile-image`; without a picture the initial on Immich's `avatarColor`). Tapping shows name, email, server, how many edits wait for backup (noting that the Immich app must back up with this account), "Log out" and "Settings". Settings are on their own page by section (Editing, Saving, Stacking with "Stack now", Account) instead of the ⋮ menu.
+So, like the Immich app: avatar top right (`GET /users/me`, `GET /users/{id}/profile-image`; else initial on `avatarColor`). Tap: name, email, server, edits awaiting backup (the Immich app must back up with this account), "Log out", "Settings". Settings on their own page (Editing, Saving, Stacking with "Stack now", Account) instead of ⋮.
 
-**Verified** 2026-09-22 in the emulator: initial "E" in blue, account dialog with "3 edits waiting for backup", settings page with all switches.
+**Verified** 2026-09-22, emulator: blue "E", "3 edits waiting for backup", all switches.
 
 ---
 
 ## 2026-09-22 · D-31: Replace a copy or save alongside; thumbnails of new copies
 
-Trigger: maintainer feedback (Pixel, build `1a96574`). Saving works there — the "App isn't responding" from the older build (D-23) is gone. In Google Photos, editing a copy always makes yet another copy, loose in the gallery — messy. Whoever changes a copy usually wants to change that copy.
+Pixel feedback (build `1a96574`): saving works, the old ANR (D-23) is gone. Google Photos makes a new loose copy each time a copy is edited — messy; usually you want to change that copy.
 
-Decision: when a copy is opened (the editor loads the original with its recipe, D-23), saving offers **"Replace copy"** (the opened one goes to trash, D-23) or **"Save as another copy"** (both stay in the stack). Files in Immich can't be modified (D-1) — "replace" means: new copy on top, old one to trash, reversible there. Edits are always reversible because the original is in the stack.
+Decision: saving an opened copy (original + its recipe, D-23) offers **"Replace copy"** (old to trash, D-23) or **"Save as another copy"** (both stacked). Immich files are immutable (D-1): "replace" = new copy on top, old in trash, reversible. Edits stay reversible since the original is in the stack.
 
-Stacking finding (Immich `v3.2.2`, `server/src/repositories/stack.repository.ts`, `create`): `POST /stacks` merges an existing stack into the new one only if its **primary** asset is among the `assetIds`; otherwise only the named asset moves and the rest stay behind. So the app now passes `[new copy, original, previous primary]` — all copies stay in one stack; deleting the previous primary copy (D-23) is dropped.
+Stacking (Immich `v3.2.2`, `server/src/repositories/stack.repository.ts`, `create`): `POST /stacks` merges an existing stack only if its **primary** is in `assetIds`; otherwise only the named asset moves. So the app sends `[new copy, original, previous primary]`, keeping one stack; deleting the previous primary (D-23) is dropped.
 
-Black thumbnail after saving: Immich generates a new copy's thumbnail seconds after upload; the tile stayed empty after the failed load. Now it retries every 2 s (max. ten times).
+Black thumbnail: Immich generates it seconds after upload; the tile stayed empty. Now retries every 2 s (max. 10).
 
-**Measured** 2026-09-22 in the emulator (direct to server): `testfoto-a-hdr` → "Save as another copy" → stack with new copy on top, original, older copy; thumbnail immediately in the gallery. Opened the new copy → "Replace copy" → stack with newest copy, original, older copy; the replaced one in trash.
+**Measured** 2026-09-22, emulator (direct to server): `testfoto-a-hdr` → "Save as another copy" → new copy, original, older copy; thumbnail immediate. Then "Replace copy" → newest, original, older; replaced one in trash.
 
 ---
 
 ## 2026-09-22 · D-30: "Mobile data" setting
 
-Follows D-24: gallery (⋮) "Originals and uploads over mobile data", default on — saving on the go should just work. If off and the connection is metered (Android's `isActiveNetworkMetered`, via platform channel, no new dependency; needs `ACCESS_NETWORK_STATE`), the editor doesn't fetch the original automatically and asks once on save if an original still needs loading or the copy is to be uploaded directly. Thumbnails, previews and API calls always run; backing up an on-device copy is up to the Immich app.
+Follows D-24: gallery ⋮ "Originals and uploads over mobile data", default on. If off and metered (`isActiveNetworkMetered` via platform channel, needs `ACCESS_NETWORK_STATE`, no dependency), the editor doesn't auto-load originals and asks once on save if an original or direct upload is pending. Thumbnails, previews, API calls always run; on-device copies are backed up by the Immich app.
 
-**Measured** 2026-09-22 in the emulator: setting off, Wi-Fi off (cellular, metered) → editor shows preview, no original after 15 s (no HDR button); save → prompt; "Anyway" → full-resolution copy (3072 px wide).
+**Measured** 2026-09-22, emulator: off, Wi-Fi off (metered) → preview, no original after 15 s (no HDR button); save → prompt; "Anyway" → full-res copy (3072 px wide).
 
 ---
 
 ## 2026-09-22 · D-29: Open online photos with Immich's preview; HDR only in the image
 
-For a server photo the editor first loads only details, the first 64 KB (EXIF, recipe XMP — enough to recognize a copy) and Immich's preview (`GET /assets/{id}/thumbnail?size=preview`, already upright, no gain map) and shows it immediately. The original loads in the background and replaces the preview in the renderer with the current recipe (no flash); only then is HDR available. Saving waits for the original ("Loading original …") — the copy is always made from the original. The recipe is resolution-independent and the aspect ratio is the same.
+For server photos the editor first loads details, the first 64 KB (EXIF, recipe XMP — identifies copies) and Immich's preview (`GET /assets/{id}/thumbnail?size=preview`, upright, no gain map), shown at once. The original loads in the background and replaces it in the renderer with the current recipe (no flash); then HDR. Save waits for the original ("Loading original …"); copies always come from it. Recipe is resolution-independent, same aspect ratio.
 
-**Measured** 2026-09-22 in the emulator (debug build, `testfoto-a-hdr`, 4.6 MB): image in the editor after 2.6 s, HDR button (original ready) after 10.4 s; before, the image appeared only with the original. Saved immediately, before the original arrived → copy 3072 × 4080 with `hdrgm`, MPF and recipe.
+**Measured** 2026-09-22, emulator (debug, `testfoto-a-hdr`, 4.6 MB): image after 2.6 s (before: only with original), HDR button after 10.4 s. Saved before the original arrived → 3072 × 4080 with `hdrgm`, MPF, recipe.
 
-**Maintainer's finding** on the Pixel (2026-09-22): the HDR button only affects the image; bars and buttons stay at normal brightness — as intended (D-17, D-20).
+**Pixel** (maintainer, 2026-09-22): HDR only brightens the image, not bars or buttons — intended (D-17, D-20).
 
 ---
 
 ## 2026-09-22 · D-28: Online photos backed up via the device — built
 
-Follows D-25: gallery setting (⋮) "Back up edits of online photos via the device", default on (`online` = `geraet`/`server`). When on, the editor puts the copy of a server-only photo into the camera folder (`DCIM/Camera/`) and records it with its device ID. When stacking after backup (D-26), a replaced server copy goes to Immich's trash and the local copy to the device's trash — one Android confirmation for all completed ones.
+Follows D-25: gallery ⋮ "Back up edits of online photos via the device", default on (`online` = `geraet`/`server`). Copies of server-only photos go to `DCIM/Camera/`, recorded by device ID. Stacking after backup (D-26) sends replaced server copies to Immich trash and the local copy to device trash — one Android prompt for all.
 
-Limit: the Immich app only backs up the copy if the camera folder is part of the backup; otherwise it stays on the device and pending.
+Limit: backed up only if the Immich app backs up the camera folder; otherwise stays local and pending.
 
-**Measured** 2026-09-22 in the emulator: edited `testfoto-a-exif6` (server-only, with an older copy) → `testfoto-a-exif6.edit.jpg` in the camera folder; backup simulated (file uploaded unchanged via `POST /assets`); refresh → new copy on top of the stack, old copy in the server trash, Android prompt, local copy gone.
+**Measured** 2026-09-22, emulator: `testfoto-a-exif6` (server-only, older copy) → `testfoto-a-exif6.edit.jpg` in camera folder; backup simulated (`POST /assets`, unchanged); refresh → new copy on top, old in server trash, Android prompt, local copy gone.
 
 ---
 
 ## 2026-09-22 · D-27: No server extension; the recipe format is the interface
 
-Maintainer's question: a removable extension for the Immich server, like Noodle Gallery offers, so the server understands the edits itself — and that also works with Noodle.
+Maintainer asked for a removable server extension, as Noodle Gallery offers, so the server understands edits — also on Noodle.
 
-Finding (README of `open-noodle/gallery`, 2026-09-22): Noodle Gallery is **not a plugin but its own server image** — a fork rebased onto each Immich release (currently 3.2.2, own version `v5`). It's removable via a script that drops its tables and columns; the database stays Immich-compatible. A server runs exactly one image — an extension "for Immich and Noodle" would mean maintaining a patch on both forks for every release.
+Finding (`open-noodle/gallery` README, 2026-09-22): Noodle is **its own server image, not a plugin** — a fork rebased per Immich release (now 3.2.2, own version `v5`), removable by a script dropping its tables and columns; DB stays Immich-compatible. One image per server, so "for Immich and Noodle" means a patch on both forks every release.
 
-Maintainer's decision: **not for now**, the current approach (D-2) suffices. Reasons:
-- If the server understands the edit, it must also render it (thumbnails, preview, download) — a second renderer in TypeScript/libvips, pixel-identical to the AGSL shader, with gain map; barely feasible for masks, 3D LUTs and eraser (M4, M5). D-2 avoids exactly this.
-- Small gain: web, Immich app and shared albums already show the edit because the copy is on top of the stack. Mainly it would save the doubled storage.
-- D-1 would still hold: the app works with any unmodified Immich server.
+Maintainer: **not for now**, D-2 suffices:
+- A server that understands edits must render them (thumbnails, preview, download): a second TypeScript/libvips renderer, pixel-identical to the AGSL shader, with gain map; barely feasible for masks, 3D LUTs, eraser (M4, M5). D-2 avoids this.
+- Small gain: web, Immich app, shared albums already show the edit (copy on top). Mainly saves doubled storage.
+- D-1 would still hold.
 
-The door stays open: the recipe is stored versioned as XMP (`ife:recipe`) in every copy, with the original's checksum — a future server extension, by us, Noodle or Immich, can read it. **Apply:** keep the recipe format stable and documented (spec, *Aufbau*); running against a Noodle server is in the ROADMAP.
+Door open: every copy carries the versioned recipe as XMP (`ife:recipe`) with the original's checksum, readable by any future extension (ours, Noodle's, Immich's). **Apply:** keep the recipe format stable and documented (spec, *Aufbau*); Noodle-server compatibility is in the ROADMAP.
 
 ---
 
@@ -922,27 +922,27 @@ The door stays open: the recipe is stored versioned as XMP (`ife:recipe`) in eve
 
 Built per D-24:
 
-- **Gallery** with two bottom tabs, "Device" (`photo_manager`, newest first, pages of 120) and "Immich" (as before). Still separate; a combined timeline is in the ROADMAP.
-- **Editor for device photos:** loads the file from the device, computes its SHA-1 itself; saves the copy (`<name>.edit.jpg`) into the **same folder** with the **same capture time** (`DATE_TAKEN`) — so the Immich app backs it up and it sits next to the original.
-- **Re-edit** on device: a copy's original is found via capture time (same second) and the SHA-1 from the recipe XMP. The old copy goes to the device trash; Android asks for confirmation.
-- **Stack later:** each local copy is recorded (SHA-1 of copy, original, replaced copy; in `flutter_secure_storage`). On gallery open and refresh the app looks up both by checksum on the server and stacks as with direct saving (`lib/stapeln/`).
-- **`ACCESS_MEDIA_LOCATION` is mandatory.** Without it Android returns the file with location redacted: different bytes, a SHA-1 no backup has — and a copy without GPS. Android grants it with photo access, no separate prompt.
-- **Build:** `kotlin.incremental=false` in `android/gradle.properties` — plugins are in the pub cache on `C:`, the build on `M:`; Kotlin's incremental cache fails on that ("Could not close incremental caches").
+- **Gallery** tabs "Device" (`photo_manager`, newest first, pages of 120) and "Immich". Combined timeline in ROADMAP.
+- **Device editor:** loads the file, computes SHA-1; saves `<name>.edit.jpg` in the **same folder** with the **same capture time** (`DATE_TAKEN`) — backed up by the Immich app, shown next to the original.
+- **Re-edit:** original found by capture time (same second) and SHA-1 from the recipe XMP. Old copy to device trash (Android asks).
+- **Stack later:** each local copy is recorded (SHA-1 of copy, original, replaced copy; `flutter_secure_storage`). On gallery open/refresh both are found by checksum and stacked as in direct save (`lib/stapeln/`).
+- **`ACCESS_MEDIA_LOCATION` required.** Otherwise Android redacts location: different bytes, a SHA-1 no backup has, a copy without GPS. Granted with photo access, no extra prompt.
+- **Build:** `kotlin.incremental=false` in `android/gradle.properties` — pub cache on `C:`, build on `M:` breaks Kotlin's incremental cache ("Could not close incremental caches").
 
-**Measured** 2026-09-21 in the emulator (test user): put test photo B and test photo A with appended zero bytes into `DCIM/Camera` (not on the server). Edited B → copy in same folder, same `datetaken`; reopened → original with recipe; saved again → old copy in trash. Backup simulated (both files uploaded unchanged via `POST /assets`) → after pull-to-refresh one stack, copy on top, latitude in both. Test photo A (Ultra HDR) → copy with `hdrgm` XMP, MPF and recipe.
+**Measured** 2026-09-21, emulator, test user: test photos B and A (zero bytes appended) in `DCIM/Camera`, not on server. B edited → copy in same folder, same `datetaken`; reopened → original with recipe; saved again → old copy in trash. Backup simulated (both unchanged via `POST /assets`) → after pull-to-refresh one stack, copy on top, latitude in both. A (Ultra HDR) → copy with `hdrgm` XMP, MPF, recipe.
 
-**Apply:** online photos (D-25, default "Device") use the same path.
+**Apply:** online photos (D-25, default "Device") take the same path.
 
 ---
 
 ## 2026-09-21 · D-25: Editing a server-only photo — setting, default device
 
-Maintainer's decision on E6: the user chooses in settings; the maintainer leans towards (b), so (b) is the default.
+Maintainer on E6: user setting; default (b), his preference.
 
-- **(b) Device (default):** like device photos (D-24), the copy goes to the device gallery, the Immich app backs it up, our app stacks it on the server and removes the local file once the server has it (checksum, `POST /assets/bulk-upload-check`). Android asks the user to confirm deletion from the device gallery (`MediaStore.createDeleteRequest`).
-- **(a) Server:** as before (D-23): upload directly, stack, verify; nothing stays on the device.
+- **(b) Device (default):** as D-24: copy to device gallery, Immich app backs up, we stack and delete the local file once on the server (checksum, `POST /assets/bulk-upload-check`); Android confirms deletion (`MediaStore.createDeleteRequest`).
+- **(a) Server:** as D-23: upload, stack, verify; nothing on device.
 
-**Apply:** "Online photos" (M2) builds both paths; setting "Edits of online photos: Device / Server".
+**Apply:** "Online photos" (M2) builds both; setting "Edits of online photos: Device / Server".
 
 ---
 
@@ -950,41 +950,41 @@ Maintainer's decision on E6: the user chooses in settings; the maintainer leans 
 
 Maintainer's proposal and decision:
 
-- **Original is on the device** (backed up or not): the app edits the local file and doesn't query the server. The copy (with recipe XMP) goes to the device gallery; the Immich app backs it up; our app stacks on the server once original and copy are uploaded. On the device both sit side by side unstacked, on the web as a stack. The app never uploads such a copy itself — that would create duplicates next to the backup.
-- **Original is only on the server:** the editor opens immediately with Immich's preview; the recipe is resolution-independent. The original (full resolution, gain map) is needed only for saving — Immich can't apply the recipe (D-2), the final copy is made on the device. Immich's previews have no gain map: HDR preview only with the original.
-- **Network:** the user decides in settings whether originals and uploads also use mobile data or Wi-Fi only.
+- **Original on device** (backed up or not): edit the local file, no server calls. Copy (with recipe XMP) to device gallery; Immich app backs up; we stack once both are on the server. Unstacked on device, stacked on web. The app never uploads such copies itself (would duplicate the backup).
+- **Original only on server:** open at once with Immich's preview (recipe is resolution-independent). The original (full res, gain map) is needed only to save — Immich can't apply recipes (D-2), so the copy is rendered on device. Previews lack gain maps: HDR preview only with the original.
+- **Network:** user setting — mobile data or Wi-Fi only for originals and uploads.
 
-Where the edit of a *server-only* photo goes: D-25.
+Server-only photo edits: D-25.
 
-**Apply:** gallery with device photos (M2) builds on this; settings "Mobile data" and "Edits of local photos: Device / directly to server".
+**Apply:** basis for the device-photo gallery (M2); settings "Mobile data" and "Edits of local photos: Device / directly to server".
 
 ---
 
 ## 2026-09-21 · D-23: Gallery via the timeline; re-edit; save in 4 s
 
-**Gallery:** `POST /search/metadata` can't reduce stacks to the primary — `withStacked:false` hides *all* stacked images (test: 1 instead of 8 entries). Immich's timeline (`/timeline/buckets`, `/timeline/bucket`, `withStacked=true`) returns the primary per stack with a count, by month, like Immich's own app — 8 entries instead of 15. The editor fetches checksum and file name via `GET /assets/{id}`.
+**Gallery:** `POST /search/metadata` can't collapse stacks — `withStacked:false` hides *all* stacked images (1 instead of 8 entries). The timeline API (`/timeline/buckets`, `/timeline/bucket`, `withStacked=true`) returns each stack's primary with count, by month, like Immich's app — 8 entries instead of 15. The editor fetches checksum and file name via `GET /assets/{id}`.
 
-**Re-edit** (spec, *Speicherweg* 5): if the opened file carries a recipe from this app, the editor opens the original (found by checksum) with that recipe. Finding: re-stacking an original that's already in a stack makes Immich dissolve the old stack — the old copy is then loose in the timeline (tested with `POST /stacks`). So on save, the opened copy and the previous primary go to trash; the primary only if its head (64 KB range request, server answers 206) carries a recipe from this app. Checked in the emulator: after editing a loose older copy, exactly one active copy is on top of the stack.
+**Re-edit** (spec, *Speicherweg* 5): a file with this app's recipe opens its original (found by checksum) with that recipe. Finding: re-stacking an already-stacked original dissolves the old stack, leaving the old copy loose (tested with `POST /stacks`). So saving trashes the opened copy and the previous primary — the latter only if its head (64 KB range request, 206) has our recipe. Emulator: after editing a loose older copy, exactly one active copy tops the stack.
 
-**Saving was too slow** — the maintainer aborted on the Pixel, Android showed "App isn't responding". Measured in the emulator (timestamps along the save path): render and encode 0.5 s, upload 3.8 s, **re-download copy for verification 7.9 s**, stack/albums/trash 2.4 s — total 14.7 s. From the PC the same requests take 0.15 s (small) and 0.4 s (download): the client opened a new connection per request. Now: one keep-alive client, and instead of re-downloading, the app compares Immich's SHA-1 (computed on receipt) with its own (Android `MessageDigest`) — equally strict. After: 0.5 s + 3.0 s + 0.2 s + 0.3 s = **4.0 s**. Decoding on open ran on the main thread and now runs in the background; whether that removes the ANR is still to be checked on the Pixel.
+**Saving was too slow**: the maintainer aborted on the Pixel after "App isn't responding". Emulator timestamps: render+encode 0.5 s, upload 3.8 s, **re-download to verify 7.9 s**, stack/albums/trash 2.4 s — 14.7 s. From the PC: 0.15 s (small) / 0.4 s (download); the client opened a connection per request. Now one keep-alive client, and instead of re-downloading, Immich's SHA-1 (computed on receipt) is compared to ours (Android `MessageDigest`) — equally strict. Result: 0.5 + 3.0 + 0.2 + 0.3 = **4.0 s**. Decoding on open moved off the main thread; whether the ANR is gone is still to be checked on the Pixel.
 
-Side finding: D-22 gives "19 s" for the save test with the values of a different copy — that evening two saves happened (20:03 contrast + geometry, 20:18 all sliders via `adb` swipes over the toolbar); the one examined was from 20:03. The measurements in D-22 belong to it, the 19 s to the second.
+Side finding: D-22's "19 s" and its measurements are from different copies — two saves that evening (20:03 contrast + geometry, 20:18 all sliders via `adb` swipes over the toolbar). Measurements: 20:03; 19 s: 20:18.
 
-**Apply:** when verifying after saving, fetch the copy by its ID, never "the first search hit".
+**Apply:** verify saved copies by ID, never "the first search hit".
 
 ---
 
 ## 2026-09-21 · D-22: Stage-1 sliders in one shader; editor modeled on Google Photos
 
-Implementation: one AGSL shader for all twelve sliders (spec, recipe format). White balance in linear light, tones in perceived lightness; sharpening as unsharp mask with radius relative to image size so preview and export match; all sliders at 0 = image unchanged. **Brightness is now a midtone curve** (γ = 2^−value), no longer the additive offset from M1 (D-12) — the recipe format is still free to change before the first release.
+One AGSL shader for all twelve sliders (spec, recipe format). White balance in linear light, tones in perceived lightness; unsharp mask with radius relative to image size, so preview and export match; all 0 = unchanged. **Brightness is now a midtone curve** (γ = 2^−value), replacing M1's additive offset (D-12) — the recipe format is free until the first release.
 
-How verified: 11 instrumented tests on the emulator GPU (`RendererTest`): neutral deviates at most 2 of 255; brightness lifts midtones and keeps black; contrast spreads; saturation −1 gives gray; blue tones affect the blue patch, not the orange; warmth raises red and lowers blue; shadows, highlights, white and black point, vignette, sharpness move in their direction; geometry swaps width and height. Edited in the emulator (contrast +0.39, 7.8°, crop) and saved: "Saved and verified" after 19 s, 2432×3333, `uhdrload`, gain map 552×757, correlation with the image 0.605 (rotated −0.089).
+Verification: 11 instrumented tests on the emulator GPU (`RendererTest`): neutral ≤ 2/255 off; brightness lifts midtones, keeps black; contrast spreads; saturation −1 → gray; blue tones hit the blue patch, not orange; warmth raises red, lowers blue; shadows, highlights, white/black point, vignette, sharpness move correctly; geometry swaps width/height. Emulator edit (contrast +0.39, 7.8°, crop) saved: "Saved and verified" after 19 s, 2432×3333, `uhdrload`, gain map 552×757, correlation with image 0.605 (rotated −0.089).
 
-Interaction (spec, *Bedienung*): black editor, tabs, round tool buttons, scale ruler, crop frame with handles (outside dimming measured: brightness 76 → 42), undo/redo, press-and-hold shows the original.
+UI (spec, *Bedienung*): black editor, tabs, round tool buttons, scale ruler, crop frame with handles (outside dimming: brightness 76 → 42), undo/redo, press-and-hold for original.
 
-Finding while building: ruler and crop frame computed each drag from the value of the last repaint — with several drags in one frame, movement was lost (an 86 px drag gave 1° instead of 8°). Both now keep their own value while dragging.
+Finding: ruler and crop frame computed drags from the last repaint's value, losing movement when several drags hit one frame (86 px → 1° instead of 8°). Both now track their own value while dragging.
 
-**Apply:** new sliders go into `Renderer.REGLER`, the shader and `werkzeuge` (Dart) — and get a test in `RendererTest`.
+**Apply:** new sliders go into `Renderer.REGLER`, the shader and `werkzeuge` (Dart), with a test in `RendererTest`.
 
 ---
 
