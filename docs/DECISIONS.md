@@ -32,11 +32,21 @@ persönlichen Daten durchsucht:
   Das erste Release ist jetzt `v0.1.0-rc.1`, eine Vorabversion. Der Release-Workflow nimmt Version
   und Build-Nummer aus `pubspec.yaml` statt aus der Laufnummer der CI, bricht ab, wenn der Tag
   nicht passt, und kennzeichnet Tags mit Bindestrich als Vorabversion.
-- **Offen vor dem Veröffentlichen:** GitHub hält alte Commits eine Weile per Kennung erreichbar.
-  Sie waren nur in diesem privaten Repo und in dessen gelöschten Releases, gesehen hat sie also
-  niemand außer dem Besitzer. Wer ganz sicher gehen will, lässt den GitHub-Support den Speicher
-  des Repos bereinigen, bevor es öffentlich wird. Im GitHub-Konto „Keep my email addresses
-  private" und „Block command line pushes that expose my email" einschalten.
+- **Neues GitHub-Repo statt Bereinigung** (Nachtrag, 25.09.2026): Im alten Repo zeigten 96 von 108
+  Actions-Läufen noch auf alte Commits, deren Autor die API mit der alten E-Mail lieferte. GitHub
+  hält überschriebene Commits außerdem ohne Frist per Kennung erreichbar, und die Aktivität zeigt
+  den Force-Push. Deshalb heißt das alte Repo jetzt `immich-editor-old` (privat, Sicherung, der
+  Besitzer löscht es). `Construxz/immich-editor` ist neu angelegt, darin nur die bereinigte
+  Historie und der Tag `v0.1.0-rc.1`; die vier Signier-Secrets hat der Besitzer neu eingetragen.
+  **Geprüft über die REST-API:** 108 Commits, alle Autor und Committer noreply; 3 Actions-Läufe
+  (CI auf `a1fdee3` und `eb0fb08`, Release auf `eb0fb08`), alle erfolgreich und alle mit noreply;
+  ein Release `v0.1.0-rc.1` (Vorabversion) mit 4 APKs und `SHA256SUMS.txt`; ein Tag; die Aktivität
+  zeigt nur das Anlegen von `main`. Die Suche nach der alten E-Mail über alle Antworten (Repo,
+  Commits, Läufe, Releases, Tags, Refs, Events, Aktivität, Beitragende; 540 kB) ergibt 0 Treffer.
+  Die neue arm64-APK trägt dasselbe Signierzertifikat wie die aus dem alten Repo
+  (`apksigner verify --print-certs`, SHA-256 `9adfffc3…131f`); Updates über alte Installationen
+  gehen also weiter. Im GitHub-Konto „Keep my email addresses private" und „Block command line
+  pushes that expose my email" einschalten.
 
 App-Version `0.1.0-rc.1` (Build 82).
 
