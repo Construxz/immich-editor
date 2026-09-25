@@ -1,7 +1,7 @@
 name: immich_editor
 description: "Editor for Immich"
 publish_to: 'none'
-version: 0.1.0-dev.80+80
+version: 0.1.0-dev.81+81
 
 environment:
   sdk: ^3.13.4

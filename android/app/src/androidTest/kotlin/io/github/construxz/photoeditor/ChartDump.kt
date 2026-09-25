@@ -38,7 +38,8 @@ class ChartDump {
                 small.getPixels(pixels, 0, small.width, 0, 0, small.width, small.height)
                 JSONObject(Optimize.adjustments(pixels) as Map<*, *>).also { Log.i("ChartDump", "$source $it") }
             }
-            val b = Renderer.render(image, Geometry(), recipe).copy(Bitmap.Config.ARGB_8888, false)
+            // Crop and rotation from the recipe, as the editor applies them (the source is upright).
+            val b = Renderer.render(image, Geometry.from(recipe), recipe).copy(Bitmap.Config.ARGB_8888, false)
             File(dir, "$name.png").outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
     }

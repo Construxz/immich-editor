@@ -10,6 +10,16 @@ An open-source Android photo editor and gallery for [Immich](https://immich.app)
 photos on your phone alone, without any server. Everyday editing like in Google Photos,
 computed on the device, non-destructive, without Google services, ads or tracking.
 
+<p align="center">
+  <img src="docs/assets/screenshots/app.webp" width="860" alt="Gallery, the editor with Pop, and the filters">
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshots/before-after.webp" width="760" alt="Four photos, the divider wipes between the original and the edit">
+  <br><sub>Each edit made with the app's own sliders, crop and Pop — set to match the
+  photographer's earlier edits in Google Photos.</sub>
+</p>
+
 > **Unofficial.** This project is not affiliated with, endorsed by, or connected to Immich
 > or FUTO. "Immich" is a trademark of FUTO.
 

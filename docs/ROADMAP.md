@@ -36,6 +36,15 @@ Reihenfolge:
 - ⬜ Perspektive (Vier-Punkt).
 - ⬜ Zeitleiste ohne Netz: Immichs Monatsliste merken (D-55 — ohne Netz bleibt sie leer).
 - ⬜ HDR im Betrachter auch für reine Server-Fotos (Original laden, nach Einstellung „Mobile Daten").
+- ⬜ **Aufnahmedatum ohne MediaStore** (Befund 25.09.2026): Fotos ohne `datetaken` in Android (EXIF
+  ohne Zeitzone und ohne GPS, oder gar kein EXIF, etwa WhatsApp) stehen unter dem Datum des
+  Hinzufügens, bei heruntergeladenen Fotos also „heute“. Google Fotos nimmt das EXIF-Datum oder
+  den Dateinamen. *Abnahme:* `IMG_20210803_231353_596.jpg` ohne EXIF steht unter August 2021.
+- ⬜ **Zeitleiste lädt, wo man hinschaut** (Befund Besitzer, 25.09.2026): Google Fotos lädt
+  beim schnellen Scrollen sofort den sichtbaren Bereich, wir Monat für Monat von oben. Zuerst das
+  Sichtbare laden, Übersprungenes zurückstellen. *Abnahme:* auf dem Pixel mit dem Scroller ans
+  Ende gesprungen, die sichtbaren Kacheln stehen so schnell wie bei Google (Bildschirmaufnahme,
+  beide gemessen).
 - ⬜ Blättern durch eine große Bibliothek messen (Bildraten auf dem Pixel, der Besitzer wischt —
   per `adb` scrollt dort nichts, D-50).
 - ⬜ **Sicherheit, Rest aus der Durchsicht** (D-78), vor dem ersten Release:

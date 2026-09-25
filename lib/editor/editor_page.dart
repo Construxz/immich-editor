@@ -1017,8 +1017,10 @@ class _ToolButton extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // A thumbnail covers the fill, so a ring marks the choice.
+                  // A thumbnail covers the fill, so a ring marks the choice — drawn over the
+                  // thumbnail; behind it the thumbnail hid it.
                   DecoratedBox(
+                    position: DecorationPosition.foreground,
                     decoration: ShapeDecoration(
                       shape: CircleBorder(
                         side: selected && image != null
@@ -1054,7 +1056,10 @@ class _ToolButton extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 label,
-                style: Theme.of(context).textTheme.labelSmall,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: selected ? colors.primary : null,
+                  fontWeight: selected ? FontWeight.bold : null,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

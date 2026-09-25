@@ -7,6 +7,39 @@ gemessen wurde. **Neue Einträge oben anfügen.** Was noch zu tun ist, steht in
 
 ---
 
+## 2026-09-25 · D-81: Screenshots und Vorher/Nachher für die README; gewählter Filter sichtbar
+
+**Screenshots** (`docs/assets/screenshots/app.webp`): Galerie, Editor mit Pop 71 und die Filter,
+aus der Release-Fassung im Emulator, im Modus ohne Server. Die Galerie zeigt nur den Ordner
+`Pictures/Showcase`, also keine Serveradressen und keine Kontonamen. Die Fotos sind vom Besitzer:
+18 hat er ausgewählt, 24 habe ich aus Juni bis August 2026 zufällig gezogen und nur Motive ohne
+Personen, Kennzeichen, Innenräume und Notizen genommen. Allen fehlen GPS, Seriennummern und
+Herstellerdaten (nur der EXIF-Block getauscht, das Bild byteweise gleich, geprüft an 53 Dateien).
+
+**Vorher/Nachher** (`before-after.webp`, `tool/before_after.py`): Eine Trennlinie wandert über
+vier Fotos. Das „Nachher“ hat unser Renderer auf der GPU gerechnet (`ChartDump`, jetzt mit dem
+Zuschnitt aus dem Rezept). Zuschnitt und Regler sind Googles Bearbeitungen des Besitzers
+nachgebaut: Den Ausschnitt fand eine normierte Kreuzkorrelation der Kanten, die Regler ein
+Optimierer auf einem Python-Nachbau des Shaders (≤ 0,6 Stufen zur GPU). Abstand zu Google in
+Stufen, vorher → nachher: Distelfalter 13,1 → 6,0; Turm 14,9 → 6,5; Fiat 7,9 → 2,3; Berge
+9,9 → 3,8. Das Schloss (13,5 → 13,3) ließ sich nicht nachbauen, vermutlich eine
+Perspektivkorrektur. Laden und Küste hatte Google kaum verändert.
+
+**Befunde dabei:**
+- **Gewählter Filter unsichtbar** (Besitzer, am Screenshot): Der Ring um den gewählten Filter lag
+  *hinter* dem Vorschaubild und wurde verdeckt, auf jedem Gerät. Jetzt liegt er darüber
+  (`DecorationPosition.foreground`), und die Beschriftung des Gewählten ist farbig und fett, auch
+  bei „Optimieren“. Geprüft im Emulator: „Film“ trägt Ring und farbige Beschriftung.
+- **Fotos ohne Aufnahmedatum:** Fehlt Android das `datetaken` (EXIF ohne Zeitzone und ohne GPS,
+  oder gar kein EXIF), stehen sie unter dem Datum des Hinzufügens. Drei Fotos des Besitzers auf
+  dem Pixel sind betroffen (ROADMAP).
+- **Zeitleiste beim Scrollen:** Sie lädt Monat für Monat von oben, nicht dort, wo man hinschaut
+  (Besitzer, im Vergleich mit Google Fotos; ROADMAP).
+
+App-Version `0.1.0-dev.81`.
+
+---
+
 ## 2026-09-25 · D-80: App-Icon, Slogan und eine README für Außenstehende
 
 **Icon und Slogan** vom Besitzer: vier Blätter in Rot, Gelb, Grün und Blau um einen weißen
