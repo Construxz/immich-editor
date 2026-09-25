@@ -78,9 +78,13 @@ custom preset, 20 stacks are created — also for a photo that was only on the d
 Immich app has backed it up. On the Pixel, the preview of an Ultra HDR photo shows HDR, also
 after cropping and rotating, and the copy is Ultra HDR with a matching gain map — libvips
 (`uhdrload`) recognises it (D-19); with "HDR" off, the copies are SDR.
-→ first release; the repo goes public (D-4), before that an email to Immich (D-5) and the docs
-translated into English (D-15) — tightening DECISIONS while doing so (1175 lines, `doccheck`
-guideline 600).
+→ first release. Pre-release `v0.1.0-rc.1` is out, the repo has been public since 2026-09-25, the
+docs are in English too (D-82, D-84). Open:
+- ⬜ **Email to Immich** (D-5): to questions@immich.app — name, "unofficial, API client, changes
+  nothing on the server", link. Should have gone out before going public; the maintainer sends
+  it later.
+- ⬜ Condense the German DECISIONS (over 2000 lines, `doccheck` guideline 600; the English
+  version is already condensed).
 
 **M6. One renderer for all, then a web version.** ⬜ After M2, before M3 (maintainer,
 2026-09-25). Today sliders, Pop and filters are computed in AGSL, so on Android only. Gallery,

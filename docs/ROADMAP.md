@@ -71,8 +71,12 @@ Foto, das nur auf dem Gerät lag, sobald die Immich-App es gesichert hat. Auf de
 Vorschau eines Ultra-HDR-Fotos HDR, auch nach Zuschneiden und Drehen, und die Kopie ist Ultra
 HDR mit passender Gain-Map — libvips (`uhdrload`) erkennt sie (D-19); mit „HDR" aus entstehen
 SDR-Kopien.
-→ erstes Release; Repo wird öffentlich (D-4), vorher Mail an Immich (D-5) und die Doku ins
-Englische übersetzt (D-15) — dabei DECISIONS straffen (1175 Zeilen, `doccheck`-Richtwert 600).
+→ erstes Release. Vorabversion `v0.1.0-rc.1` steht, das Repo ist seit 25.09.2026 öffentlich, die
+Doku auch englisch (D-82, D-84). Offen:
+- ⬜ **Mail an Immich** (D-5): an questions@immich.app — Name, „inoffiziell, API-Client, verändert
+  nichts am Server", Link. Sollte vor dem Öffentlichschalten raus; der Besitzer holt sie nach.
+- ⬜ Deutsche DECISIONS straffen (über 2000 Zeilen, `doccheck`-Richtwert 600; die englische
+  Fassung ist schon gestrafft).
 
 **M6. Ein Renderer für alle, dann eine Web-Fassung.** ⬜ Nach M2, vor M3 (Besitzer, 25.09.2026).
 Heute rechnen Regler, Pop und Filter in AGSL, also nur auf Android. Galerie, Editor, Rezept,
